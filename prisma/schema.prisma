@@ -4,6 +4,8 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,29 +15,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  rentals   Rental[]
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String @unique
+  rentals  Rental[]
 }
 
-model Car {
-  id          Int      @id @default(autoincrement())
+model Vehicle {
+  id          Int     @id @default(autoincrement())
   model       String
   brand       String
-  dailyPrice  Float
-  available   Boolean  @default(true)
+  pricePerDay Float
+  availability Boolean
+  imageUrl    String
   rentals     Rental[]
 }
 
 model Rental {
-  id        Int     @id @default(autoincrement())
-  userId    Int
-  carId     Int
-  startDate DateTime
-  endDate   DateTime
-
-  user User @relation(fields: [userId], references: [id])
-  car  Car  @relation(fields: [carId], references: [id])
+  id       Int     @id @default(autoincrement())
+  user     User    @relation(fields: [userId], references: [id])
+  userId   Int
+  vehicle  Vehicle @relation(fields: [vehicleId], references: [id])
+  vehicleId Int
+  rating   Float
 }
+
