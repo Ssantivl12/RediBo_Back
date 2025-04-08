@@ -12,3 +12,159 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// Modelo para usuarios
+model Usuario {
+  id                Int                @id @default(autoincrement())
+  nombre            String
+  apellido          String
+  email             String             @unique
+  telefono          String?
+  direccion         String?
+  fechaRegistro     DateTime           @default(now())
+  contraseña        String
+  esAdmin           Boolean            @default(false)
+  autos             Auto[]             // Relación con los autos que posee
+  rentas            Renta[]            // Relación con sus rentas como cliente
+  comentarios       Comentario[]
+  
+  @@map("usuarios")
+}
+
+// Modelo para automóviles
+model Auto {
+  id                Int                @id @default(autoincrement())
+  marca             String
+  modelo            String
+  año               Int
+  placa             String             @unique
+  color             String
+  precioRentaDiario Decimal            @db.Decimal(10, 2)
+  montoGarantia     Decimal            @db.Decimal(10, 2)
+  estado            EstadoAuto         @default(DISPONIBLE)
+  fechaAdquisicion  DateTime           @default(now())
+  kilometraje       Int                @default(0)
+  descripcion       String?
+  propietarioId     Int
+  propietario       Usuario            @relation(fields: [propietarioId], references: [id])
+  rentas            Renta[]
+  historialMantenimiento HistorialMantenimiento[]
+  comentarios       Comentario[]
+  imagenes          String?
+
+  @@map("autos")
+}
+
+// Modelo para rentas
+model Renta {
+  id                Int                @id @default(autoincrement())
+  fechaInicio       DateTime
+  fechaFin          DateTime
+  autoId            Int
+  auto              Auto               @relation(fields: [autoId], references: [id])
+  clienteId         Int
+  cliente           Usuario            @relation(fields: [clienteId], references: [id])
+  estatus           EstatusRenta       @default(AGENDADA)
+  fechaSolicitud    DateTime           @default(now())
+  fechaAprobacion   DateTime?
+  montoTotal        Decimal            @db.Decimal(10, 2)
+  kilometrajeInicial Int?
+  kilometrajeFinal  Int?
+  pagos             Pago[]
+  garantia          Garantia?
+  comentario        Comentario?
+
+  @@map("rentas")
+}
+
+// Modelo para pagos
+model Pago {
+  id                Int                @id @default(autoincrement())
+  rentaId           Int
+  renta             Renta              @relation(fields: [rentaId], references: [id])
+  monto             Decimal            @db.Decimal(10, 2)
+  fechaPago         DateTime           @default(now())
+  metodoPago        MetodoPago
+  referencia        String?
+  comprobante       String?
+  
+  @@map("pagos")
+}
+
+// Modelo para garantías
+model Garantia {
+  id                Int                @id @default(autoincrement())
+  rentaId           Int                @unique
+  renta             Renta              @relation(fields: [rentaId], references: [id])
+  monto             Decimal            @db.Decimal(10, 2)
+  fechaDeposito     DateTime           @default(now())
+  fechaLiberacion   DateTime?
+  estatus           EstatusGarantia    @default(DEPOSITADA)
+  comprobante       String?
+  
+  @@map("garantias")
+}
+
+// Modelo para historial de mantenimiento
+model HistorialMantenimiento {
+  id                Int                @id @default(autoincrement())
+  autoId            Int
+  auto              Auto               @relation(fields: [autoId], references: [id])
+  fechaInicio       DateTime           @default(now())
+  fechaFin          DateTime?
+  descripcion       String
+  costo             Decimal?           @db.Decimal(10, 2)
+  tipoMantenimiento TipoMantenimiento
+  kilometraje       Int
+  
+  @@map("historial_mantenimiento")
+}
+
+// Modelo para comentarios
+model Comentario {
+  id                Int                @id @default(autoincrement())
+  autoId            Int
+  auto              Auto               @relation(fields: [autoId], references: [id])
+  usuarioId         Int
+  usuario           Usuario            @relation(fields: [usuarioId], references: [id])
+  contenido         String
+  calificacion      Int                @db.SmallInt
+  fechaCreacion     DateTime           @default(now())
+  rentaId           Int?               @unique
+  renta             Renta?             @relation(fields: [rentaId], references: [id])
+  
+  @@map("comentarios")
+}
+
+// Enumeraciones
+enum EstatusRenta {
+  AGENDADA
+  APROBADA
+  DENEGADA
+  EN_CURSO
+  FINALIZADA
+  CANCELADA
+}
+
+enum EstatusGarantia {
+  DEPOSITADA
+  LIBERADA
+  RETENIDA
+}
+
+enum MetodoPago {
+  QR
+  TARJETA_DEBITO
+}
+
+enum TipoMantenimiento {
+  PREVENTIVO
+  CORRECTIVO
+  REVISION
+}
+
+enum EstadoAuto {
+  DISPONIBLE
+  OCUPADO
+  EN_MANTENIMIENTO
+}
