@@ -13,14 +13,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  USER
-  OWNER
-  RENTER
+enum RolUsuario {
+  Usuario
+  Arrendador
 }
 
 model User {
   id            String         @id @default(uuid())
-  notifications Notification[] 
-  role          UserRole      
+  notificaciones Notification[] 
+  rol          RolUsuario   
 }
