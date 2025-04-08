@@ -13,13 +13,43 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum RolUsuario {
+enum RolDeUsuario {
   Usuario
   Arrendador
 }
 
-model User {
-  id            String         @id @default(uuid())
-  notificaciones Notification[] 
-  rol          RolUsuario   
+enum TipoDeNotificacion {
+  ALQUILER_FINALIZADO
+  RESERVA_CANCELADA
+  RESERVA_MODIFICADA
+  VEHICULO_CALIFICADO
+  RESERVA_CONFIRMADA
+  DEPOSITO_CONFIRMADO
+  DEPOSITO_RECIBIDO
+}
+
+model Usuario {
+  id              String            @id @default(uuid())
+  notificaciones  Notificacion[]  
+  rol             RolDeUsuario
+}
+
+model Notificacion {
+  id             String                 @id @default(uuid())
+  usuarioId      String                 
+  usuario        Usuario                @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  titulo         String                 @db.VarChar(100)
+  mensaje        String                 @db.Text
+  tipo           TipoDeNotificacion    
+  prioridad      PrioridadNotificacion @default(MEDIUM)
+  entidadId      String?               
+  tipoEntidad    String?               @db.VarChar(50) 
+  leido          Boolean               @default(false)
+  leidoEn        DateTime?            
+  creadoEn       DateTime              @default(now())
+  actualizadoEn  DateTime              @updatedAt             
+  @@index([usuarioId])                
+  @@index([creadoEn])                 
+  @@index([leido, usuarioId])         
+  @@unique([usuarioId, entidadId, tipo], name: "notificacionUnicaUsuarioEntidad")
 }
