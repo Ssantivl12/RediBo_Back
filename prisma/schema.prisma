@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,11 +8,11 @@ datasource db {
 }
 
 model Pago {
-  id          Int      @id @default(autoincrement())
-  metodo      String
-  monto       Float
-  fecha       DateTime @default(now())
-  referencia  String?
-  estado      String
-  vehiculoId  Int
+  id         Int       @id @default(autoincrement())
+  metodo     String    @db.VarChar(50)
+  monto      Decimal   @db.Decimal(10, 2)
+  fecha      DateTime? @default(now()) @db.Timestamp(6)
+  referencia String?   @db.VarChar(100)
+  estado     String?   @db.VarChar(50)
+  vehiculoid Int?
 }
