@@ -34,6 +34,12 @@ enum TipoDeNotificacion {
   DEPOSITO_RECIBIDO
 }
 
+enum PrioridadNotificacion{
+  BAJA
+  MEDIA
+  ALTA
+}
+
 model Usuario {
   id              String            @id @default(uuid())
   notificaciones  Notificacion[]  
