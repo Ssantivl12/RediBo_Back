@@ -18,6 +18,12 @@ enum RolDeUsuario {
   Arrendador
 }
 
+enum PrioridadNotificacion{
+  BAJA
+  MEDIA
+  ALTA
+}
+
 enum TipoDeNotificacion {
   ALQUILER_FINALIZADO
   RESERVA_CANCELADA
@@ -41,7 +47,7 @@ model Notificacion {
   titulo         String                 @db.VarChar(100)
   mensaje        String                 @db.Text
   tipo           TipoDeNotificacion    
-  prioridad      PrioridadNotificacion @default(MEDIUM)
+  prioridad      PrioridadNotificacion @default(MEDIA)
   entidadId      String?               
   tipoEntidad    String?               @db.VarChar(50) 
   leido          Boolean               @default(false)
