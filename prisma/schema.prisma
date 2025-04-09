@@ -18,6 +18,12 @@ enum RolDeUsuario {
   Arrendador
 }
 
+enum PrioridadNotificacion {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 enum TipoDeNotificacion {
   ALQUILER_FINALIZADO
   RESERVA_CANCELADA
