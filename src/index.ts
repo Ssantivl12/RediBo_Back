@@ -3,17 +3,26 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 
+import autoRoutes from "./routes/autoRoutes";
+import { getDefaultAutoSelectFamilyAttemptTimeout } from 'net';
+
 // Cargar variables de entorno
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
 // Middlewares
 app.use(cors());
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.get('/', (req, res) => {
+  res.send('Bienvenido al back de REDIBO');
+});
+
+app.use('/api', autoRoutes);
 
 // End point para verificar la salud de la conexión de la API
 app.get('/health', (req, res) => {
