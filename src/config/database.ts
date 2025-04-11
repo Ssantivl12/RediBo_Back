@@ -1,3 +1,4 @@
+//C:\Users\H P\Documents\IS 2025\PROYECTO IS 1_2025\RediBo_Back\src\config\database.ts
 /*
 Vista rápida del funcionamiento y contenido de esta carpeta
 
@@ -7,18 +8,21 @@ Vista rápida del funcionamiento y contenido de esta carpeta
 */
 
 // El error sale porque Prisma no generará un cliente si no hay modelos definidos
-import { PrismaClient } from '@prisma/client';
+generator client {
+  provider = "prisma-client-js"
+}
 
-const prisma = new PrismaClient();
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
-// Conexión a la database
-prisma.$connect()
-  .then(() => {
-    console.log('Database connected successfully');
-  })
-  .catch((error: any) => {
-    console.error('Database connection error:', error);
-    process.exit(1);
-  });
-
-export default prisma;
+model Pago {
+  id         Int       @id @default(autoincrement())
+  metodo     String    @db.VarChar(50)
+  monto      Decimal   @db.Decimal(10, 2)
+  fecha      DateTime? @default(now()) @db.Timestamp(6)
+  referencia String?   @db.VarChar(100)
+  estado     String?   @db.VarChar(50)
+  vehiculoid Int?
+}

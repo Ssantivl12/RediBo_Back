@@ -1,14 +1,18 @@
-//pagoConTarjeta.ts
+//C:\Users\H P\Documents\IS 2025\PROYECTO IS 1_2025\RediBo_Back\src\controllers\pagoConTarjetaController.ts
+import { Request, Response } from 'express';
+import { crearPagoConTarjeta } from '../services/pagoConTarjetaService';  
 
-/* Usar estos datos para los 2 metodos de pago
+export const crearPagoConTarjetaController = async (req: Request, res: Response) => {
+    const { metodo, monto, referencia, estado, vehiculoid } = req.body;
 
-CREATE TABLE IF NOT EXISTS "Pago" (
-    id SERIAL PRIMARY KEY,
-    metodo VARCHAR(50) NOT NULL,
-    monto NUMERIC(10,2) NOT NULL,
-    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    referencia VARCHAR(100),
-    estado VARCHAR(50),
-    vehiculoId INTEGER
-);
-*/
+    if (!metodo || !monto) {
+        return res.status(400).json({ error: "Faltan parámetros obligatorios (metodo y monto)" });
+    }
+
+    try {
+        const pago = await crearPagoConTarjeta(metodo, monto, referencia, estado, vehiculoid);
+        return res.status(201).json({ mensaje: "Pago creado con éxito", pago });
+    } catch (error) {
+        return res.status(500).json({ error: "Error al procesar el pago" });
+    }
+};
