@@ -40,3 +40,40 @@ export const marcarOcupado = async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Error al procesar la solicitud' });
   }
 };
+
+// Función para marcar auto como Disponible
+async function marcarAutoComoDisponible(autoId: number) {
+  return await prisma.auto.update({
+    where: { id: autoId },
+    data: { estado: 'DISPONIBLE' }
+  });
+}
+
+// Controlador para manejar la solicitud de marcar un auto como disponible
+export const marcarDisponible = async (req: Request, res: Response) => {
+  try {
+    const autoId = parseInt(req.params.id);
+    
+    // Validar id del auto
+    if (isNaN(autoId)) {
+      return res.status(400).json({ error: 'ID de auto inválido' });
+    }
+    
+    const autoActualizado = await marcarAutoComoDisponible(autoId);
+    
+    return res.status(200).json({
+      mensaje: 'Auto marcado como disponible exitosamente',
+      auto: autoActualizado
+    });
+    
+  } catch (error: any) {
+    console.error('Error al marcar auto como disponible:', error);
+    
+    // Manejar y devolver errores especificos
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Auto no encontrado' });
+    }
+    
+    return res.status(500).json({ error: 'Error al procesar la solicitud' });
+  }
+};

@@ -14,12 +14,16 @@ Define las rutas (URL's) de la API
 import { Request, Response } from 'express';
 
 //imports locales
-import { marcarOcupado } from '../controllers/autoController';
+import { marcarOcupado, marcarDisponible } from '../controllers/autoController';
 
 const express = require('express');
 const router = express.Router();
 
+// ******* AUTO CONTROLLER ********
+// Marcar auto como ocupado
 router.put('/autos/:id/ocupar', marcarOcupado);
+// Marcar auto como disponible (liberar)
+router.put('/autos/:id/liberar', marcarDisponible);
 
 router.get('/test', (req: Request, res: Response) => {
   res.send('Router funcionando correctamente!');
