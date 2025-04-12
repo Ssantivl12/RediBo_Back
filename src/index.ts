@@ -3,6 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 
+import router from './routes/routes';
+
 // Cargar variables de entorno
 dotenv.config();
 
@@ -20,6 +22,16 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
+// Importar rutas
+app.use('/api', router);
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+
+  console.log(`Servidor funcionando en puerto  ${PORT}`);
 });
+
+
+/* app.use(cors({
+origin: 'http://localhost:5173' // para uso del frontend en localhost:5173
+})); */

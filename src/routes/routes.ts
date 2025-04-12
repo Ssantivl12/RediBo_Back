@@ -10,10 +10,20 @@ Define las rutas (URL's) de la API
     - Aplicación de middlewares específicos a rutas
 */
 
-import { Router } from 'express';
+//imports globales
+import { Request, Response } from 'express';
 
-const router = Router();
+//imports locales
+import { marcarOcupado } from '../controllers/autoController';
 
+const express = require('express');
+const router = express.Router();
+
+router.put('/autos/:id/ocupar', marcarOcupado);
+
+router.get('/test', (req: Request, res: Response) => {
+  res.send('Router funcionando correctamente!');
+});
 // router.get('/', index);
 
-export { router as userRouter };
+export default router;
