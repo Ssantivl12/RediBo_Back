@@ -20,3 +20,42 @@ export const getAutos = async (req: Request, res: Response) => {
         });
     }
 };
+
+export const getAutoId = async (req: Request, res: Response): Promise<void> => {
+    const id = parseInt(req.params.id, 10);
+  
+    if (isNaN(id)) {
+      res.status(400).json({
+        success: false,
+        message: "ID inválido proporcionado.",
+      });
+      return;
+    }
+  
+    try {
+      const auto = await prisma.auto.findUnique({
+        where: {
+          idAuto: id,
+        },
+      });
+  
+      if (!auto) {
+        res.status(404).json({
+          success: false,
+          message: "Auto no encontrado.",
+        });
+        return;
+      }
+  
+      res.status(200).json({
+        success: true,
+        data: auto,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener el auto.",
+        error: error instanceof Error ? error.message : "Error desconocido",
+      });
+    }
+  };

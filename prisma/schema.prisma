@@ -22,3 +22,12 @@ model Auto {
   transmision String
   combustible String
 }
+
+
+
+
+
+
+
+
+
