@@ -21,6 +21,22 @@ model Auto {
   kilometraje String
   transmision String
   combustible String
+  comentarios  Comentario[]
+  calificaciones Calificacion[]
+}
+
+model Comentario {
+  idComentario Int @id @default(autoincrement())
+  comentario String
+  autoId       Int     
+  auto         Auto    @relation(fields: [autoId], references: [idAuto])
+}
+
+model Calificacion {
+  idCalificacion Int @id @default(autoincrement())
+  calificacion Int
+  autoId       Int
+  auto         Auto @relation(fields: [autoId], references: [idAuto])
 }
 
 
