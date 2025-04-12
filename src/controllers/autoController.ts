@@ -59,3 +59,44 @@ export const getAutoId = async (req: Request, res: Response): Promise<void> => {
       });
     }
   };
+
+export const getComentarios = async (req: Request, res: Response): Promise<void> => {
+    const id = parseInt(req.params.id, 10);
+  
+    if (isNaN(id)) {
+      res.status(400).json({
+        success: false,
+        message: "ID inválido proporcionado.",
+      });
+      return;
+    }
+  
+    try {
+      const comentarios = await prisma.comentario.findMany({
+        where: {
+          autoId: id,
+        },
+      });
+  
+      if (!comentarios) {
+        res.status(404).json({
+          success: false,
+          message: "Comentario no encontrado.",
+        });
+        return;
+      }
+  
+      res.status(200).json({
+        success: true,
+        data: comentarios, 
+      });
+  
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener los comentarios del auto.",
+        error: error instanceof Error ? error.message : "Error desconocido",
+      });
+    }
+  };
+  
