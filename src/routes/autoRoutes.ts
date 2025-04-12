@@ -1,6 +1,5 @@
 import { Router } from "express";
-import { getAutos, getAutoId, getComentarios } from "../controllers/autoController";
-import { getAutos, getAutoId, getCalificacion } from "../controllers/autoController";
+import { getAutos, getAutoId, getComentarios, getCalificacion} from "../controllers/autoController";
 
 const router = Router();
 
