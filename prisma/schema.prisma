@@ -23,6 +23,8 @@ model Auto {
   combustible String
   comentarios  Comentario[]
   calificaciones Calificacion[]
+  hostId Int
+  host   Host @relation(fields: [hostId], references: [idHost])
 }
 
 model Comentario {
@@ -39,7 +41,11 @@ model Calificacion {
   auto         Auto @relation(fields: [autoId], references: [idAuto])
 }
 
-
+model Host {
+  idHost Int @id @default(autoincrement())
+  nombre String
+  autos Auto[]
+}
 
 
 
