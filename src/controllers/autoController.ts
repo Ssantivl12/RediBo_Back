@@ -59,3 +59,43 @@ export const getAutoId = async (req: Request, res: Response): Promise<void> => {
       });
     }
   };
+
+  export const getCalificacion = async (req: Request, res: Response): Promise<void> => {
+    const id = parseInt(req.params.id, 10);
+  
+    if (isNaN(id)) {
+      res.status(400).json({
+        success: false,
+        message: "ID inválido proporcionado.",
+      });
+      return;
+    }
+  
+    try {
+      const calificacion = await prisma.calificacion.findMany({
+        where: {
+          autoId: id,
+        },
+      });
+  
+      if (!calificacion) {
+        res.status(404).json({
+          success: false,
+          message: "Calificacion no encontrado.",
+        });
+        return;
+      }
+  
+      res.status(200).json({
+        success: true,
+        data: calificacion, 
+      });
+  
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener las calificaciones del auto.",
+        error: error instanceof Error ? error.message : "Error desconocido",
+      });
+    }
+  };
