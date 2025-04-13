@@ -13,43 +13,91 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Usuario {
+  id                Int                @id @default(autoincrement())
+  nombre            String
+  apellido          String
+  email             String             @unique
+  telefono          String
+  direccion         String?
+  fechaRegistro     DateTime           @default(now())
+  contraseña        String
+  esAdmin           Boolean            @default(false)
+  autos             Auto[]             // Relación con los autos que posee
+  comentarios       Comentario[]
+}
+
 model Auto {
-  idAuto Int @id @default(autoincrement())
-  marca String
-  modelo String
-  capacidad Int
-  kilometraje String
-  transmision String
-  combustible String
-  comentarios  Comentario[]
-  calificaciones Calificacion[]
-  hostId Int
-  host   Host @relation(fields: [hostId], references: [idHost])
+  id                Int                @id @default(autoincrement())
+  marca             String
+  modelo            String
+  año               Int
+  placa             String             @unique
+  color             String
+  precioRentaDiario Decimal            @db.Decimal(10, 2)
+  montoGarantia     Decimal            @db.Decimal(10, 2)
+  estado            EstadoAuto         @default(ACTIVO)  // ACTIVO o INACTIVO (si esta inactivo no sale en el sistema para rentar)
+  fechaAdquisicion  DateTime           @default(now())
+  kilometraje       Int                @default(0)
+  descripcion       String?
+  transmision       String
+  combustible       String
+  capacidad         Int               @db.SmallInt
+  propietarioId     Int
+  propietario       Usuario            @relation(fields: [propietarioId], references: [id])
+  historialMantenimiento HistorialMantenimiento[]
+  comentarios       Comentario[]
+  imagenes          String
+  disponibilidad    Disponibilidad[]   // Periodos de no disponibilidad (por mantenimiento)
 }
 
 model Comentario {
-  idComentario Int @id @default(autoincrement())
-  comentario String
-  autoId       Int     
-  auto         Auto    @relation(fields: [autoId], references: [idAuto])
+  id                Int                @id @default(autoincrement())
+  autoId            Int
+  auto              Auto               @relation(fields: [autoId], references: [id])
+  usuarioId         Int
+  usuario           Usuario            @relation(fields: [usuarioId], references: [id])
+  contenido         String
+  calificacion      Int                @db.SmallInt
+  fechaCreacion     DateTime           @default(now())
 }
 
-model Calificacion {
-  idCalificacion Int @id @default(autoincrement())
-  calificacion Int
-  autoId       Int
-  auto         Auto @relation(fields: [autoId], references: [idAuto])
+model HistorialMantenimiento {
+  id                Int                @id @default(autoincrement())
+  autoId            Int
+  auto              Auto               @relation(fields: [autoId], references: [id])
+  fechaInicio       DateTime           @default(now())
+  fechaFin          DateTime?
+  descripcion       String
+  costo             Decimal?           @db.Decimal(10, 2)
+  tipoMantenimiento TipoMantenimiento
+  kilometraje       Int
 }
 
-model Host {
-  idHost Int @id @default(autoincrement())
-  nombre String
-  autos Auto[]
+model Disponibilidad {
+  id                Int                @id @default(autoincrement())
+  autoId            Int
+  auto              Auto               @relation(fields: [autoId], references: [id])
+  fechaInicio       DateTime
+  fechaFin          DateTime
+  motivo            MotivoNoDisponibilidad
+  descripcion       String?
 }
 
+enum MotivoNoDisponibilidad {
+  MANTENIMIENTO
+  REPARACION
+  USO_PERSONAL
+  OTRO
+}
 
+enum EstadoAuto {
+  ACTIVO            // El auto está en la plataforma y puede ser reservado
+  INACTIVO          // El auto no está disponible, no puede ser reservado
+}
 
-
-
-
-
+enum TipoMantenimiento {
+  PREVENTIVO
+  CORRECTIVO
+  REVISION
+}
