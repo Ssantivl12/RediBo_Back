@@ -24,6 +24,8 @@ const router = express.Router();
 router.put('/autos/:id/ocupar', marcarOcupado);
 // Marcar auto como disponible (liberar)
 router.put('/autos/:id/liberar', marcarDisponible);
+// Marcar auto como disponible (liberar)
+router.put('/autos/:id/liberar', marcarDisponible);
 
 router.get('/test', (req: Request, res: Response) => {
   res.send('Router funcionando correctamente!');

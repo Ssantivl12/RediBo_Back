@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -25,7 +22,7 @@ model Usuario {
   contraseña        String
   esAdmin           Boolean            @default(false)
   autos             Auto[]             // Relación con los autos que posee
-  rentas            Renta[]            // Relación con sus rentas como cliente
+  reservas          Reserva[]          // Relación con sus reservas como cliente
   comentarios       Comentario[]
   
   @@map("usuarios")
@@ -41,22 +38,36 @@ model Auto {
   color             String
   precioRentaDiario Decimal            @db.Decimal(10, 2)
   montoGarantia     Decimal            @db.Decimal(10, 2)
-  estado            EstadoAuto         @default(DISPONIBLE)
+  estado            EstadoAuto         @default(ACTIVO)  // ACTIVO o INACTIVO (si esta inactivo no sale en el sistema para rentar)
   fechaAdquisicion  DateTime           @default(now())
   kilometraje       Int                @default(0)
   descripcion       String?
   propietarioId     Int
   propietario       Usuario            @relation(fields: [propietarioId], references: [id])
-  rentas            Renta[]
+  reservas          Reserva[]          // Cambiado de rentas a reservas
   historialMantenimiento HistorialMantenimiento[]
   comentarios       Comentario[]
   imagenes          String?
+  disponibilidad    Disponibilidad[]   // Periodos de no disponibilidad (por mantenimiento)
 
   @@map("autos")
 }
 
-// Modelo para rentas
-model Renta {
+// Nuevo modelo para gestionar periodos específicos de no disponibilidad (como mantenimiento)
+model Disponibilidad {
+  id                Int                @id @default(autoincrement())
+  autoId            Int
+  auto              Auto               @relation(fields: [autoId], references: [id])
+  fechaInicio       DateTime
+  fechaFin          DateTime
+  motivo            MotivoNoDisponibilidad
+  descripcion       String?
+  
+  @@map("disponibilidad")
+}
+
+// Modelo para reservas de un auto
+model Reserva {
   id                Int                @id @default(autoincrement())
   fechaInicio       DateTime
   fechaFin          DateTime
@@ -64,29 +75,32 @@ model Renta {
   auto              Auto               @relation(fields: [autoId], references: [id])
   clienteId         Int
   cliente           Usuario            @relation(fields: [clienteId], references: [id])
-  estatus           EstatusRenta       @default(AGENDADA)
+  estado            EstadoReserva      @default(SOLICITADA)
   fechaSolicitud    DateTime           @default(now())
   fechaAprobacion   DateTime?
-  montoTotal        Decimal            @db.Decimal(10, 2)
+  fechaLimitePago   DateTime           // Fecha límite para pagar la reserva
+  montoTotal        Decimal            @db.Decimal(10, 2) // Monto total de pago
   kilometrajeInicial Int?
   kilometrajeFinal  Int?
   pagos             Pago[]
   garantia          Garantia?
   comentario        Comentario?
+  estaPagada        Boolean            @default(false)  // Indica si la reserva está pagada
 
-  @@map("rentas")
+  @@map("reservas")
 }
 
 // Modelo para pagos
 model Pago {
   id                Int                @id @default(autoincrement())
-  rentaId           Int
-  renta             Renta              @relation(fields: [rentaId], references: [id])
+  reservaId         Int
+  reserva           Reserva            @relation(fields: [reservaId], references: [id])
   monto             Decimal            @db.Decimal(10, 2)
   fechaPago         DateTime           @default(now())
   metodoPago        MetodoPago
   referencia        String?
   comprobante       String?
+  tipo              TipoPago           @default(RENTA)  // RENTA O GARANTIA
   
   @@map("pagos")
 }
@@ -94,12 +108,12 @@ model Pago {
 // Modelo para garantías
 model Garantia {
   id                Int                @id @default(autoincrement())
-  rentaId           Int                @unique
-  renta             Renta              @relation(fields: [rentaId], references: [id])
+  reservaId         Int                @unique
+  reserva           Reserva            @relation(fields: [reservaId], references: [id])
   monto             Decimal            @db.Decimal(10, 2)
   fechaDeposito     DateTime           @default(now())
   fechaLiberacion   DateTime?
-  estatus           EstatusGarantia    @default(DEPOSITADA)
+  estado            EstadoGarantia     @default(DEPOSITADA)
   comprobante       String?
   
   @@map("garantias")
@@ -130,23 +144,24 @@ model Comentario {
   contenido         String
   calificacion      Int                @db.SmallInt
   fechaCreacion     DateTime           @default(now())
-  rentaId           Int?               @unique
-  renta             Renta?             @relation(fields: [rentaId], references: [id])
+  reservaId         Int?               @unique
+  reserva           Reserva?           @relation(fields: [reservaId], references: [id])
   
   @@map("comentarios")
 }
 
-// Enumeraciones
-enum EstatusRenta {
-  AGENDADA
-  APROBADA
-  DENEGADA
-  EN_CURSO
-  FINALIZADA
-  CANCELADA
+// Enumeraciones actualizadas
+enum EstadoReserva {
+  SOLICITADA        // Rentador pide la reserva
+  APROBADA          // Arrendatario aprueba la solicitud, pendiente de pago
+  RECHAZADA         // Arrendatario rechaza la solicitud
+  CONFIRMADA        // Pagada y lista para ser utilizada
+  CANCELADA         // Cancelada por falta de pago o por el arrendatario
+  EN_CURSO          // El auto está siendo utilizado actualmente
+  FINALIZADA        // Reserva completada
 }
 
-enum EstatusGarantia {
+enum EstadoGarantia {
   DEPOSITADA
   LIBERADA
   RETENIDA
@@ -164,7 +179,19 @@ enum TipoMantenimiento {
 }
 
 enum EstadoAuto {
-  DISPONIBLE
-  OCUPADO
-  EN_MANTENIMIENTO
+  ACTIVO            // El auto está en la plataforma y puede ser reservado
+  INACTIVO          // El auto no está disponible, no puede ser reservado
+}
+
+// Motivos por los que un auto no esta disponible por un tiempo en especifico
+enum MotivoNoDisponibilidad {
+  MANTENIMIENTO
+  REPARACION
+  USO_PERSONAL
+  OTRO
+}
+
+enum TipoPago {
+  RENTA
+  GARANTIA
 }
