@@ -5,15 +5,15 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // Función para marcar auto como ocupado
-async function marcarAutoComoOcupado(autoId: number) {
+async function marcarAutoComoActivo(autoId: number) {
   return await prisma.auto.update({
     where: { id: autoId },
-    data: { estado: 'OCUPADO' }
+    data: { estado: 'ACTIVO' }
   });
 }
 
 // Controlador para manejar la solicitud de marcar un auto como ocupado
-export const marcarOcupado = async (req: Request, res: Response) => {
+export const marcarActivo = async (req: Request, res: Response) => {
   try {
     const autoId = parseInt(req.params.id);
     
@@ -22,15 +22,15 @@ export const marcarOcupado = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'ID de auto inválido' });
     }
     
-    const autoActualizado = await marcarAutoComoOcupado(autoId);
+    const autoActualizado = await marcarAutoComoActivo(autoId);
     
     return res.status(200).json({
-      mensaje: 'Auto marcado como ocupado exitosamente',
+      mensaje: 'Auto marcado como activo exitosamente',
       auto: autoActualizado
     });
     
   } catch (error: any) {
-    console.error('Error al marcar auto como ocupado:', error);
+    console.error('Error al marcar auto como activo:', error);
     
     // Manejar y devolver errores especificos
     if (error.code === 'P2025') {
@@ -42,15 +42,15 @@ export const marcarOcupado = async (req: Request, res: Response) => {
 };
 
 // Función para marcar auto como Disponible
-async function marcarAutoComoDisponible(autoId: number) {
+async function marcarAutoComoInactivo(autoId: number) {
   return await prisma.auto.update({
     where: { id: autoId },
-    data: { estado: 'DISPONIBLE' }
+    data: { estado: 'INACTIVO' }
   });
 }
 
 // Controlador para manejar la solicitud de marcar un auto como disponible
-export const marcarDisponible = async (req: Request, res: Response) => {
+export const marcarInactivo = async (req: Request, res: Response) => {
   try {
     const autoId = parseInt(req.params.id);
     
@@ -59,15 +59,15 @@ export const marcarDisponible = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'ID de auto inválido' });
     }
     
-    const autoActualizado = await marcarAutoComoDisponible(autoId);
+    const autoActualizado = await marcarAutoComoInactivo(autoId);
     
     return res.status(200).json({
-      mensaje: 'Auto marcado como disponible exitosamente',
+      mensaje: 'Auto marcado como inactivo exitosamente',
       auto: autoActualizado
     });
     
   } catch (error: any) {
-    console.error('Error al marcar auto como disponible:', error);
+    console.error('Error al marcar auto como inactivo:', error);
     
     // Manejar y devolver errores especificos
     if (error.code === 'P2025') {
