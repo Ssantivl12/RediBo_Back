@@ -39,6 +39,7 @@ export const getAutoId = async (req: Request, res: Response): Promise<void> => {
           id: id,
         },
         include: {
+          imagenes: true, 
           propietario: {
             select: {
               id: true,
@@ -84,7 +85,16 @@ export const getComentarios = async (req: Request, res: Response): Promise<void>
     try {
       const comentarios = await prisma.comentario.findMany({
         where: {
-          autoId: id,
+          id: id,
+        },
+        include: {
+          usuario: {
+            select: {
+              id: true,
+              nombre: true,
+              apellido: true, 
+            },
+          },
         },
       });
   

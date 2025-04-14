@@ -47,7 +47,7 @@ model Auto {
   propietario       Usuario            @relation(fields: [propietarioId], references: [id])
   historialMantenimiento HistorialMantenimiento[]
   comentarios       Comentario[]
-  imagenes          String
+  imagenes          Imagen[]
   disponibilidad    Disponibilidad[]   // Periodos de no disponibilidad (por mantenimiento)
 }
 
@@ -82,6 +82,13 @@ model Disponibilidad {
   fechaFin          DateTime
   motivo            MotivoNoDisponibilidad
   descripcion       String?
+}
+
+model Imagen {
+  id                Int               @id @default(autoincrement())
+  autoId            Int
+  auto              Auto              @relation(fields: [autoId], references: [id])
+  direccionImagen   String        
 }
 
 enum MotivoNoDisponibilidad {
