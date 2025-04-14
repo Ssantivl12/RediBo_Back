@@ -39,7 +39,6 @@ export const getAutoId = async (req: Request, res: Response): Promise<void> => {
           id: id,
         },
         include: {
-          imagenes: true, 
           propietario: {
             select: {
               id: true,
