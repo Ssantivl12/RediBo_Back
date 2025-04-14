@@ -48,6 +48,7 @@ model Auto {
   historialMantenimiento HistorialMantenimiento[]
   comentarios       Comentario[]
   imagenes          Imagen[]
+  imagenes          Imagen[]
   disponibilidad    Disponibilidad[]   // Periodos de no disponibilidad (por mantenimiento)
 }
 
