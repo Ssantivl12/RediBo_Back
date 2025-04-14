@@ -10,9 +10,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Modelo para usuarios
+// Modelo para usuarios (arrendatarios y arrendadores)
 model Usuario {
-  id                Int                @id @default(autoincrement())
+  idUsuario         Int                @id @default(autoincrement())
   nombre            String
   apellido          String
   email             String             @unique
@@ -23,41 +23,48 @@ model Usuario {
   esAdmin           Boolean            @default(false)
   autos             Auto[]             // Relación con los autos que posee
   reservas          Reserva[]          // Relación con sus reservas como cliente
-  comentarios       Comentario[]
+  comentariosEscritos Comentario[]     // Comentarios que este usuario ha escrito sobre autos
   
   @@map("usuarios")
 }
 
 // Modelo para automóviles
 model Auto {
-  id                Int                @id @default(autoincrement())
+  idAuto            Int                @id @default(autoincrement())
+  idPropietario     Int
+  propietario       Usuario            @relation(fields: [idPropietario], references: [idUsuario])
   marca             String
   modelo            String
+  descripcion       String?
+  precioRentaDiario Decimal            @db.Decimal(10, 2)
+  montoGarantia     Decimal            @db.Decimal(10, 2)
+  kilometraje       Int                @default(0)
+  comentarios       Comentario[]
+  calificacionPromedio Float?
+  totalComentarios  Int                @default(0)
+  reservas          Reserva[]
+  disponibilidad    Disponibilidad[]   // Periodos de no disponibilidad (por mantenimiento)
+  // ** Detalles adicionales del auto **
+  tipo              String             // Tipo de vehículo (Sedán, SUV, Hatchback, etc.)
   año               Int
   placa             String             @unique
   color             String
-  precioRentaDiario Decimal            @db.Decimal(10, 2)
-  montoGarantia     Decimal            @db.Decimal(10, 2)
   estado            EstadoAuto         @default(ACTIVO)  // ACTIVO o INACTIVO (si esta inactivo no sale en el sistema para rentar)
   fechaAdquisicion  DateTime           @default(now())
-  kilometraje       Int                @default(0)
-  descripcion       String?
-  propietarioId     Int
-  propietario       Usuario            @relation(fields: [propietarioId], references: [id])
-  reservas          Reserva[]          // Cambiado de rentas a reservas
   historialMantenimiento HistorialMantenimiento[]
-  comentarios       Comentario[]
   imagenes          String?
-  disponibilidad    Disponibilidad[]   // Periodos de no disponibilidad (por mantenimiento)
-
+  asientos          Int                @default(5) // Cantidad de asientos
+  transmision       Transmision        // Tipo de transmisión (Automático, Manual)
+  combustible       Combustible        // Tipo de combustible (Gasolina, Diesel, Eléctrico)
+  
   @@map("autos")
 }
 
-// Nuevo modelo para gestionar periodos específicos de no disponibilidad (como mantenimiento)
+
 model Disponibilidad {
-  id                Int                @id @default(autoincrement())
-  autoId            Int
-  auto              Auto               @relation(fields: [autoId], references: [id])
+  idDisponibilidad  Int                @id @default(autoincrement())
+  idAuto            Int
+  auto              Auto               @relation(fields: [idAuto], references: [idAuto])
   fechaInicio       DateTime
   fechaFin          DateTime
   motivo            MotivoNoDisponibilidad
@@ -68,13 +75,13 @@ model Disponibilidad {
 
 // Modelo para reservas de un auto
 model Reserva {
-  id                Int                @id @default(autoincrement())
+  idReserva         Int                @id @default(autoincrement())
   fechaInicio       DateTime
   fechaFin          DateTime
-  autoId            Int
-  auto              Auto               @relation(fields: [autoId], references: [id])
-  clienteId         Int
-  cliente           Usuario            @relation(fields: [clienteId], references: [id])
+  idAuto            Int
+  auto              Auto               @relation(fields: [idAuto], references: [idAuto])
+  idCliente         Int
+  cliente           Usuario            @relation(fields: [idCliente], references: [idUsuario])
   estado            EstadoReserva      @default(SOLICITADA)
   fechaSolicitud    DateTime           @default(now())
   fechaAprobacion   DateTime?
@@ -84,7 +91,7 @@ model Reserva {
   kilometrajeFinal  Int?
   pagos             Pago[]
   garantia          Garantia?
-  comentario        Comentario?
+  comentario        Comentario?        // Un comentario puede estar asociado a una reserva específica
   estaPagada        Boolean            @default(false)  // Indica si la reserva está pagada
 
   @@map("reservas")
@@ -92,9 +99,9 @@ model Reserva {
 
 // Modelo para pagos
 model Pago {
-  id                Int                @id @default(autoincrement())
-  reservaId         Int
-  reserva           Reserva            @relation(fields: [reservaId], references: [id])
+  idPago            Int                @id @default(autoincrement())
+  idReserva         Int
+  reserva           Reserva            @relation(fields: [idReserva], references: [idReserva])
   monto             Decimal            @db.Decimal(10, 2)
   fechaPago         DateTime           @default(now())
   metodoPago        MetodoPago
@@ -107,9 +114,9 @@ model Pago {
 
 // Modelo para garantías
 model Garantia {
-  id                Int                @id @default(autoincrement())
-  reservaId         Int                @unique
-  reserva           Reserva            @relation(fields: [reservaId], references: [id])
+  idGarantia        Int                @id @default(autoincrement())
+  idReserva         Int                @unique
+  reserva           Reserva            @relation(fields: [idReserva], references: [idReserva])
   monto             Decimal            @db.Decimal(10, 2)
   fechaDeposito     DateTime           @default(now())
   fechaLiberacion   DateTime?
@@ -121,9 +128,9 @@ model Garantia {
 
 // Modelo para historial de mantenimiento
 model HistorialMantenimiento {
-  id                Int                @id @default(autoincrement())
-  autoId            Int
-  auto              Auto               @relation(fields: [autoId], references: [id])
+  idHistorial       Int                @id @default(autoincrement())
+  idAuto            Int
+  auto              Auto               @relation(fields: [idAuto], references: [idAuto])
   fechaInicio       DateTime           @default(now())
   fechaFin          DateTime?
   descripcion       String
@@ -136,21 +143,20 @@ model HistorialMantenimiento {
 
 // Modelo para comentarios
 model Comentario {
-  id                Int                @id @default(autoincrement())
-  autoId            Int
-  auto              Auto               @relation(fields: [autoId], references: [id])
-  usuarioId         Int
-  usuario           Usuario            @relation(fields: [usuarioId], references: [id])
+  idComentario      Int                @id @default(autoincrement())
+  idAuto            Int
+  auto              Auto               @relation(fields: [idAuto], references: [idAuto])
+  idUsuario         Int                // Usuario que escribió el comentario
+  usuario           Usuario            @relation(fields: [idUsuario], references: [idUsuario])
   contenido         String
   calificacion      Int                @db.SmallInt
   fechaCreacion     DateTime           @default(now())
-  reservaId         Int?               @unique
-  reserva           Reserva?           @relation(fields: [reservaId], references: [id])
+  idReserva         Int?               @unique
+  reserva           Reserva?           @relation(fields: [idReserva], references: [idReserva])
   
   @@map("comentarios")
 }
 
-// Enumeraciones actualizadas
 enum EstadoReserva {
   SOLICITADA        // Rentador pide la reserva
   APROBADA          // Arrendatario aprueba la solicitud, pendiente de pago
@@ -170,6 +176,18 @@ enum EstadoGarantia {
 enum MetodoPago {
   QR
   TARJETA_DEBITO
+}
+
+enum Transmision {
+  AUTOMATICO
+  MANUAL
+}
+
+enum Combustible {
+  GASOLINA
+  DIESEL
+  ELECTRICO
+  HIBRIDO
 }
 
 enum TipoMantenimiento {
