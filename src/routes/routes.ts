@@ -15,15 +15,22 @@ import { Request, Response } from 'express';
 
 //imports locales
 import { marcarActivo, marcarInactivo } from '../controllers/autoController';
+import { obtenerDetallesReservaAuto } from '../controllers/reservaController';
 
 const express = require('express');
 const router = express.Router();
 
 // ******* AUTO CONTROLLER ********
 // Marcar auto como activo (disponible para renta)
-router.put('/autos/:id/activar', marcarActivo);
+router.put('/autos/:idAuto/activar', marcarActivo);
 // Marcar auto como inactivo (no disponible para renta)
-router.put('/autos/:id/inactivar', marcarInactivo);
+router.put('/autos/:idAuto/inactivar', marcarInactivo);
+
+// ******* RESERVA CONTROLLER ********
+// Obtener los datos de una reserva junto con detalles del auto
+router.get('/reservas/:idReserva/detalles', obtenerDetallesReservaAuto);
+
+
 
 router.get('/test', (req: Request, res: Response) => {
   res.send('Router funcionando correctamente!');

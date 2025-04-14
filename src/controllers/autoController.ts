@@ -4,25 +4,25 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
-// Función para marcar auto como ocupado
-async function marcarAutoComoActivo(autoId: number) {
+// Función para marcar auto como Activo
+async function marcarAutoComoActivo(idAuto: number) {
   return await prisma.auto.update({
-    where: { id: autoId },
+    where: { idAuto: idAuto },
     data: { estado: 'ACTIVO' }
   });
 }
 
-// Controlador para manejar la solicitud de marcar un auto como ocupado
+// Controlador para manejar la solicitud de marcar un auto como activo
 export const marcarActivo = async (req: Request, res: Response) => {
   try {
-    const autoId = parseInt(req.params.id);
+    const idAuto = parseInt(req.params.idAuto);
     
     // Validar id del auto
-    if (isNaN(autoId)) {
+    if (isNaN(idAuto)) {
       return res.status(400).json({ error: 'ID de auto inválido' });
     }
     
-    const autoActualizado = await marcarAutoComoActivo(autoId);
+    const autoActualizado = await marcarAutoComoActivo(idAuto);
     
     return res.status(200).json({
       mensaje: 'Auto marcado como activo exitosamente',
@@ -41,15 +41,15 @@ export const marcarActivo = async (req: Request, res: Response) => {
   }
 };
 
-// Función para marcar auto como Disponible
-async function marcarAutoComoInactivo(autoId: number) {
+// Función para marcar auto como inactivo
+async function marcarAutoComoInactivo(idAuto: number) {
   return await prisma.auto.update({
-    where: { id: autoId },
+    where: { idAuto: idAuto },
     data: { estado: 'INACTIVO' }
   });
 }
 
-// Controlador para manejar la solicitud de marcar un auto como disponible
+// Controlador para manejar la solicitud de marcar un auto como inactivo
 export const marcarInactivo = async (req: Request, res: Response) => {
   try {
     const autoId = parseInt(req.params.id);
@@ -77,3 +77,4 @@ export const marcarInactivo = async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Error al procesar la solicitud' });
   }
 };
+
