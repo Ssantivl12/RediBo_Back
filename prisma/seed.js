@@ -5,36 +5,36 @@ async function main() {
   // Crear usuarios de prueba
   const user1 = await prisma.user.create({
     data: {
-      name: 'Juan Pérez',
-      email: 'juan@example.com',
+      name: 'liz Pérezi',
+      email: 'jlizl@example.com',
     },
   });
 
   const user2 = await prisma.user.create({
     data: {
-      name: 'Maria López',
-      email: 'maria@example.com',
+      name: 'lizas Rodriguez',
+      email: 'asda@example.com',
     },
   });
 
   // Crear vehículos de prueba
   const vehicle1 = await prisma.vehicle.create({
     data: {
-      model: 'Corolla',
-      brand: 'Toyota',
+      model: 'sdfad',
+      brand: 'asdf',
       pricePerDay: 50.0,
       availability: true,
-      imageUrl: 'https://example.com/toyota-corolla.jpg',
+      imageUrl: 'https://example.com/adf-toy.jpg',
     },
   });
 
   const vehicle2 = await prisma.vehicle.create({
     data: {
-      model: 'Civic',
-      brand: 'Honda',
+      model: 'asdfg',
+      brand: 'asdfg',
       pricePerDay: 55.0,
       availability: true,
-      imageUrl: 'https://example.com/honda-civic.jpg',
+      imageUrl: 'https://example.com/asdf-ci.jpg',
     },
   });
 
@@ -43,7 +43,7 @@ async function main() {
     data: {
       userId: user1.id,
       vehicleId: vehicle1.id,
-      rating: 4.5,
+      rating: 2.5,
     },
   });
 
@@ -51,7 +51,7 @@ async function main() {
     data: {
       userId: user2.id,
       vehicleId: vehicle2.id,
-      rating: 4.8,
+      rating: 2.8,
     },
   });
 
