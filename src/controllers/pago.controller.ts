@@ -20,7 +20,6 @@ if(metodoPago=="QR"){
 
 }*/
 
-
 /* ABRAHAM body desde el formulario para validar tarjeta
 if(metodoPago=="Tarjeta-Credito"){
   validarPago = validarTarjeta();
@@ -34,8 +33,13 @@ import { Request, Response } from 'express';
 import * as PagoService from '../services/pago.service';
 import { sendEmail } from '../utils/mailer';
 import { generarImagenPago } from '../utils/generarImagen';
-<<<<<<< Updated upstream
 import { MetodoPago } from '@prisma/client';
+
+
+
+
+
+
 
 export const registrarPago = async (
   correo: string,
@@ -45,40 +49,6 @@ export const registrarPago = async (
   referencia: string,
   comprobante: string
 ): Promise<any> => {
-=======
-import { validarQR } from '../middlewares/validarQR';
-
-//import { validarQR, validarTarjeta } from '../utils/validadores'; // asumiendo que existen estas funciones
-export const realizarPagoQR = async (req: Request, res: Response) => {
-  try {
-    const { comprobante, metodoPago, monto, rentalId, referencia, correo } = req.body;
-
-    if (!comprobante || !metodoPago || !monto || !rentalId || !referencia || !correo) {
-      return res.status(400).json({ error: 'Faltan campos obligatorios.' });
-    }
-
-    const resultado = validarQR(comprobante);
-
-    if (!resultado.valido) {
-      return res.status(400).json({ error: resultado.errores });
-    }
-
-    const nuevoPago = await PagoService.crearPago({
-      metodoPago,
-      monto,
-      rentalId,
-      referencia,
-      comprobante
-    });
-
-    res.json({ mensaje: 'Pago QR registrado correctamente.', pago: nuevoPago });
-  } catch (error) {
-    console.error('Error al registrar pago QR:', error);
-    res.status(500).json({ error: 'Error interno al procesar el pago.' });
-  }
-};
-/*export const realizarPago = async (req: Request, res: Response) => {
->>>>>>> Stashed changes
   try {
     if (!correo) {
       return { error: 'El correo es obligatorio' };
@@ -154,4 +124,12 @@ export const obtenerPagos = async (_req: Request, res: Response) => {
   }
 };
 
-
+// Función para generar un código de comprobante aleatorio
+export const generarCodigoComprobante = (): string => {
+  const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let comprobante = '';
+  for (let i = 0; i < 12; i++) {
+    comprobante += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+  return comprobante;
+};

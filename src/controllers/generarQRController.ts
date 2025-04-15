@@ -2,22 +2,15 @@ import { Request, Response } from 'express';
 import QRCode from 'qrcode';
 import fs from 'fs';
 import path from 'path';
+import {generarCodigoComprobante} from './pago.controller'
 
-// Función para generar un código de comprobante aleatorio
-const generarComprobante = (): string => {
-  const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let comprobante = '';
-  for (let i = 0; i < 12; i++) {
-    comprobante += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
-  }
-  return comprobante;
-};
+
 
 export const generarQR = async (req: Request, res: Response) => {
   try {
     const { monto, referencia } = req.params;
 
-    const comprobante = generarComprobante();
+    const comprobante = 'QR-' + generarCodigoComprobante();
 
     const qrData = `Monto: ${monto}, Referencia: ${referencia}, Comprobante: ${comprobante}`;
     const fileName = `qr_${Date.now()}.png`;
