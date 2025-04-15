@@ -1,14 +1,20 @@
 import { prisma } from '../config/database';
+import { MetodoPago } from '@prisma/client'; 
 
-export const registrarPago = async (rentalId, monto, fechaPago, metodoPago, referencia, comprobante) => {
+export const registrarPago = async (
+  rentalId: number,
+  monto: number,
+  metodoPago: MetodoPago,
+  referencia: string,
+  comprobante: string
+) => {
   try {
     const pagoData = {
       rentalId,
       monto,
-      fechaPago,
       metodoPago,
       comprobante,
-      ...(referencia && { referencia }),
+      referencia,
     };
 
     const nuevoPago = await prisma.pago.create({

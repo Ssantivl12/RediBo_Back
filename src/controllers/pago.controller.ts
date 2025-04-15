@@ -7,6 +7,15 @@ if(metodoPago=="QR"){
  if(validarPago){
   llamar a esta funcion y recien crear el pago (export const crearPago = async (req: Request, res: Response) => {)
  }
+  al momento de validar el qr tienes que recuperar el codigo de comprobante y recien cuando se haga todas las validaciones se manda a la siguiente funcion para registra
+  export const registrarPago = async (
+  correo: string,
+  rentalId: number,
+  monto: number,
+  metodoPago: MetodoPago,
+  referencia: string,
+  comprobante: string
+): Promise<any> => {
 }
 
 }*/
@@ -24,127 +33,57 @@ import { Request, Response } from 'express';
 import * as PagoService from '../services/pago.service';
 import { sendEmail } from '../utils/mailer';
 import { generarImagenPago } from '../utils/generarImagen';
-//import { validarQR, validarTarjeta } from '../utils/validadores'; // asumiendo que existen estas funciones
+import { MetodoPago } from '@prisma/client';
 
-/*export const realizarPago = async (req: Request, res: Response) => {
+export const registrarPago = async (
+  correo: string,
+  rentalId: number,
+  monto: number,
+  metodoPago: MetodoPago,
+  referencia: string,
+  comprobante: string
+): Promise<any> => {
   try {
-    const { metodoPago, monto, rentalId, referencia, comprobante, correo } = req.body;
-
-    if (!metodoPago || !monto || !rentalId || !referencia || !comprobante || !correo) {
-      return res.status(400).json({ error: 'Faltan campos obligatorios.' });
-    }
-  
-    let validado = false;
-
-    if (metodoPago === 'QR') {
-      validado = validarQR();
-    } else if (metodoPago === 'TARJETA_DEBITO') {
-      validado = validarTarjeta();
-    }
-   
-    if (!validado) {
-      return res.status(400).json({ error: 'Validación del método de pago fallida.' });
-    }
-
-    const nuevoPago = await PagoService.crearPago({
-      metodoPago,
-      monto,
-      rentalId,
-      referencia,
-      comprobante
-    });
-
-    const imagePath = await generarImagenPago(nuevoPago);
-
-    const fechaPago = nuevoPago.fechaPago
-      ? new Date(nuevoPago.fechaPago).toLocaleString()
-      : 'Fecha no disponible';
-
-    const correoHtml = `
-      <h2>Confirmación de Pago</h2>
-      <p>Detalles del pago:</p>
-      <ul>
-        <li>Método: ${nuevoPago.metodoPago}</li>
-        <li>Monto: $${nuevoPago.monto}</li>
-        <li>Fecha: ${fechaPago}</li>
-        <li>Referencia: ${nuevoPago.referencia}</li>
-      </ul>
-    `;
-
-    const exito = await sendEmail(
-      correo,
-      'Confirmación de Pago - RediBo',
-      correoHtml,
-      imagePath
-    );
-
-    if (exito) {
-      res.json({ mensaje: 'Pago registrado y correo enviado exitosamente.' });
-    } else {
-      throw new Error('Error al enviar el correo');
-    }
-  } catch (error) {
-    console.error('Error al realizar el pago:', error);
-    res.status(500).json({ error: 'Error al realizar el pago' });
-  }
-};
-
-*/export const registrarPago = async (correo, rentalId, monto, metodoPago, referencia, comprobante) => {
-  try {
-    // Validaciones
     if (!correo) {
       return { error: 'El correo es obligatorio' };
     }
 
-    if (!rentalId) {
-      return { error: 'El ID del alquiler (rentalId) es obligatorio' };
+    if (!rentalId || isNaN(rentalId)) {
+      return { error: 'El ID del alquiler (rentalId) es obligatorio y debe ser un número' };
     }
 
-    if (!metodoPago) {
-      return { error: 'El método de pago es obligatorio' };
-    }
-
-    if (monto === undefined || monto === null) {
-      return { error: 'El monto es obligatorio' };
-    }
-
-    if (Number(monto) <= 0) {
+    if (monto <= 0) {
       return { error: 'El monto debe ser mayor a cero' };
+    }
+
+    if (!referencia) {
+      return { error: 'La referencia es obligatoria' };
     }
 
     if (!comprobante) {
       return { error: 'El comprobante es obligatorio' };
     }
 
-    // Fecha actual del sistema
-    const fechaPago = new Date();
-
-    // Registrar el pago
     const nuevoPago = await PagoService.registrarPago(
       rentalId,
       monto,
-      fechaPago,
       metodoPago,
-      referencia || null,
+      referencia,
       comprobante
     );
 
-    // Generar imagen del pago
     const imagePath = await generarImagenPago(nuevoPago);
 
-    // Preparar contenido del correo
     const correoHtml = `
       <h2>Confirmación de Pago</h2>
       <p>Detalles del pago:</p>
       <ul>
-        <li>Método: ${nuevoPago.metodoPago}</li>
-        <li>Monto: $${nuevoPago.monto}</li>
-        <li>Fecha: ${fechaPago.toLocaleString()}</li>
-        <li>Referencia: ${nuevoPago.referencia || 'N/A'}</li>
+        <li>Método: ${metodoPago}</li>
+        <li>Monto: $${monto}</li>
+        <li>Referencia: ${referencia}</li>
       </ul>
     `;
 
-    // Enviar correo
     const exito = await sendEmail(
       correo,
       'Confirmación de Pago - RediBo',
@@ -153,12 +92,11 @@ import { generarImagenPago } from '../utils/generarImagen';
     );
 
     if (!exito) {
-      return { error: 'Pago registrado pero error al enviar el correo' };
+      throw new Error('Error al enviar el correo');
     }
 
-    // Éxito
     return {
-      mensaje: 'Pago registrado y correo enviado exitosamente.',
+      message: 'Pago registrado correctamente',
       pago: nuevoPago,
       imagen: imagePath
     };
