@@ -2,45 +2,49 @@ import { Request, Response } from 'express';
 import QRCode from 'qrcode';
 import fs from 'fs';
 import path from 'path';
-// Asegúrate de que importar `generarCodigoComprobante` no sea circular
 import { generarCodigoComprobante } from './pago.controller';
 
-export const generarQR = async (req: Request, res: Response): Promise<void> => {
+export const generarQR = async (req: Request, res: Response) => {
   try {
     const { monto, referencia } = req.params;
 
+    if (!monto || !referencia) {
+      return res.status(400).json({ error: 'Monto y referencia son obligatorios.' });
+    }
+
     const comprobante = 'QR-' + generarCodigoComprobante();
+    const tempDir = path.join(__dirname, '..', 'temp');
 
-    const qrData = `Monto: ${monto}, Referencia: ${referencia}, Comprobante: ${comprobante}`;
-    const fileName = `qr_${Date.now()}.png`;
-    const filePath = path.join(__dirname, '..', 'temp', fileName);
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
 
-    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    const nombreBase = `qr_${Date.now()}`;
+    const rutaJson = path.join(tempDir, `${nombreBase}.json`);
+    const rutaQR = path.join(tempDir, `${nombreBase}.png`);
 
-    await QRCode.toFile(filePath, qrData, {
-      color: {
-        dark: '#000',
-        light: '#FFF',
-      },
+    const datos = {
+      comprobante,
+      monto,
+      referencia,
+      fecha: new Date().toISOString()
+    };
+
+    // Guardar JSON
+    fs.writeFileSync(rutaJson, JSON.stringify(datos, null, 2), 'utf-8');
+
+    // Guardar imagen QR con contenido del nombre del JSON
+    await QRCode.toFile(rutaQR, `${nombreBase}.json`);
+
+    return res.json({
+      mensaje: 'QR generado correctamente',
+      archivoQR: `${nombreBase}.png`,
+      archivoJSON: `${nombreBase}.json`,
+      comprobante
     });
 
-    // Enviar el QR como archivo directamente (sin validación aquí)
-    res.sendFile(filePath, () => {
-      console.log(`QR enviado. Comprobante: ${comprobante}`);
-    });
-
-    // Borrar el archivo después de 10 minutos
-    setTimeout(() => {
-      fs.unlink(filePath, (err) => {
-        if (err) {
-          console.error(`Error al eliminar el archivo QR ${fileName}:`, err);
-        } else {
-          console.log(`Archivo QR eliminado: ${fileName}`);
-        }
-      });
-    }, 10 * 60 * 1000);
   } catch (error) {
-    console.error('Error generando QR:', error);
-    res.status(500).json({ error: 'No se pudo generar el QR' });
+    console.error('Error al generar QR:', error);
+    return res.status(500).json({ error: 'Error interno al generar el QR.' });
   }
 };
