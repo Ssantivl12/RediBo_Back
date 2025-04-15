@@ -15,12 +15,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Pago {
-  id         Int       @id @default(autoincrement())
-  metodo     String    @db.VarChar(50)
-  monto      Decimal   @db.Decimal(10, 2)
-  fecha      DateTime? @default(now()) @db.Timestamp(6)
-  referencia String?   @db.VarChar(100)
-  estado     String?   @db.VarChar(50)
-  vehiculoid Int?
+enum MetodoPago {
+  QR
+  TARJETA_DEBITO
 }
+
+model Pago {
+  id           Int         @id @default(autoincrement())
+  rentalId     Int
+  monto        Decimal     @db.Decimal(10, 2)
+  fechaPago    DateTime    @default(now())
+  metodoPago   MetodoPago
+  referencia   String     @unique
+  comprobante  String
+}
+
