@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
@@ -8,88 +9,59 @@ const prisma = new PrismaClient();
 app.use(cors());
 app.use(express.json());
 
-// Ruta para obtener todos los vehículos
-app.get('/vehicles', async (req, res) => {
+// Ruta GET para obtener los 5 vehículos mejor puntuados según rating promedio
+app.get('/vehiculos', async (req, res) => {
   try {
-    const vehicles = await prisma.vehicle.findMany();
-    res.json(vehicles);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error retrieving vehicles' });
-  }
-});
-
-// Ruta para obtener los 5 vehículos con mejor promedio de rating
-app.get('/vehicles/top', async (req, res) => {
-  try {
-    const topVehicles = await prisma.vehicle.findMany({
+    const vehiculos = await prisma.vehicle.findMany({
       include: {
-        rentals: true,
+        rentals: {
+          select: { rating: true },
+        },
       },
     });
 
-    const vehiclesWithAverage = topVehicles
-      .map(vehicle => {
-        const ratings = vehicle.rentals.map(r => r.rating);
-        const avgRating = ratings.length > 0
-          ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length
-          : 0;
-        return {
-          ...vehicle,
-          averageRating: avgRating,
-        };
-      })
-      .sort((a, b) => b.averageRating - a.averageRating)
+    // Calcular el promedio de rating para cada vehículo
+    const vehiculosConPromedio = vehiculos.map(vehiculo => {
+      const ratings = vehiculo.rentals.map(r => r.rating);
+      const promedio = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
+      return {
+        ...vehiculo,
+        promedioRating: promedio,
+      };
+    });
+
+    // Ordenar por promedioRating descendente y tomar los top 5
+    const topVehiculos = vehiculosConPromedio
+      .sort((a, b) => b.promedioRating - a.promedioRating)
       .slice(0, 5);
 
-    res.json(vehiclesWithAverage);
+    res.json(topVehiculos);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error retrieving top vehicles' });
+    console.error('Error en /vehiculos:', error);
+    res.status(500).json({ error: 'Error al obtener vehículos' });
   }
 });
 
-// Ruta para crear un nuevo vehículo
-app.post('/vehicles', async (req, res) => {
-  const { model, brand, pricePerDay, availability, imageUrl } = req.body;
-
+// Ruta POST para agregar vehículos manualmente (para pruebas)
+app.post('/vehiculos', async (req, res) => {
   try {
-    const newVehicle = await prisma.vehicle.create({
+    const nuevoVehiculo = await prisma.vehicle.create({
       data: {
-        model,
-        brand,
-        pricePerDay: parseFloat(pricePerDay),
-        availability,
-        imageUrl,
+        model: req.body.model,
+        brand: req.body.brand,
+        pricePerDay: req.body.pricePerDay,
+        availability: true,
+        imageUrl: req.body.imageUrl,
       },
     });
-    res.json(newVehicle);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error creating vehicle' });
+    res.status(201).json(nuevoVehiculo);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al crear vehículo' });
   }
 });
 
-// Ruta para crear una nueva renta (rental)
-app.post('/rentals', async (req, res) => {
-  const { userId, vehicleId, rating } = req.body;
-
-  try {
-    const rental = await prisma.rental.create({
-      data: {
-        userId: parseInt(userId),
-        vehicleId: parseInt(vehicleId),
-        rating: parseFloat(rating),
-      },
-    });
-
-    res.json(rental);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error creating rental' });
-  }
-});
-
+// Levantar servidor
 app.listen(3000, () => {
-  console.log('🚗 Server running on http://localhost:3000');
+  console.log('Servidor corriendo en http://localhost:3000');
 });
