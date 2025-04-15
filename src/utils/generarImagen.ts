@@ -1,11 +1,10 @@
-// generarImagen.ts
 import { createCanvas } from 'canvas';
-import fs from 'fs';
 import path from 'path';
+import fs from 'fs';
 
 export const generarImagenPago = async (pago: any): Promise<string> => {
-  const width = 600;
-  const height = 300;
+  const width = 800; // Relación 4:5, tamaño vertical para Instagram
+  const height = 1000;
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d');
 
@@ -13,24 +12,42 @@ export const generarImagenPago = async (pago: any): Promise<string> => {
   ctx.fillStyle = '#f9f9f9';
   ctx.fillRect(0, 0, width, height);
 
+  // Colores
+  const colorPrimario = '#ff7f00'; // Naranja
+  const colorSecundario = '#0077ff'; // Azul
+
+  // Fondo de título
+  ctx.fillStyle = colorPrimario;
+  ctx.fillRect(0, 0, width, 80);
+
   // Texto
-  ctx.fillStyle = '#333';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '30px Arial';
+  ctx.fillText('🔖 Confirmación de Pago', 20, 50);
+
+  // Detalles del pago
+  ctx.fillStyle = colorSecundario;
   ctx.font = '20px Arial';
-  ctx.fillText('🔖 Confirmación de Pago', 20, 40);
+  ctx.fillText(`Método: ${pago.metodo}`, 20, 120);
+  ctx.fillText(`Monto: $${pago.monto}`, 20, 150);
+  ctx.fillText(`Fecha: ${new Date(pago.fecha).toLocaleString()}`, 20, 180);
+  ctx.fillText(`Referencia: ${pago.referencia || 'N/A'}`, 20, 210);
+  ctx.fillText(`Estado: ${pago.estado || 'N/A'}`, 20, 240);
+
+  // Añadir la fecha del servidor
+  ctx.fillStyle = '#666666';
   ctx.font = '16px Arial';
-  ctx.fillText(`Método: ${pago.metodo}`, 20, 80);
-  ctx.fillText(`Monto: $${pago.monto}`, 20, 110);
-  ctx.fillText(`Fecha: ${new Date(pago.fecha).toLocaleString()}`, 20, 140);
-  ctx.fillText(`Referencia: ${pago.referencia || 'N/A'}`, 20, 170);
-  ctx.fillText(`Estado: ${pago.estado || 'N/A'}`, 20, 200);
+  const fechaServidor = new Date().toLocaleString();
+  ctx.fillText(`Fecha del servidor: ${fechaServidor}`, 20, 270);
 
+  // Crear el directorio de la imagen si no existe
   const tempDir = path.join(__dirname, '..', '..', 'temp');
-
   if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir, { recursive: true });
   }
-  const imagePath = path.join(tempDir, `pago_${Date.now()}.png`);
 
+  // Guardar la imagen en el sistema de archivos
+  const imagePath = path.join(tempDir, `pago_${Date.now()}.png`);
   const buffer = canvas.toBuffer('image/png');
   fs.writeFileSync(imagePath, buffer);
 

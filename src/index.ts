@@ -1,6 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import pagoRoutes from './routes/pago.routes';
+import rutasPago from './routes/pago.routes';
 import qrRoutes from './routes/generarQRRoute';
 
 dotenv.config();
@@ -10,7 +10,7 @@ app.use(express.json());
 
 //RUTA DE APIs
 
-app.use('/pagos', pagoRoutes);
+app.use('/pagos', rutasPago);
 app.use('/', qrRoutes);
 
 app.listen(3000, () => {
