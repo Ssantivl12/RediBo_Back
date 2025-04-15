@@ -3,6 +3,9 @@
     "prisma": "^6.5.0"
   },
   "dependencies": {
-    "@prisma/client": "^6.5.0"
+    "@prisma/client": "^6.6.0",
+    "cors": "^2.8.5",
+    "expres": "^0.0.5",
+    "express": "^5.1.0"
   }
 }
