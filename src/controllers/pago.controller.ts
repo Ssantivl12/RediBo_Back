@@ -40,20 +40,21 @@ import {validarQR} from '../middlewares/validarQR'
 
 export const realizarPagoQR = async (req: Request, res: Response) => {
   try {
-    const { nombreArchivoQR, metodoPago, monto, rentalId, referencia, correo } = req.body;
+    const { nombreArchivoQR, monto, rentalId, referencia, correo } = req.body;
 
     // Validaciones mínimas antes de continuar
-    if (!nombreArchivoQR || !metodoPago || !monto || !rentalId || !referencia || !correo) {
+    if (!nombreArchivoQR || !monto || !rentalId || !referencia || !correo) {
       return res.status(400).json({ error: 'Faltan campos obligatorios.' });
     }
 
     // Validar que el comprobante (nombre del archivo JSON) exista
     const comprobante = validarQR(nombreArchivoQR); // corregir para recuperar solo el campo comprobantes que es un codigo textual en formato string
-
+    const codigoComprobante = comprobante.comprobante;
     if (!comprobante.valido) {
       return res.status(400).json({ error: comprobante.errores });
     }
-
+     
+    const metodoPago: MetodoPago = MetodoPago.QR;
     // Registrar el pago utilizando la función central
     const resultadoPago = await registrarPago(
       correo,
@@ -61,9 +62,9 @@ export const realizarPagoQR = async (req: Request, res: Response) => {
       monto,
       metodoPago,
       referencia,
-      comprobante
+      codigoComprobante
     );
-
+  
     if (resultadoPago.error) {
       return res.status(400).json({ error: resultadoPago.error });
     }
