@@ -1,0 +1,31 @@
+{
+  "name": "repois",
+  "version": "1.0.0",
+  "description": "Repositorio para el desarrollo Front-end de la aplicación web RediBo. Este proyecto es desarrollado para la materia Ingenieria de Software con la docente Indira Camacho de la Universiad Mayor de San Simón Las tecnologías que se usarán para su desarrollo son: - Express.js con Prisma como ORM",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "ts-node src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "@types/express": "^4.17.13",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.10.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/node": "^22.14.0",
+    "@types/node-cron": "^3.0.11",
+    "@types/nodemailer": "^6.4.17",
+    "@types/uuid": "^10.0.0",
+    "prisma": "^6.6.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

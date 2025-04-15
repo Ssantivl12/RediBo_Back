@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  idusuario Int       @id @default(autoincrement())
+  nombre    String    @db.VarChar(45)
+  correo    String    @db.VarChar(45)
+  renter    Renter?
+  host      Host?
+}
+
+model Renter {
+  idrenter            Int           @id @default(autoincrement())
+  usuario_idusuario   Int           @unique
+  usuario             Usuario       @relation(fields: [usuario_idusuario], references: [idusuario])
+  reservas            Reserva[]
+  calificaciones      Calificacion[]
+}
+
+model Host {
+  idhost              Int           @id @default(autoincrement())
+  usuario_idusuario   Int           @unique
+  usuario             Usuario       @relation(fields: [usuario_idusuario], references: [idusuario])
+  autos               Auto[]
+}
+
+model Calificacion {
+  idcalificacion      Int           @id @default(autoincrement())
+  puntuacion          Float
+  comentario          String?       @db.Text
+  fecha               DateTime
+  renter_idrenter     Int
+  auto_idauto         Int
+
+  renter              Renter        @relation(fields: [renter_idrenter], references: [idrenter])
+  auto                Auto          @relation(fields: [auto_idauto], references: [idauto])
+}
+
+model Reserva {
+  idreserva           Int           @id @default(autoincrement())
+  fecha_inicio        DateTime
+  fecha_fin           DateTime
+  pagado              Boolean       @default(false)
+  estado              String        @default("pendiente") // "pendiente", "cancelada", "confirmada"
+  expiracion          DateTime
+
+  renter_idrenter     Int
+  auto_idauto         Int
+
+  renter              Renter        @relation(fields: [renter_idrenter], references: [idrenter])
+  auto                Auto          @relation(fields: [auto_idauto], references: [idauto])
+}
+
+model Auto {
+  idauto              Int           @id @default(autoincrement())
+  marca               String        @db.VarChar(25)
+  modelo              String        @db.VarChar(45)
+  transmision         String        @db.VarChar(15)
+  consumo             String        @db.VarChar(10)
+  tipo_Auto           String        @db.VarChar(25)
+  color               String        @db.VarChar(10)
+  anio                Int
+  tarifa              Float
+  kilometraje         Int
+  placa               String        @db.VarChar(10)
+  descripcion         String?       @db.Text
+  disponible          String        @db.VarChar(10) // puedes usar "sí" o "no" o enum luego
+
+  host_idhost         Int
+  ubicacion_idubicacion Int
+
+  host                Host          @relation(fields: [host_idhost], references: [idhost])
+  ubicacion           Ubicacion     @relation(fields: [ubicacion_idubicacion], references: [idubicacion])
+
+  reservas            Reserva[]
+  calificaciones      Calificacion[]
+}
+
+model Ubicacion {
+  idubicacion         Int           @id @default(autoincrement())
+  pais                String        @db.VarChar(45)
+  ciudad              String        @db.VarChar(45)
+
+  autos               Auto[]
+}
+
