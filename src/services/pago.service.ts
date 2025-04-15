@@ -2,7 +2,11 @@ import { prisma } from '../config/database';
 
 export const crearPago = async (data: any) => {
   try {
-    const nuevoPago = await prisma.pago.create({ data });
+    
+    const { correo, ...pagoData } = data;  
+    const nuevoPago = await prisma.pago.create({
+      data: pagoData,  
+    });
     return nuevoPago;
   } catch (error) {
     console.error('Error al crear el pago:', error);

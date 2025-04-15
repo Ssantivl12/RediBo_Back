@@ -5,7 +5,6 @@ import { generarImagenPago } from '../utils/generarImagen';
 
 export const crearPago = async (req: Request, res: Response) => {
   try {
-
     if (!req.body.metodo || !req.body.monto) {
       throw new Error('El método de pago y el monto son obligatorios');
     }
@@ -13,12 +12,9 @@ export const crearPago = async (req: Request, res: Response) => {
 
     const nuevoPago = await PagoService.crearPago(req.body);
 
-
     const imagePath = await generarImagenPago(nuevoPago);
 
-
     const fechaPago = nuevoPago.fecha ? new Date(nuevoPago.fecha).toLocaleString() : 'Fecha no disponible';
-
 
     const correoHtml = `
       <h2>Confirmación de Pago</h2>
@@ -32,7 +28,7 @@ export const crearPago = async (req: Request, res: Response) => {
       </ul>
     `;
 
-    // Enviar el correo
+
     const exito = await sendEmail(
       req.body.correo,
       'Confirmación de Pago - RediBo',
@@ -45,7 +41,6 @@ export const crearPago = async (req: Request, res: Response) => {
     } else {
       throw new Error('Error al enviar el correo');
     }
-
   } catch (error) {
     console.error('Error al crear el pago:', error);
     res.status(500).json({ error: 'Error al crear el pago' });

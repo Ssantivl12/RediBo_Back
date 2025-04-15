@@ -1,3 +1,4 @@
+// generarImagen.ts
 import { createCanvas } from 'canvas';
 import fs from 'fs';
 import path from 'path';
@@ -23,8 +24,13 @@ export const generarImagenPago = async (pago: any): Promise<string> => {
   ctx.fillText(`Referencia: ${pago.referencia || 'N/A'}`, 20, 170);
   ctx.fillText(`Estado: ${pago.estado || 'N/A'}`, 20, 200);
 
-  // Guardar en disco temporal
-  const imagePath = path.join(__dirname, `../../temp/pago_${Date.now()}.png`);
+  const tempDir = path.join(__dirname, '..', '..', 'temp');
+
+  if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
+  }
+  const imagePath = path.join(tempDir, `pago_${Date.now()}.png`);
+
   const buffer = canvas.toBuffer('image/png');
   fs.writeFileSync(imagePath, buffer);
 
