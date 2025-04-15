@@ -34,6 +34,8 @@ import * as PagoService from '../services/pago.service';
 import { sendEmail } from '../utils/mailer';
 import { generarImagenPago } from '../utils/generarImagen';
 import { MetodoPago } from '@prisma/client';
+import {validarTarjeta} from '../middlewares/validarTarjeta'
+import {validarQR} from '../middlewares/validarQR'
 
 
 export const realizarPagoQR = async (req: Request, res: Response) => {
@@ -46,7 +48,7 @@ export const realizarPagoQR = async (req: Request, res: Response) => {
     }
 
     // Validar que el comprobante (nombre del archivo JSON) exista
-    const comprobante = validarQR(nombreArchivoQR); // comprobante es el nombre del archivo sin extensión
+    const comprobante = validarQR(nombreArchivoQR); // corregir para recuperar solo el campo comprobantes que es un codigo textual en formato string
 
     if (!comprobante.valido) {
       return res.status(400).json({ error: comprobante.errores });
