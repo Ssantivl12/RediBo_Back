@@ -1,7 +1,3 @@
-import { Request, Response } from 'express';
-import * as PagoService from '../services/pago.service';
-import { sendEmail } from '../utils/mailer';
-import { generarImagenPago } from '../utils/generarImagen';
 
 /* SAMUEL
 export.realizarPagoQr( /*vas a tener el mismo Bodi que crearPago, parametros de entrada*/ 
@@ -23,17 +19,41 @@ if(metodoPago=="Tarjeta-Credito"){
   }
  }
  */
+// pago.controller.ts
+import { Request, Response } from 'express';
+import * as PagoService from '../services/pago.service';
+import { sendEmail } from '../utils/mailer';
+import { generarImagenPago } from '../utils/generarImagen';
+//import { validarQR, validarTarjeta } from '../utils/validadores'; // asumiendo que existen estas funciones
 
- // modificar que tenga solo parametros de entrada y que no tenga reqRequest, 
- export const crearPago = async (req: Request, res: Response) => {
+export const realizarPago = async (req: Request, res: Response) => {
   try {
-    const { metodoPago, monto, correo } = req.body;
+    const { metodoPago, monto, rentalId, referencia, comprobante, correo } = req.body;
 
-    if (!metodoPago || !monto) {
-      throw new Error('El método de pago y el monto son obligatorios');
+    if (!metodoPago || !monto || !rentalId || !referencia || !comprobante || !correo) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios.' });
+    }
+  
+    let validado = false;
+/*
+    if (metodoPago === 'QR') {
+      validado = validarQR();
+    } else if (metodoPago === 'TARJETA_DEBITO') {
+      validado = validarTarjeta();
+    }
+   */
+    if (!validado) {
+      return res.status(400).json({ error: 'Validación del método de pago fallida.' });
     }
 
-    const nuevoPago = await PagoService.crearPago(req.body);
+    const nuevoPago = await PagoService.crearPago({
+      metodoPago,
+      monto,
+      rentalId,
+      referencia,
+      comprobante
+    });
+
     const imagePath = await generarImagenPago(nuevoPago);
 
     const fechaPago = nuevoPago.fechaPago
@@ -47,7 +67,7 @@ if(metodoPago=="Tarjeta-Credito"){
         <li>Método: ${nuevoPago.metodoPago}</li>
         <li>Monto: $${nuevoPago.monto}</li>
         <li>Fecha: ${fechaPago}</li>
-        <li>Referencia: ${nuevoPago.referencia || 'N/A'}</li>
+        <li>Referencia: ${nuevoPago.referencia}</li>
       </ul>
     `;
 
@@ -64,12 +84,10 @@ if(metodoPago=="Tarjeta-Credito"){
       throw new Error('Error al enviar el correo');
     }
   } catch (error) {
-    console.error('Error al crear el pago:', error);
-    res.status(500).json({ error: 'Error al crear el pago' });
+    console.error('Error al realizar el pago:', error);
+    res.status(500).json({ error: 'Error al realizar el pago' });
   }
 };
-
-
 
 export const obtenerPagos = async (_req: Request, res: Response) => {
   try {
@@ -80,3 +98,14 @@ export const obtenerPagos = async (_req: Request, res: Response) => {
     res.status(500).json({ error: 'Error al obtener los pagos' });
   }
 };
+
+export const crearPago = async (req: Request, res: Response) => {
+  try {
+    const nuevoPago = await PagoService.crearPago(req.body);
+    res.status(201).json(nuevoPago);
+  } catch (error) {
+    console.error('Error al crear el pago:', error);
+    res.status(500).json({ error: 'Error al crear el pago' });
+  }
+};
+
