@@ -1,5 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import emailRoutes from './routes/emailRoutes';
 import pagoRoutes from './routes/pago.routes';
 
 dotenv.config();
@@ -7,6 +8,8 @@ const app = express();
 
 app.use(express.json());
 
+//RUTA DE APIs
+app.use('/api', emailRoutes);
 app.use('/pagos', pagoRoutes);
 
 app.listen(3000, () => {
