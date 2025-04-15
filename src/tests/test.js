@@ -1,12 +1,8 @@
-const { getTopRentedCars } = require("../models/carQueries");
+const { getTopRentedVehicles } = require('../models/carQueries');
 
 async function test() {
-    try {
-        const cars = await getTopRentedCars();
-        console.log("Top 5 autos más alquilados:", cars);
-    } catch (error) {
-        console.error("Error al obtener los autos más alquilados:", error);
-    }
+  const vehicles = await getTopRentedVehicles();
+  console.log('Top 5 vehículos más alquilados:', vehicles);
 }
 
 test();
