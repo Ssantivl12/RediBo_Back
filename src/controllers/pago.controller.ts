@@ -26,7 +26,7 @@ import { sendEmail } from '../utils/mailer';
 import { generarImagenPago } from '../utils/generarImagen';
 //import { validarQR, validarTarjeta } from '../utils/validadores'; // asumiendo que existen estas funciones
 
-export const realizarPago = async (req: Request, res: Response) => {
+/*export const realizarPago = async (req: Request, res: Response) => {
   try {
     const { metodoPago, monto, rentalId, referencia, comprobante, correo } = req.body;
 
@@ -35,13 +35,13 @@ export const realizarPago = async (req: Request, res: Response) => {
     }
   
     let validado = false;
-/*
+
     if (metodoPago === 'QR') {
       validado = validarQR();
     } else if (metodoPago === 'TARJETA_DEBITO') {
       validado = validarTarjeta();
     }
-   */
+   
     if (!validado) {
       return res.status(400).json({ error: 'Validación del método de pago fallida.' });
     }
@@ -88,7 +88,7 @@ export const realizarPago = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error al realizar el pago' });
   }
 };
-
+*/
 export const obtenerPagos = async (_req: Request, res: Response) => {
   try {
     const pagos = await PagoService.obtenerPagos();
@@ -99,13 +99,4 @@ export const obtenerPagos = async (_req: Request, res: Response) => {
   }
 };
 
-export const crearPago = async (req: Request, res: Response) => {
-  try {
-    const nuevoPago = await PagoService.crearPago(req.body);
-    res.status(201).json(nuevoPago);
-  } catch (error) {
-    console.error('Error al crear el pago:', error);
-    res.status(500).json({ error: 'Error al crear el pago' });
-  }
-};
 
