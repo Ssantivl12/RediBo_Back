@@ -1,9 +1,9 @@
-// src/routes/pagoConTarjetaRoute.ts
-import { Router } from 'express';
-import { crearPagoConTarjetaController } from '../controllers/pagoConTarjetaController';
+/*import { Router } from 'express';
+import { realizarPagoConTarjeta } from '../controllers/pagoConTarjetaController';
 
 const router = Router();
 
-router.post('/', crearPagoConTarjetaController);
+router.post('/tarjeta', realizarPagoConTarjeta);
 
 export default router;
+*/

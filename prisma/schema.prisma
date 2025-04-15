@@ -6,7 +6,6 @@ Vista rápida del funcionamiento y contenido de esta carpeta
         - Conexión a la base de datos
         - Configuración de variables de entorno, servicios externos y/o opciones del servidor
 */
-
 generator client {
   provider = "prisma-client-js"
 }

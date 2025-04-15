@@ -1,23 +1,23 @@
-//C:\Users\H P\Documents\IS 2025\PROYECTO IS 1_2025\RediBo_Back\src\services\pagoConTarjetaService.ts
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prisma/client';
 
-const prisma = new PrismaClient();
+interface PagoConTarjetaDTO {
+  metodo: string;
+  monto: number;
+  referencia?: string;
+  estado?: string;
+  vehiculoid?: number;
+}
 
-export const crearPagoConTarjeta = async (metodo: string, monto: number, referencia?: string, estado?: string, vehiculoid?: number) => {
-    try {
-      const pago = await prisma.pago.create({
-        data: {
-          metodo,
-          monto: parseFloat(monto.toFixed(2)), 
-          referencia,
-          estado,
-          vehiculoid,
-        },
-      });
-      return pago;
-    } catch (error) {
-      console.error("Error al crear el pago:", error);
-      throw new Error("Error al procesar el pago");
-    }
-  };
-  
+export const procesarPagoConTarjeta = async (data: PagoConTarjetaDTO) => {
+  const nuevoPago = await prisma.pago.create({
+    data: {
+      metodo: data.metodo,
+      monto: data.monto,
+      referencia: data.referencia ?? 'Pago simulado',
+      estado: data.estado ?? 'Completado',
+      vehiculoid: data.vehiculoid ?? null,
+    },
+  });
+
+  return nuevoPago;
+};

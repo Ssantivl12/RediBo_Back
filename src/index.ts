@@ -1,10 +1,14 @@
 import express from 'express';
-import routes from './routes/routes';
+import dotenv from 'dotenv';
+import pagoRoutes from './routes/pago.routes';
 
+dotenv.config();
 const app = express();
+
 app.use(express.json());
-app.use('/api', routes);
+
+app.use('/pagos', pagoRoutes);
 
 app.listen(3000, () => {
-  console.log('Servidor corriendo en puerto 3000');
+  console.log('Servidor corriendo en http://localhost:3000');
 });
