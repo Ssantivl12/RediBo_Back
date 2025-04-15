@@ -2,11 +2,10 @@ import { Request, Response } from 'express';
 import QRCode from 'qrcode';
 import fs from 'fs';
 import path from 'path';
-import {generarCodigoComprobante} from './pago.controller'
+// Asegúrate de que importar `generarCodigoComprobante` no sea circular
+import { generarCodigoComprobante } from './pago.controller';
 
-
-
-export const generarQR = async (req: Request, res: Response) => {
+export const generarQR = async (req: Request, res: Response): Promise<void> => {
   try {
     const { monto, referencia } = req.params;
 
@@ -21,16 +20,16 @@ export const generarQR = async (req: Request, res: Response) => {
     await QRCode.toFile(filePath, qrData, {
       color: {
         dark: '#000',
-        light: '#FFF'
-      }
+        light: '#FFF',
+      },
     });
 
-     // Guardar también los datos en JSON
-     const jsonData = { monto, referencia, comprobante };
-     const jsonPath = filePath.replace('.png', '.json');
-     fs.writeFileSync(jsonPath, JSON.stringify(jsonData));
- 
+    // Enviar el QR como archivo directamente (sin validación aquí)
+    res.sendFile(filePath, () => {
+      console.log(`QR enviado. Comprobante: ${comprobante}`);
+    });
 
+    // Borrar el archivo después de 10 minutos
     setTimeout(() => {
       fs.unlink(filePath, (err) => {
         if (err) {
@@ -39,12 +38,7 @@ export const generarQR = async (req: Request, res: Response) => {
           console.log(`Archivo QR eliminado: ${fileName}`);
         }
       });
-    }, 10 * 60 * 1000); // 10 minutos
-
-    // Envía la imagen como respuesta
-    res.sendFile(filePath, () => {
-      console.log(`QR enviado. Comprobante: ${comprobante}`);
-    });
+    }, 10 * 60 * 1000);
   } catch (error) {
     console.error('Error generando QR:', error);
     res.status(500).json({ error: 'No se pudo generar el QR' });

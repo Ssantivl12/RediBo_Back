@@ -36,6 +36,47 @@ import { generarImagenPago } from '../utils/generarImagen';
 import { MetodoPago } from '@prisma/client';
 
 
+export const realizarPagoQR = async (req: Request, res: Response) => {
+  try {
+    const { nombreArchivoQR, metodoPago, monto, rentalId, referencia, correo } = req.body;
+
+    // Validaciones mínimas antes de continuar
+    if (!nombreArchivoQR || !metodoPago || !monto || !rentalId || !referencia || !correo) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios.' });
+    }
+
+    // Validar que el comprobante (nombre del archivo JSON) exista
+    const comprobante = validarQR(nombreArchivoQR); // comprobante es el nombre del archivo sin extensión
+
+    if (!comprobante.valido) {
+      return res.status(400).json({ error: comprobante.errores });
+    }
+
+    // Registrar el pago utilizando la función central
+    const resultadoPago = await registrarPago(
+      correo,
+      rentalId,
+      monto,
+      metodoPago,
+      referencia,
+      comprobante
+    );
+
+    if (resultadoPago.error) {
+      return res.status(400).json({ error: resultadoPago.error });
+    }
+
+    return res.json({
+      mensaje: 'Pago QR registrado correctamente.',
+      pago: resultadoPago.pago,
+      imagen: resultadoPago.imagen
+    });
+
+  } catch (error) {
+    console.error('Error al registrar pago QR:', error);
+    return res.status(500).json({ error: 'Error interno al procesar el pago.' });
+  }
+};
 
 
 
