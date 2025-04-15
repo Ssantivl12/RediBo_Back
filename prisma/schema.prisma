@@ -50,6 +50,7 @@ model Calificacion {
 
 model Reserva {
   idreserva           Int           @id @default(autoincrement())
+  
   fecha_inicio        DateTime
   fecha_fin           DateTime
   pagado              Boolean       @default(false)

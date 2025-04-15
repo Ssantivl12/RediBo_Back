@@ -1,17 +1,20 @@
 // src/app.ts
 import express from 'express';
-import reservationRoutes from './routes/reservationRoutes'; // Asegúrate de que esta ruta es correcta
-console.log('📂 Ejecutando app.ts desde:', __filename);
+import cors from 'cors';
+import reservationRoutes from './routes/reservas.route';
 
 const app = express();
 
-app.use(express.json()); // Middleware para leer JSON
+const corsOptions: cors.CorsOptions = {
+  origin: 'http://localhost:5432', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // métodos permitidos
+  credentials: true, // permite el uso de cookies/autenticación
+  allowedHeaders: ['Content-Type', 'Authorization'], // headers que se aceptan
+};
 
-// Aquí conectas tus rutas
+app.use(cors(corsOptions));
+app.use(express.json());
+
 app.use('/api/reservas', reservationRoutes);
-
-//app.listen(3000, () => {
-  //console.log('Servidor en puerto 3000');
-//});
 
 export default app;

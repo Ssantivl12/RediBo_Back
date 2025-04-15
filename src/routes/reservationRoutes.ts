@@ -2,20 +2,20 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
-
 const router = Router();
 const prisma = new PrismaClient();
+
 //para almacenar los temeout en memoria
 const expirations = new Map<number, NodeJS.Timeout>();
 console.log('✅ reservationRoutes CARGADO');
-// Crear una reserva
+// Crear una reserva 
 router.post('/', async (req: Request, res: Response) => {
     console.log('📥 POST /api/reservas recibido');
  
   try {
     const { renter_idrenter, auto_idauto, fecha_inicio, fecha_fin } = req.body;
 
-    // Validar que auto y renter existan
+    // Validar que auto y renter existan desde mi base de datos
     const auto = await prisma.auto.findUnique({
       where: { idauto: auto_idauto },
     });
@@ -33,7 +33,7 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
 
-    // Verificar si ya tiene una reserva activa
+    // Verificar si ya hay una reserva activa si ya exite poder enviar un sms de que ya existe esa reserva
     const reservaActiva = await prisma.reserva.findFirst({
       where: {
         renter_idrenter,
@@ -48,7 +48,7 @@ router.post('/', async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Ya tienes una reserva activa.' });
     }
 
-    // Calcular expiración (30 minutos)
+    // calcular la expiracion en un rango de tiempo (30 minutos)
     const expiracion = new Date();
     expiracion.setMinutes(expiracion.getMinutes() + 30);
 
@@ -63,17 +63,17 @@ router.post('/', async (req: Request, res: Response) => {
       },
     });
 
-    // Simulación de notificación (puedes usar correo o SMS real)
+    // enviar notificación (aun falta confirmar si se usara correo u otro medio pendte)
     console.log(`🔔 Notificación: Se creó una nueva reserva. Tienes hasta ${expiracion.toLocaleTimeString()} para pagar.`);
 
     const ahora = new Date().getTime();
 const tiempoHastaExpiracion = new Date(expiracion).getTime() - ahora;
-const notificacionAntes = tiempoHastaExpiracion - (5 * 60 * 1000); // 5 minutos antes
+const notificacionAntes = tiempoHastaExpiracion - (5 * 60 * 1000); // aviso 5 minutos antes de que expire
 
 if (notificacionAntes > 0) {
   const timeout = setTimeout(() => {
     console.log(`⏳ Aviso: Tu reserva #${reserva.idreserva} expirará en 5 minutos (${reserva.expiracion.toLocaleTimeString()})`);
-    // Aquí puedes usar nodemailer, twilio, etc.
+
   }, notificacionAntes);
 
   expirations.set(reserva.idreserva, timeout);
@@ -86,7 +86,7 @@ if (notificacionAntes > 0) {
   }
 });
 
-// Confirmar pago
+// confirmar pago caso de que si quiero hacer la reserva
 router.post('/pago/:idreserva', async (req: Request, res: Response) => {
   try {
     const { idreserva } = req.params;
@@ -155,7 +155,7 @@ router.get('/activa/:idrenter', async (req: Request, res: Response) => {
   }
 });
 
-// Cancelar reservas expiradas (puedes poner esto en un job o cron)
+// Cancelar reservas que ya expiraron (vencio el tiempo de reserva)
 router.post('/cancelar-expiradas', async (_req: Request, res: Response) => {
   try {
     const resultado = await prisma.reserva.updateMany({
@@ -202,7 +202,7 @@ router.post('/cancelar/:idreserva', async (req: Request, res: Response) => {
       },
     });
 
-    // Limpiar timeout de notificación si existe
+    // limpiar timeout de notificación si existe
     const timeout = expirations.get(reserva.idreserva);
     if (timeout) {
       clearTimeout(timeout);
@@ -222,7 +222,6 @@ router.post('/cancelar/:idreserva', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error al cancelar la reserva' });
   }
 });
-
 
 export default router;
 
