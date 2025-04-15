@@ -32,6 +32,12 @@ export const generarQR = async (req: Request, res: Response) => {
       }
     });
 
+     // Guardar también los datos en JSON
+     const jsonData = { monto, referencia, comprobante };
+     const jsonPath = filePath.replace('.png', '.json');
+     fs.writeFileSync(jsonPath, JSON.stringify(jsonData));
+ 
+
     setTimeout(() => {
       fs.unlink(filePath, (err) => {
         if (err) {

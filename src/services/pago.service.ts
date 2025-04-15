@@ -1,6 +1,8 @@
+// pago.service.ts
 import { prisma } from '../config/database';
 import { MetodoPago } from '@prisma/client'; 
 
+<<<<<<< Updated upstream
 export const registrarPago = async (
   rentalId: number,
   monto: number,
@@ -17,18 +19,19 @@ export const registrarPago = async (
       referencia,
     };
 
+=======
+export const crearPago = async (data: any) => {
+  try {
+>>>>>>> Stashed changes
     const nuevoPago = await prisma.pago.create({
-      data: pagoData,
+      data,
     });
-
     return nuevoPago;
-
   } catch (error) {
     console.error('Error al crear el pago:', error);
     throw new Error('Error al crear el pago');
   }
 };
-
 
 export const obtenerPagos = async () => {
   try {
