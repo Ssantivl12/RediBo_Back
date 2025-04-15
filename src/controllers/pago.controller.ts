@@ -154,7 +154,35 @@ export const registrarPago = async (
   }
 };
 
+export const realizarPagoTarjeta = async (req: Request, res: Response) => {
+  try {
+    const { nombreTitular, numeroTarjeta, fechaExpiracion, cvv, direccion, correoElectronico } = req.body;
 
+    const { valido, errores } = validarTarjeta(nombreTitular, numeroTarjeta, fechaExpiracion, cvv, direccion, correoElectronico);
+    
+    if (!valido) {
+      return res.status(400).json({ error: 'Errores en la validación de la tarjeta', detalles: errores });
+    }
+
+    const { monto, rentalId, referencia } = req.body;
+
+    if (!monto || !rentalId || !referencia) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios.' });
+    }
+
+    const metodoPago: MetodoPago = MetodoPago.TARJETA_DEBITO;
+
+    const comprobante = 'TC-' + generarCodigoComprobante();
+
+    const nuevoPago = await registrarPago(correoElectronico, rentalId, monto, metodoPago, referencia, comprobante);
+
+    return res.json({ mensaje: 'Pago con tarjeta registrado correctamente.', pago: nuevoPago });
+
+  } catch (error) {
+    console.error('Error al registrar pago con tarjeta:', error);
+    return res.status(500).json({ error: 'Error interno al procesar el pago.' });
+  }
+};
 export const obtenerPagos = async (_req: Request, res: Response) => {
   try {
     const pagos = await PagoService.obtenerPagos();

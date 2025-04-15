@@ -1,12 +1,12 @@
 export function validarTarjeta(
-    nombreTitular,
-    numeroTarjeta,
-    fechaExpiracion,
-    cvv,
-    direccion,
-    correoElectronico
-) {
-    const errores = [];
+    nombreTitular: string,
+    numeroTarjeta: string,
+    fechaExpiracion: string,
+    cvv: string,
+    direccion: string,
+    correoElectronico: string
+): { valido: boolean, errores: string[] } {
+    const errores: string[] = [];
 
     const nombreValido = /^[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ]+\s[A-ZÁÉÍÓÚÑa-záéíóúñ\s]+$/.test(nombreTitular.trim());
     if (!nombreValido) errores.push("Nombre del titular inválido");
@@ -20,7 +20,7 @@ export function validarTarjeta(
         const [mes, anio] = fechaExpiracion.split('/');
         const fechaActual = new Date();
         const anioCompleto = 2000 + parseInt(anio);
-        const fechaIngresada = new Date(anioCompleto, parseInt(mes), 0);
+        const fechaIngresada = new Date(anioCompleto, parseInt(mes), 0); // Último día del mes
         if (fechaIngresada < fechaActual) errores.push("La tarjeta está vencida");
     }
 
@@ -33,5 +33,5 @@ export function validarTarjeta(
 
     return errores.length > 0
         ? { valido: false, errores }
-        : { valido: true };
+        : { valido: true, errores: [] };
 }

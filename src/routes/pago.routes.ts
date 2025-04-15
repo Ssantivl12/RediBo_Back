@@ -3,7 +3,7 @@ import * as PagoController from '../controllers/pago.controller';
 
 const router = Router();
 
-//router.post('/', PagoController.realizarPago);
+router.post('/pagarConTarjeta', PagoController.realizarPagoTarjeta);
 router.get('/', PagoController.obtenerPagos);
 
 export default router;
