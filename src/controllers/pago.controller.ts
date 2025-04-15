@@ -1,6 +1,6 @@
 
 /* SAMUEL
-export.realizarPagoQr( /*vas a tener el mismo Bodi que crearPago, parametros de entrada*/ 
+export.realizarPagoQr( /*vas a tener el mismo Bodi que crearPago, parametros de entrada*/
 /*aqui modificar para qr
 if(metodoPago=="QR"){
  validarPago = validarQR();
@@ -88,7 +88,88 @@ import { generarImagenPago } from '../utils/generarImagen';
     res.status(500).json({ error: 'Error al realizar el pago' });
   }
 };
-*/
+
+*/export const registrarPago = async (correo, rentalId, monto, metodoPago, referencia, comprobante) => {
+  try {
+    // Validaciones
+    if (!correo) {
+      return { error: 'El correo es obligatorio' };
+    }
+
+    if (!rentalId) {
+      return { error: 'El ID del alquiler (rentalId) es obligatorio' };
+    }
+
+    if (!metodoPago) {
+      return { error: 'El método de pago es obligatorio' };
+    }
+
+    if (monto === undefined || monto === null) {
+      return { error: 'El monto es obligatorio' };
+    }
+
+    if (Number(monto) <= 0) {
+      return { error: 'El monto debe ser mayor a cero' };
+    }
+
+    if (!comprobante) {
+      return { error: 'El comprobante es obligatorio' };
+    }
+
+    // Fecha actual del sistema
+    const fechaPago = new Date();
+
+    // Registrar el pago
+    const nuevoPago = await PagoService.registrarPago(
+      rentalId,
+      monto,
+      fechaPago,
+      metodoPago,
+      referencia || null,
+      comprobante
+    );
+
+    // Generar imagen del pago
+    const imagePath = await generarImagenPago(nuevoPago);
+
+    // Preparar contenido del correo
+    const correoHtml = `
+      <h2>Confirmación de Pago</h2>
+      <p>Detalles del pago:</p>
+      <ul>
+        <li>Método: ${nuevoPago.metodoPago}</li>
+        <li>Monto: $${nuevoPago.monto}</li>
+        <li>Fecha: ${fechaPago.toLocaleString()}</li>
+        <li>Referencia: ${nuevoPago.referencia || 'N/A'}</li>
+      </ul>
+    `;
+
+    // Enviar correo
+    const exito = await sendEmail(
+      correo,
+      'Confirmación de Pago - RediBo',
+      correoHtml,
+      imagePath
+    );
+
+    if (!exito) {
+      return { error: 'Pago registrado pero error al enviar el correo' };
+    }
+
+    // Éxito
+    return {
+      mensaje: 'Pago registrado y correo enviado exitosamente.',
+      pago: nuevoPago,
+      imagen: imagePath
+    };
+
+  } catch (error) {
+    console.error('Error al registrar el pago:', error);
+    return { error: 'Error interno al registrar el pago' };
+  }
+};
+
+
 export const obtenerPagos = async (_req: Request, res: Response) => {
   try {
     const pagos = await PagoService.obtenerPagos();
