@@ -3,11 +3,35 @@ import * as PagoService from '../services/pago.service';
 import { sendEmail } from '../utils/mailer';
 import { generarImagenPago } from '../utils/generarImagen';
 
+/* SAMUEL
+export.realizarPagoQr( /*vas a tener el mismo Bodi que crearPago, parametros de entrada*/ 
+/*aqui modificar para qr
+if(metodoPago=="QR"){
+ validarPago = validarQR();
+ if(validarPago){
+  llamar a esta funcion y recien crear el pago (export const crearPago = async (req: Request, res: Response) => {)
+ }
+}
+
+}*/
+
+/* ABRAHAM body desde el formulario para validar tarjeta
+if(metodoPago=="Tarjeta-Credito"){
+  validarPago = validarTarjeta();
+  if(validarPago){
+  const nuevoPago = await PagoService.crearPago(req.body);
+  }
+ }
+ */
+
+ // modificar que tenga solo parametros de entrada y que no tenga reqRequest, 
 export const crearPago = async (req: Request, res: Response) => {
+  //voy a modificar esto
   try {
     if (!req.body.metodo || !req.body.monto) {
       throw new Error('El método de pago y el monto son obligatorios');
     }
+
 
 
     const nuevoPago = await PagoService.crearPago(req.body);
@@ -46,6 +70,7 @@ export const crearPago = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error al crear el pago' });
   }
 };
+
 
 export const obtenerPagos = async (_req: Request, res: Response) => {
   try {
