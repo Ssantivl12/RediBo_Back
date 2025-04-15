@@ -106,6 +106,27 @@ export class NotificacionService {
         }
     }
 
+	async obtenerDetalleNotificacion(id: string, usuarioId: string) {
+        try {
+            const notificacion = await prisma.notificacion.findUnique({
+                where: { id }
+            });
+
+            if (!notificacion) {
+                throw new Error('Notificación no encontrada');
+            }
+
+            if (notificacion.usuarioId !== usuarioId) {
+                throw new Error('No tienes permiso para ver esta notificación');
+            }
+
+            return notificacion;
+        } catch (error) {
+            console.error('Error al obtener detalle de notificación:', error);
+            throw error;
+        }
+    }
+
     async marcarComoLeida(id: string, usuarioId: string) {
         try {
             const notificacion = await prisma.notificacion.findUnique({
@@ -168,7 +189,7 @@ export class NotificacionService {
             return { id, eliminada: true };
         } catch (error) {
             console.error('Error al eliminar notificación:', error);
-            throw new Error('No se pudo eliminar la notificación');
+            throw error;
         }
     }
 
