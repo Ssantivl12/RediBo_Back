@@ -1,44 +1,14 @@
-
-/* SAMUEL
-export.realizarPagoQr( /*vas a tener el mismo Bodi que crearPago, parametros de entrada*/
-/*aqui modificar para qr
-if(metodoPago=="QR"){
- validarPago = validarQR();
- if(validarPago){
-  llamar a esta funcion y recien crear el pago (export const crearPago = async (req: Request, res: Response) => {)
- }
-  al momento de validar el qr tienes que recuperar el codigo de comprobante y recien cuando se haga todas las validaciones se manda a la siguiente funcion para registra
-  export const registrarPago = async (
-  correo: string,
-  rentalId: number,
-  monto: number,
-  metodoPago: MetodoPago,
-  referencia: string,
-  comprobante: string
-): Promise<any> => {
-}
-
-}*/
-
-/* ABRAHAM body desde el formulario para validar tarjeta
-if(metodoPago=="Tarjeta-Credito"){
-  validarPago = validarTarjeta();
-  if(validarPago){
-  const nuevoPago = await PagoService.crearPago(req.body);
-  }
- }
- */
 // pago.controller.ts
 import { Request, Response } from 'express';
 import * as PagoService from '../services/pago.service';
 import { sendEmail } from '../utils/mailer';
 import { generarImagenPago } from '../utils/generarImagen';
 import { MetodoPago } from '@prisma/client';
-import {validarTarjeta} from '../middlewares/validarTarjeta'
-import {validarQR} from '../middlewares/validarQR'
+import { validarTarjeta } from '../middlewares/validarTarjeta'
+import { validarQR } from '../middlewares/validarQR'
 
 
-export const realizarPagoQR = async (req: Request, res: Response) => {
+export const realizarPagoQR = async (req: Request, res: Response):  Promise<any> => {
   try {
     const { nombreArchivoQR, monto, rentalId, referencia, correo } = req.body;
 
@@ -53,7 +23,7 @@ export const realizarPagoQR = async (req: Request, res: Response) => {
     if (!comprobante.valido) {
       return res.status(400).json({ error: comprobante.errores });
     }
-     
+
     const metodoPago: MetodoPago = MetodoPago.QR;
     // Registrar el pago utilizando la función central
     const resultadoPago = await registrarPago(
@@ -64,7 +34,7 @@ export const realizarPagoQR = async (req: Request, res: Response) => {
       referencia,
       codigoComprobante
     );
-  
+
     if (resultadoPago.error) {
       return res.status(400).json({ error: resultadoPago.error });
     }
@@ -157,27 +127,32 @@ export const registrarPago = async (
   }
 };
 
-export const realizarPagoTarjeta = async (req: Request, res: Response) => {
+export const realizarPagoTarjeta = async (req: Request, res: Response):  Promise<any> => {
   try {
+    const { monto, rentalId, referencia } = req.params;
     const { nombreTitular, numeroTarjeta, fechaExpiracion, cvv, direccion, correoElectronico } = req.body;
 
     const { valido, errores } = validarTarjeta(nombreTitular, numeroTarjeta, fechaExpiracion, cvv, direccion, correoElectronico);
-    
+
     if (!valido) {
       return res.status(400).json({ error: 'Errores en la validación de la tarjeta', detalles: errores });
     }
 
-    const { monto, rentalId, referencia } = req.body;
 
-    if (!monto || !rentalId || !referencia) {
-      return res.status(400).json({ error: 'Faltan campos obligatorios.' });
+    const montoNum = parseFloat(monto); // Convertir monto a número
+    const rentalIdNum = parseInt(rentalId, 10); // Convertir rentalId a número
+    
+    
+    if (isNaN(montoNum) || isNaN(rentalIdNum)) {
+      return res.status(400).json({ error: 'El monto o rentalId no son válidos.' });
     }
-
+    
+    
     const metodoPago: MetodoPago = MetodoPago.TARJETA_DEBITO;
 
     const comprobante = 'TC-' + generarCodigoComprobante();
 
-    const nuevoPago = await registrarPago(correoElectronico, rentalId, monto, metodoPago, referencia, comprobante);
+    const nuevoPago = await registrarPago(correoElectronico, rentalIdNum, montoNum, metodoPago, referencia, comprobante);
 
     return res.json({ mensaje: 'Pago con tarjeta registrado correctamente.', pago: nuevoPago });
 
