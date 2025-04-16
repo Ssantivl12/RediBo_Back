@@ -1,20 +1,12 @@
 // src/app.ts
 import express from 'express';
-import cors from 'cors';
 import reservationRoutes from './routes/reservas.route';
-
+const cors = require('cors');
 const app = express();
 
-const corsOptions: cors.CorsOptions = {
-  origin: 'http://localhost:5432', 
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // métodos permitidos
-  credentials: true, // permite el uso de cookies/autenticación
-  allowedHeaders: ['Content-Type', 'Authorization'], // headers que se aceptan
-};
+app.use(cors());
+app.use(express.json()); // Middleware para parsear JSON en el cuerpo de la solicitud
 
-app.use(cors(corsOptions));
-app.use(express.json());
-
-app.use('/api/reservas', reservationRoutes);
+app.use('/api/reservas', reservationRoutes); // Rutas de reservas
 
 export default app;

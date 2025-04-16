@@ -1,9 +1,8 @@
 // cancelara las reservas vencidas
 import cron from 'node-cron'
-import { cancelExpiredReservationsHandler } from './controllers/reservationController'
+import { cancelarExpiradas } from './controllers/reservas.controller';
 
-// Ejecutar cada minuto
-cron.schedule('* * * * *', async () => {
-  console.log('Verificando reservas expiradas...')
-  await cancelExpiredReservationsHandler({}, {})
-})
+setInterval(() => {
+  cancelarExpiradas({} as any, { status: () => ({ json: () => {} }) } as any);
+}, 60 * 1000); // Cada 1 minuto
+

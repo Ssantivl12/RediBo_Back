@@ -78,6 +78,7 @@ model Auto {
   placa               String        @db.VarChar(10)
   descripcion         String?       @db.Text
   disponible          String        @db.VarChar(10) // puedes usar "sí" o "no" o enum luego
+  fotoUrl               String        @db.VarChar(50)
 
   host_idhost         Int
   ubicacion_idubicacion Int

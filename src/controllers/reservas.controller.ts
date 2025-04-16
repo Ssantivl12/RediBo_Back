@@ -66,7 +66,7 @@ export const confirmarPago = async (req: Request, res: Response) => {
   
       const reserva = await prisma.reserva.findUnique({ where: { idreserva: parseInt(idreserva) } });
       if (!reserva) return res.status(404).json({ message: 'Reserva no encontrada' });
-      if (new Date() > reserva.expiracion) return res.status(400).json({ message: 'La reserva ha expirado' });
+      //if (new Date() > reserva.expiracion) return res.status(400).json({ message: 'La reserva ha expirado' });
       if (reserva.pagado) return res.status(400).json({ message: 'La reserva ya fue pagada' });
   
       const actualizada = await prisma.reserva.update({
