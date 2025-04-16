@@ -1,13 +1,17 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { Server as HTTPServer } from 'http';
 import { URL } from 'url';
+import { obtenerNoLeidas } from './servicioNotificaciones';
+import { Notificacion } from '@prisma/client';
 
 interface ExtWebSocket extends WebSocket {
   userId?: string;
 }
 
+//registro de usuarios
 const users = new Map<string, ExtWebSocket>();
 
+// Función para crear el servidor WebSocket
 export function setupWebSocketServer(server: HTTPServer): void {
   const wss = new WebSocketServer({ server });
 
@@ -24,6 +28,30 @@ export function setupWebSocketServer(server: HTTPServer): void {
     users.set(userId, ws);
     console.log(`Usuario conectado: ${userId}`);
 
+    // Enviar notificaciones no leídas al usuario conectado
+    obtenerNoLeidas(userId)
+    .then((notificaciones: Notificacion[]) => {
+      notificaciones.forEach((n: Notificacion) => {
+        ws.send(JSON.stringify({
+          type: 'notificacion',
+          payload: {
+            id: n.id,
+            titulo: n.titulo,
+            mensaje: n.mensaje,
+            tipo: n.tipo,
+            prioridad: n.prioridad,
+            entidadId: n.entidadId,
+            tipoEntidad: n.tipoEntidad,
+            creadoEn: n.creadoEn,
+          },
+        }));
+      });
+    })
+    .catch((err) => {
+      console.error(`Error obteniendo notificaciones para ${userId}:`, err);
+    });
+
+    // Envio de mensaje
     ws.on('message', (data) => {
       try {
         const parsed = JSON.parse(data.toString());
@@ -54,4 +82,11 @@ export function setupWebSocketServer(server: HTTPServer): void {
       }
     });
   });
+}
+
+export function sendToUser(userId: string, payload: any) {
+  const socket = users.get(userId);
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify(payload));
+  }
 }
