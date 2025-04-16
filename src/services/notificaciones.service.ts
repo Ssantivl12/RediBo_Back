@@ -47,3 +47,13 @@ export async function notificarRentaConcluida(rentaId: string): Promise<void> {
     console.log(`La renta ${rentaId} no ha finalizado aún o no existe.`);
   }
 }
+
+export async function marcarNotificacionComoLeida(notificacionId: string): Promise<void> {
+  await prisma.notificacion.update({
+    where: { id: notificacionId },
+    data: {
+      leido: true,
+      leidoEn: new Date(),
+    },
+  });
+}
