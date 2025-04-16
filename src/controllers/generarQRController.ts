@@ -33,8 +33,22 @@ export const generarQR = async (req: Request, res: Response) => {
     // Guardar JSON
     fs.writeFileSync(rutaJson, JSON.stringify(datos, null, 2), 'utf-8');
 
-    // Guardar imagen QR con contenido del nombre del JSON
-    await QRCode.toFile(rutaQR, `${nombreBase}.json`);
+    // ✅ Aquí cambiamos el contenido del QR para que contenga monto y referencia:
+    const contenidoQR = `Monto: ${monto}, Referencia: ${referencia}`;
+
+    // Generar imagen QR con el contenido corregido
+    await QRCode.toFile(rutaQR, contenidoQR);
+
+    // 🕒 Eliminar el archivo después de 10 minutos
+    setTimeout(() => {
+      try {
+        fs.unlinkSync(rutaQR);
+        fs.unlinkSync(rutaJson);
+        console.log(`Archivos eliminados: ${rutaQR}, ${rutaJson}`);
+      } catch (err) {
+        console.error('Error al eliminar archivos temporales:', err);
+      }
+    }, 10 * 60 * 1000);
 
     return res.json({
       mensaje: 'QR generado correctamente',
