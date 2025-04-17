@@ -1,9 +1,7 @@
-// routes/notificacion.ts
 import { Router } from 'express';
 import { NotificacionController } from '../controllers/notificacion';
 import { autenticarJWT } from '../middlewares/autenticacion';
 
-// Función que crea las rutas y recibe el controlador como parámetro
 export const createNotificacionRoutes = (notificacionController: NotificacionController) => {
   const router = Router();
 
