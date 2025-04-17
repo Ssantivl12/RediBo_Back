@@ -1,0 +1,108 @@
+import { Request, Response } from 'express';
+import { NotificacionService } from '../services/notificacion';
+import { TipoDeNotificacion, PrioridadNotificacion } from '@prisma/client';
+
+export class NotificacionController {
+  private notificacionService: NotificacionService;
+
+  constructor(notificacionService: NotificacionService) {
+    this.notificacionService = notificacionService;
+  }
+
+  async obtenerPanelNotificaciones(req: Request, res: Response): Promise<void> {
+    try {
+      const { usuarioId } = req.params;
+      const { tipo, prioridad, tipoEntidad, limit, offset } = req.query;
+
+      const filtros: any = { usuarioId };
+
+      if (tipo) filtros.tipo = tipo as TipoDeNotificacion;
+      if (prioridad) filtros.prioridad = prioridad as PrioridadNotificacion;
+      if (tipoEntidad) filtros.tipoEntidad = tipoEntidad as string;
+
+      if (limit) filtros.limit = parseInt(limit as string);
+      if (offset) filtros.offset = parseInt(offset as string);
+
+      const resultado = await this.notificacionService.obtenerNotificaciones(filtros);
+      res.json(resultado);
+    } catch (error: any) {
+      console.error('Error al obtener panel de notificaciones:', error);
+      res.status(500).json({
+        error: error.message || 'Error al obtener el panel de notificaciones',
+      });
+    }
+  }
+
+  async obtenerDetalleNotificacion(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const usuarioId = req.query.usuarioId as string;
+
+      if (!usuarioId) {
+        res.status(400).json({ error: 'Se requiere el usuarioId' });
+        return;
+      }
+
+      const notificacion = await this.notificacionService.obtenerDetalleNotificacion(id, usuarioId);
+      res.json(notificacion);
+    } catch (error: any) {
+      console.error('Error al obtener detalle de notificación:', error);
+      res
+        .status(error.message.includes('Notificación no encontrada') ? 404 : 500)
+        .json({ error: error.message || 'Error al obtener el detalle de la notificación' });
+    }
+  }
+
+  async marcarComoLeida(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { usuarioId } = req.body;
+
+      if (!usuarioId) {
+        res.status(400).json({ error: 'Se requiere el usuarioId' });
+        return;
+      }
+
+      const notificacion = await this.notificacionService.marcarComoLeida(id, usuarioId);
+      res.json(notificacion);
+    } catch (error: any) {
+      console.error('Error al marcar notificación como leída:', error);
+      res
+        .status(error.message.includes('Notificación no encontrada') ? 404 : 500)
+        .json({ error: error.message || 'Error al actualizar la notificación' });
+    }
+  }
+
+  async eliminarNotificacion(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { usuarioId } = req.body;
+
+      if (!usuarioId) {
+        res.status(400).json({ error: 'Se requiere el usuarioId' });
+        return;
+      }
+
+      const resultado = await this.notificacionService.eliminarNotificacion(id, usuarioId);
+      res.json(resultado);
+    } catch (error: any) {
+      console.error('Error al eliminar notificación:', error);
+      res
+        .status(error.message.includes('Notificación no encontrada') ? 404 : 500)
+        .json({ error: error.message || 'Error al eliminar la notificación' });
+    }
+  }
+
+  async obtenerConteoNoLeidas(req: Request, res: Response): Promise<void> {
+    try {
+      const { usuarioId } = req.params;
+      const resultado = await this.notificacionService.obtenerConteoNoLeidas(usuarioId);
+      res.json(resultado);
+    } catch (error: any) {
+      console.error('Error al obtener conteo de notificaciones:', error);
+      res
+        .status(500)
+        .json({ error: error.message || 'Error al obtener el conteo de notificaciones' });
+    }
+  }
+}
