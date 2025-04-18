@@ -8,6 +8,8 @@ export interface Alert {
     time: string;
     exceededTime: string;
     returnInfo: string;
+    imageUrl: string;
     viewed: boolean;
+    
   }
   

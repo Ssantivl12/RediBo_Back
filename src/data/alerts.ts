@@ -11,6 +11,8 @@ export const alerts: Alert[] = [
         time: "20:14",
         exceededTime: "2:30 hrs",
         returnInfo: "12/07/2025 - 22:44",
+        imageUrl: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=500&auto=format&fit=crop',
+
         viewed: false
       },
       { 
@@ -23,6 +25,7 @@ export const alerts: Alert[] = [
         time: "19:45",
         exceededTime: "1:15 hrs",
         returnInfo: "12/07/2025 - 21:00",
+        imageUrl: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=500&auto=format&fit=crop',
         viewed: false
       },
       { 
@@ -35,6 +38,7 @@ export const alerts: Alert[] = [
         time: "21:14",
         exceededTime: "0:45 hrs",
         returnInfo: "11/07/2025 - 22:00",
+        imageUrl: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=500&auto=format&fit=crop',
         viewed: false
       },
       { 
@@ -47,6 +51,7 @@ export const alerts: Alert[] = [
         time: "19:00",
         exceededTime: "1:00 hrs",
         returnInfo: "11/07/2025 - 20:00",
+        imageUrl: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=500&auto=format&fit=crop',
         viewed: false
       },
       { 
@@ -59,6 +64,7 @@ export const alerts: Alert[] = [
         time: "18:50",
         exceededTime: "1:40 hrs",
         returnInfo: "11/07/2025 - 20:30",
+        imageUrl: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=500&auto=format&fit=crop',
         viewed: false
       },
       { 
@@ -71,6 +77,7 @@ export const alerts: Alert[] = [
         time: "17:30",
         exceededTime: "2:10 hrs",
         returnInfo: "10/07/2025 - 19:40",
+        imageUrl: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=500&auto=format&fit=crop',
         viewed: false
       },
       { 
@@ -83,6 +90,7 @@ export const alerts: Alert[] = [
         time: "16:45",
         exceededTime: "3:00 hrs",
         returnInfo: "10/07/2025 - 19:45",
+        imageUrl: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=500&auto=format&fit=crop',
         viewed: false
       },
   // Agrega más alertas según sea necesario
