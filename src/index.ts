@@ -6,10 +6,14 @@ import qrRoutes from './routes/generarQRRoute';
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 import { vehicleRouter } from './routes/vehiculoRoutes';
+<<<<<<< Updated upstream
 =======
 =======
 >>>>>>> Stashed changes
 import  vehiculoRouter  from './routes/vehiculoRoutes';
+=======
+import historialBusquedaRoutes from './routes/historialBusquedaRoutes';
+>>>>>>> Stashed changes
 
 >>>>>>> Stashed changes
 const cors = require('cors');
