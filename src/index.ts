@@ -3,19 +3,9 @@ import dotenv from 'dotenv';
 import path from 'path';
 import rutasPago from './routes/pago.routes';
 import qrRoutes from './routes/generarQRRoute';
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-import { vehicleRouter } from './routes/vehiculoRoutes';
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> Stashed changes
-import  vehiculoRouter  from './routes/vehiculoRoutes';
-=======
 import historialBusquedaRoutes from './routes/historialBusquedaRoutes';
->>>>>>> Stashed changes
+import vehicleRouter  from './routes/vehiculoRoutes';
 
->>>>>>> Stashed changes
 const cors = require('cors');
 
 
@@ -37,12 +27,10 @@ app.use('/temp', express.static(path.join(process.cwd(), 'src', 'temp'), {
 // Rutas de APIs
 app.use('/pagos', rutasPago);
 app.use('/', qrRoutes);
-app.use('/vehiculo', vehiculoRouter);
-<<<<<<< Updated upstream
+app.use('/vehiculo', vehicleRouter);
+app.use('/historial', historialBusquedaRoutes);
 
 
-=======
->>>>>>> Stashed changes
 
 app.listen(3000, () => {
   console.log('Servidor corriendo en http://localhost:3000');
