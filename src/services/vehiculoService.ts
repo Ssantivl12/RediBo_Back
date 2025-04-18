@@ -7,6 +7,7 @@ export const obtenerTopVehiculos = async () => {
     select: {
       idvehiculo: true,
       marca: true,
+      imagen: true,
       modelo: true,
       tarifa: true,
       color: true,
@@ -27,6 +28,7 @@ export const obtenerTopVehiculos = async () => {
 
       return {
         idvehiculo: vehiculo.idvehiculo,
+        imagen:vehiculo.imagen,
         marca: vehiculo.marca,
         modelo: vehiculo.modelo,
         tarifa: vehiculo.tarifa,
