@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import prisma from '../config/database'; 
+import { prisma } from '../config/database';
 
 
 const expirations = new Map<number, NodeJS.Timeout>();
