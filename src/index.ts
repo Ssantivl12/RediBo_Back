@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import rutasPago from './routes/pago.routes';
 import qrRoutes from './routes/generarQRRoute';
+import { vehicleRouter } from './routes/vehiculoRoutes';
+
 const cors = require('cors');
 
 // Inicializar la aplicación de Express
@@ -31,6 +33,7 @@ app.use('/temp', express.static(path.join(process.cwd(), 'src', 'temp'), {
 // Rutas de APIs
 app.use('/pagos', rutasPago);
 app.use('/', qrRoutes);
+app.use('/vehiculo', vehicleRouter);
 
 // Iniciar el servidor en el puerto 3000
 app.listen(3000, () => {
