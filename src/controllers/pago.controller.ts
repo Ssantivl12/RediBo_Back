@@ -7,38 +7,57 @@ import { MetodoPago } from '@prisma/client';
 import { validarTarjeta } from '../middlewares/validarTarjeta'
 import { validarQR } from '../middlewares/validarQR'
 
-
 export const realizarPagoQR = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { nombreArchivoQR, monto, rentalId, referencia, correo } = req.body;
+    const { reserva_idreserva } = req.params;
+    const {
+      nombreArchivoQR,
+      monto,
+      concepto,
+      correoElectronico
+    } = req.body;
 
-    // Validaciones mínimas antes de continuar
-    if (!nombreArchivoQR || !monto || !rentalId || !referencia || !correo) {
+    // Validación de campos
+    if (!nombreArchivoQR || !monto || !reserva_idreserva || !concepto || !correoElectronico) {
       return res.status(400).json({ error: 'Faltan campos obligatorios.' });
     }
 
-    // Validar que el comprobante (nombre del archivo JSON) exista
-    const comprobante = validarQR(nombreArchivoQR); // corregir para recuperar solo el campo comprobantes que es un codigo textual en formato string
-    const codigoComprobante = comprobante.comprobante;
-    if (!comprobante.valido) {
-      return res.status(400).json({ error: comprobante.errores });
+    // Validación del QR
+    const referenciaValidada = validarQR(nombreArchivoQR);
+    if (!referenciaValidada.valido) {
+      return res.status(400).json({ error: referenciaValidada.errores });
     }
 
+    const codigoReferencia = referenciaValidada.comprobante;
     const metodoPago: MetodoPago = MetodoPago.QR;
-    // Registrar el pago utilizando la función central
+
+    // Conversión de datos
+    const montoNum = parseFloat(monto);
+    const idReservaNumerico = parseInt(reserva_idreserva, 10);
+
+    if (isNaN(montoNum) || montoNum <= 0) {
+      return res.status(400).json({ error: 'El monto debe ser un número válido mayor que cero.' });
+    }
+
+    if (isNaN(idReservaNumerico)) {
+      return res.status(400).json({ error: 'El ID de la reserva debe ser un número válido.' });
+    }
+
+    // Registro del pago
     const resultadoPago = await registrarPago(
-      correo,
-      rentalId,
-      monto,
+      correoElectronico,
+      idReservaNumerico,
+      montoNum, // ← aquí pasamos el número
       metodoPago,
-      referencia,
-      codigoComprobante
+      codigoReferencia,
+      concepto
     );
 
     if (resultadoPago.error) {
       return res.status(400).json({ error: resultadoPago.error });
     }
 
+    // Respuesta exitosa
     return res.json({
       mensaje: 'Pago QR registrado correctamente.',
       pago: resultadoPago.pago,
@@ -50,9 +69,6 @@ export const realizarPagoQR = async (req: Request, res: Response): Promise<any> 
     return res.status(500).json({ error: 'Error interno al procesar el pago.' });
   }
 };
-
-
-
 
 
 export const registrarPago = async (
