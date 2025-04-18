@@ -129,31 +129,47 @@ export const cancelarExpiradas = async (_req: Request, res: Response)  : Promise
     }
 };
 
-// Cancelar reserva manual
-export const cancelarReserva = async (req: Request, res: Response) : Promise<any> =>{
+export const cancelarReserva = async (req: Request, res: Response): Promise<any> => {
+    const { idreserva } = req.params;
     try {
-        const { idreserva } = req.params;
+        
 
-        const reserva = await prisma.reserva.findUnique({ where: { idreserva: parseInt(idreserva) } });
-        if (!reserva) return res.status(404).json({ message: 'Reserva no encontrada' });
-        if (reserva.estado !== 'pendiente') return res.status(400).json({ message: 'Solo puedes cancelar reservas pendientes' });
-
-        const cancelada = await prisma.reserva.update({
-            where: { idreserva: reserva.idreserva },
-            data: { estado: 'cancelada' },
-        });
-
-        const timeout = expirations.get(reserva.idreserva);
-        if (timeout) {
-            clearTimeout(timeout);
-            expirations.delete(reserva.idreserva);
-            console.log(`❌ Timeout cancelado para reserva #${reserva.idreserva}`);
+        // Validación del parámetro
+        const id = parseInt(idreserva);
+        if (isNaN(id)) {
+            return res.status(400).json({ message: 'ID de reserva inválido' });
         }
 
-        console.log(`🚫 Reserva #${reserva.idreserva} fue cancelada por el usuario.`);
-        res.status(200).json({ message: '✅ Tu reserva ha sido cancelada correctamente.', reserva: cancelada });
+        // Buscar la reserva
+        const reserva = await prisma.reserva.findUnique({
+            where: { idreserva: id }
+        });
+
+        if (!reserva) {
+            return res.status(404).json({ message: 'Reserva no encontrada' });
+        }
+
+        if (reserva.estado !== 'pendiente') {
+            return res.status(400).json({ message: 'Solo puedes cancelar reservas pendientes.' });
+        }
+
+        // Actualizar estado a cancelada
+        const cancelada = await prisma.reserva.update({
+            where: { idreserva: id },
+            data: {
+                estado: 'cancelada'
+                // `ultima_modificacion` se actualizará automáticamente por `@updatedAt`
+            }
+        });
+
+        console.log(`🚫 Reserva #${id} fue cancelada por el usuario.`);
+        return res.status(200).json({
+            message: '✅ Tu reserva ha sido cancelada correctamente.',
+            reserva: cancelada
+        });
+
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al cancelar la reserva' });
+        console.error('Error al cancelar la reserva:', error);
+        return res.status(500).json({ error: 'Error interno al cancelar la reserva.' });
     }
 };

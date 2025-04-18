@@ -13,7 +13,7 @@ router.post('/', crearReserva);
 router.post('/pago/:idreserva', confirmarPago);
 router.get('/activa/:idrenter', verReservaActiva);
 router.post('/cancelar-expiradas', cancelarExpiradas);
-router.post('/cancelar/:idreserva', cancelarReserva);
+router.put('/cancelar/:idreserva', cancelarReserva);
 
 export default router;
 
