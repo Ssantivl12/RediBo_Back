@@ -1,0 +1,8 @@
+Api para generar QR
+
+http://localhost:3000/generarQR/:Monto
+http://localhost:3000/generarQR/4000
+
+Api para crear un pago con tarjeta 
+http://localhost:3000/pagos/pagarConTarjeta/:idReserva
+http://localhost:3000/pagos/pagarConTarjeta/27

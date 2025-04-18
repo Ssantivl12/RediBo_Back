@@ -6,13 +6,13 @@ import { generarCodigoComprobante } from './pago.controller';
 
 export const generarQR = async (req: Request, res: Response) => {
   try {
-    const { monto, referencia } = req.params;
+    const { monto } = req.params;
 
-    if (!monto || !referencia) {
-      return res.status(400).json({ error: 'Monto y referencia son obligatorios.' });
+    if (!monto) {
+      return res.status(400).json({ error: 'Monto obligatorio para generar QR..' });
     }
 
-    const comprobante = 'QR-' + generarCodigoComprobante();
+    const referencia = 'QR-' + generarCodigoComprobante();
     const tempDir = path.join(__dirname, '..', 'temp');
 
     if (!fs.existsSync(tempDir)) {
@@ -22,24 +22,19 @@ export const generarQR = async (req: Request, res: Response) => {
     const nombreBase = `qr_${Date.now()}`;
     const rutaJson = path.join(tempDir, `${nombreBase}.json`);
     const rutaQR = path.join(tempDir, `${nombreBase}.png`);
-
+    const fecha= new Date().toISOString()
     const datos = {
-      comprobante,
-      monto,
       referencia,
-      fecha: new Date().toISOString()
+      monto,
+      fecha
     };
 
-    // Guardar JSON
     fs.writeFileSync(rutaJson, JSON.stringify(datos, null, 2), 'utf-8');
 
-    // ✅ Aquí cambiamos el contenido del QR para que contenga monto y referencia:
-    const contenidoQR = `Monto: ${monto}, Referencia: ${referencia}`;
+    const contenidoQR = `Monto: ${monto}, Referencia: ${referencia}, Fecha: ${fecha}`;
 
-    // Generar imagen QR con el contenido corregido
     await QRCode.toFile(rutaQR, contenidoQR);
 
-    // 🕒 Eliminar el archivo después de 10 minutos
     setTimeout(() => {
       try {
         fs.unlinkSync(rutaQR);
@@ -54,7 +49,7 @@ export const generarQR = async (req: Request, res: Response) => {
       mensaje: 'QR generado correctamente',
       archivoQR: `${nombreBase}.png`,
       archivoJSON: `${nombreBase}.json`,
-      comprobante
+      referencia
     });
 
   } catch (error) {

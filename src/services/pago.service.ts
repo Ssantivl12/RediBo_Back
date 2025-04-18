@@ -1,24 +1,38 @@
 import { prisma } from '../config/database';
-import { MetodoPago } from '@prisma/client'; 
+import { MetodoPago } from '@prisma/client';
 
 export const registrarPago = async (
-  rentalId: number,
+  reserva_idreserva: number,
   monto: number,
-  metodoPago: MetodoPago,
+  metodo_pago: MetodoPago,
   referencia: string,
-  comprobante: string
+  concepto: string
 ) => {
   try {
-    const pagoData = {
-      rentalId,
-      monto,
-      metodoPago,
-      comprobante,
-      referencia, 
-    };
+    const reservaExistente = await prisma.reserva.findUnique({
+      where: { idreserva: reserva_idreserva },
+    });
+
+    if (!reservaExistente) {
+      throw new Error('La reserva no existe');
+    }
 
     const nuevoPago = await prisma.pago.create({
-      data: pagoData,
+      data: {
+        reserva_idreserva,
+        monto,
+        metodo_pago,
+        referencia,
+        detalles: {
+          create: {
+            concepto,
+            monto
+          }
+        }
+      },
+      include: {
+        detalles: true
+      }
     });
 
     return nuevoPago;
@@ -28,6 +42,8 @@ export const registrarPago = async (
     throw new Error('Error al crear el pago');
   }
 };
+
+
 export const obtenerPagos = async () => {
   try {
     return await prisma.pago.findMany();

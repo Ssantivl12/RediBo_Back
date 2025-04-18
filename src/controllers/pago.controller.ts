@@ -8,7 +8,7 @@ import { validarTarjeta } from '../middlewares/validarTarjeta'
 import { validarQR } from '../middlewares/validarQR'
 
 
-export const realizarPagoQR = async (req: Request, res: Response):  Promise<any> => {
+export const realizarPagoQR = async (req: Request, res: Response): Promise<any> => {
   try {
     const { nombreArchivoQR, monto, rentalId, referencia, correo } = req.body;
 
@@ -57,50 +57,37 @@ export const realizarPagoQR = async (req: Request, res: Response):  Promise<any>
 
 export const registrarPago = async (
   correo: string,
-  rentalId: number,
+  reserva_idreserva: number,
   monto: number,
-  metodoPago: MetodoPago,
+  metodo_pago: MetodoPago,
   referencia: string,
-  comprobante: string
+  concepto: string
 ): Promise<any> => {
   try {
-    if (!correo) {
-      return { error: 'El correo es obligatorio' };
-    }
-
-    if (!rentalId || isNaN(rentalId)) {
-      return { error: 'El ID del alquiler (rentalId) es obligatorio y debe ser un número' };
-    }
-
-    if (monto <= 0) {
-      return { error: 'El monto debe ser mayor a cero' };
-    }
-
-    if (!referencia) {
-      return { error: 'La referencia es obligatoria' };
-    }
-
-    if (!comprobante) {
-      return { error: 'El comprobante es obligatorio' };
-    }
+    if (!correo) return { error: 'El correo es obligatorio' };
+    if (!reserva_idreserva || isNaN(reserva_idreserva)) return { error: 'El ID de la reserva es obligatorio y debe ser un número' };
+    if (monto <= 0) return { error: 'El monto debe ser mayor a cero' };
+    if (!referencia) return { error: 'La referencia es obligatoria' };
+    if (!concepto) return { error: 'El concepto del pago es obligatorio' };
 
     const nuevoPago = await PagoService.registrarPago(
-      rentalId,
+      reserva_idreserva,
       monto,
-      metodoPago,
+      metodo_pago,
       referencia,
-      comprobante
+      concepto
     );
 
     const imagePath = await generarImagenPago(nuevoPago);
 
     const correoHtml = `
       <h2>Confirmación de Pago</h2>
-      <p>Detalles del pago:</p>
+      <p>Gracias por su pago. Aquí están los detalles:</p>
       <ul>
-        <li>Método: ${metodoPago}</li>
+        <li>Método: ${metodo_pago}</li>
         <li>Monto: $${monto}</li>
         <li>Referencia: ${referencia}</li>
+        <li>Concepto: ${concepto}</li>
       </ul>
     `;
 
@@ -111,12 +98,10 @@ export const registrarPago = async (
       imagePath
     );
 
-    if (!exito) {
-      throw new Error('Error al enviar el correo');
-    }
+    if (!exito) throw new Error('Error al enviar el correo');
 
     return {
-      message: 'Pago registrado correctamente',
+      message: 'Pago y detalle registrados correctamente',
       pago: nuevoPago,
       imagen: imagePath
     };
@@ -127,34 +112,62 @@ export const registrarPago = async (
   }
 };
 
-export const realizarPagoTarjeta = async (req: Request, res: Response):  Promise<any> => {
+export const realizarPagoTarjeta = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { monto, rentalId, referencia } = req.params;
-    const { nombreTitular, numeroTarjeta, fechaExpiracion, cvv, direccion, correoElectronico } = req.body;
+    const { reserva_idreserva } = req.params;
+    const {
+      monto,
+      concepto,
+      nombreTitular,
+      numeroTarjeta,
+      fechaExpiracion,
+      cvv,
+      direccion,
+      correoElectronico
+    } = req.body;
 
-    const { valido, errores } = validarTarjeta(nombreTitular, numeroTarjeta, fechaExpiracion, cvv, direccion, correoElectronico);
+
+    const { valido, errores } = validarTarjeta(
+      nombreTitular,
+      numeroTarjeta,
+      fechaExpiracion,
+      cvv,
+      direccion,
+      correoElectronico
+    );
 
     if (!valido) {
       return res.status(400).json({ error: 'Errores en la validación de la tarjeta', detalles: errores });
     }
 
+    const montoNum = parseFloat(monto);
+    const reservaIdNum = parseInt(reserva_idreserva, 10);
 
-    const montoNum = parseFloat(monto); // Convertir monto a número
-    const rentalIdNum = parseInt(rentalId, 10); // Convertir rentalId a número
-    
-    
-    if (isNaN(montoNum) || isNaN(rentalIdNum)) {
-      return res.status(400).json({ error: 'El monto o rentalId no son válidos.' });
+    if (isNaN(montoNum) || isNaN(reservaIdNum)) {
+      return res.status(400).json({ error: 'El monto o el ID de reserva no son válidos.' });
     }
-    
-    
+
     const metodoPago: MetodoPago = MetodoPago.TARJETA_DEBITO;
+    const referencia = 'TC-' + generarCodigoComprobante();
 
-    const comprobante = 'TC-' + generarCodigoComprobante();
+    const resultado = await registrarPago(
+      correoElectronico,
+      reservaIdNum,
+      montoNum,
+      metodoPago,
+      referencia,
+      concepto
+    );
 
-    const nuevoPago = await registrarPago(correoElectronico, rentalIdNum, montoNum, metodoPago, referencia, comprobante);
+    if (resultado.error) {
+      return res.status(500).json({ error: resultado.error });
+    }
 
-    return res.json({ mensaje: 'Pago con tarjeta registrado correctamente.', pago: nuevoPago });
+    return res.status(200).json({
+      mensaje: 'Pago con tarjeta registrado correctamente.',
+      pago: resultado.pago,
+      imagen: resultado.imagen
+    });
 
   } catch (error) {
     console.error('Error al registrar pago con tarjeta:', error);
