@@ -28,7 +28,7 @@ export const realizarPagoQR = async (req: Request, res: Response): Promise<any> 
       return res.status(400).json({ error: referenciaValidada.errores });
     }
 
-    const codigoReferencia = referenciaValidada.comprobante;
+    const codigoReferencia = referenciaValidada.referencia;
     const metodoPago: MetodoPago = MetodoPago.QR;
 
     // Conversión de datos

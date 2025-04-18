@@ -11,7 +11,7 @@ export function validarQR(nombreArchivoQR: string) {
   if (!fs.existsSync(rutaJson)) {
     return {
       valido: false,
-      errores: ['No se encontró comprobante QR válido.']
+      errores: ['No se encontró codigo de Referencia QR válido.']
     };
   }
 
@@ -19,16 +19,16 @@ export function validarQR(nombreArchivoQR: string) {
     const data = JSON.parse(fs.readFileSync(rutaJson, 'utf-8'));
 
     // Validar que tenga el comprobante dentro
-    if (!data.comprobante) {
+    if (!data.referencia) {
       return {
         valido: false,
-        errores: ['El archivo JSON no contiene un comprobante válido.']
+        errores: ['El archivo JSON no contiene un codigo de Referencia válido.']
       };
     }
 
     return {
       valido: true,
-      comprobante: data.comprobante, // <- Aquí lo regresamos directamente
+      referencia: data.referencia, // <- Aquí lo regresamos directamente
       datos: data // opcional, si quieres seguir usando monto y referencia también
     };
   } catch (err) {
