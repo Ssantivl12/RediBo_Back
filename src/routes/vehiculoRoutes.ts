@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { getTopRatedVehicles, getMostRentedVehicles } from '../controllers/vehiculoController';
+import { getTopVehiculos } from '../controllers/vehiculoController';
 
 const router = Router();
 
-router.get('/vehicles/top-rated', getTopRatedVehicles);
-router.get('/vehicles/most-rented', getMostRentedVehicles);
+router.get('/obtenerVehiculosTop', getTopVehiculos);
 
-export const vehicleRouter = router;
+
+export default router; // ✅ debe exportar un router

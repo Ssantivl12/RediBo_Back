@@ -1,40 +1,12 @@
-import pkg from '@prisma/client';
-const { PrismaClient } = pkg;
-const prisma = new PrismaClient();
+import { Request, Response } from 'express';
+import { obtenerTopVehiculos } from '../services/vehiculoService';
 
-export const getTopRatedVehicles = async (req, res) => {
+export const getTopVehiculos = async (_req: Request, res: Response) => {
   try {
-    const vehicles = await prisma.vehicle.findMany({
-      include: {
-        rentals: {
-          select: { rating: true },
-        },
-      },
-    });
-
-    const vehiclesWithRating = vehicles.map(vehicle => ({
-      ...vehicle,
-      averageRating: vehicle.rentals.reduce((acc, curr) => acc + curr.rating, 0) / vehicle.rentals.length || 0,
-    }));
-
-    res.json(vehiclesWithRating.sort((a, b) => b.averageRating - a.averageRating).slice(0, 5));
+    const data = await obtenerTopVehiculos();
+    res.status(200).json(data);
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching vehicles' });
-  }
-};
-
-export const getMostRentedVehicles = async (req, res) => {
-  try {
-    const vehicles = await prisma.vehicle.findMany({
-      orderBy: {
-        rentals: {
-          _count: 'desc',
-        },
-      },
-      take: 5,
-    });
-    res.json(vehicles);
-  } catch (error) {
-    res.status(500).json({ error: 'Error fetching vehicles' });
+    console.error('Error al obtener los vehículos:', error);
+    res.status(500).json({ error: 'Error al obtener los vehículos con mejor calificación' });
   }
 };
