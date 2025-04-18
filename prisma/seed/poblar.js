@@ -231,7 +231,7 @@ async function crearReservas(autos, usuarios) {
   
   const hoy = new Date();
   const reservas = [];
-
+{/* Creamos algunas reservas pasadas (finalizadas) 
   // Creamos algunas reservas pasadas (finalizadas)
   for (let i = 0; i < 5; i++) {
     const autoIndex = Math.floor(Math.random() * autos.length);
@@ -277,7 +277,7 @@ async function crearReservas(autos, usuarios) {
     
     reservas.push(reserva);
   }
-
+*/}
   // Creamos algunas reservas en curso o futuras
   for (let i = 0; i < 5; i++) {
     const autoIndex = Math.floor(Math.random() * autos.length);
