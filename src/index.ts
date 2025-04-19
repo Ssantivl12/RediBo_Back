@@ -1,13 +1,26 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
+
+import helmet from "helmet"; // Seguridad con Helmet
+
+
 import alertRoutes from "./routes/alertRoutes";
 import carRoutes from "./routes/carRoutes";
+import rentalsRoutes from "./routes/rentals";
 
 const app = express();
 const PORT = 5000;
 
-app.use(cors());
+// CORS configuracion para permitir peticiones desde el frontend
+app.use(cors({
+  origin: 'http://localhost:3002', // aquí va el puerto del FRONTEND
+  credentials: true
+}));
+
+// Seguridad con Helmet (opcional, pero recomendable)
+app.use(helmet());
+
 app.use(express.json());
 
 // Ruta raíz opcional
