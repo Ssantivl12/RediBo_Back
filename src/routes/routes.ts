@@ -15,7 +15,7 @@ import { Request, Response } from 'express';
 
 //imports locales
 import { marcarActivo, marcarInactivo } from '../controllers/autoController';
-import { obtenerDetallesReservaAuto } from '../controllers/reservaController';
+import { obtenerDetallesReservaAuto, obtenerSolicitudesDeReserva } from '../controllers/reservaController';
 
 const express = require('express');
 const router = express.Router();
@@ -29,6 +29,8 @@ router.put('/autos/:idAuto/inactivar', marcarInactivo);
 // ******* RESERVA CONTROLLER ********
 // Obtener los datos de una reserva junto con detalles del auto
 router.get('/reservas/:idReserva/detalles', obtenerDetallesReservaAuto);
+// Obtener todas las reservas solicitadas de un propietario específico
+router.get('/reservas/propietario/:idPropietario', obtenerSolicitudesDeReserva);
 
 
 
