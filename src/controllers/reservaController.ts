@@ -193,7 +193,7 @@ async function obtenerSolicitudes(idPropietario: number) {
         nombre: `${auto.marca} ${auto.modelo} ${auto.año}`,
         placa: auto.placa,
         precioPorDia: Number(auto.precioRentaDiario),
-        imagen: auto.imagenes ? JSON.parse(auto.imagenes)[0] : null,
+        imagen: [],
         solicitudesPendientes: solicitudesPendientes,
         estaRentado: estaRentado,
       };
