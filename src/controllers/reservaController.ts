@@ -129,100 +129,82 @@ export const obtenerDetallesReservaAuto = async (
 
 async function obtenerSolicitudes(idPropietario: number) {
   try {
-    // Buscar todas las reservas solicitadas para los autos del propietario
-    const reservas = await prisma.reserva.findMany({
+    // Buscar todos los autos del propietario
+    const autos = await prisma.auto.findMany({
       where: {
-        estado: 'SOLICITADA',
-        auto: {
-          idPropietario: idPropietario
-        }
+        idPropietario: idPropietario,
       },
       include: {
-        auto: {
+        reservas: {
+          where: {
+            estado: 'SOLICITADA',
+          },
           include: {
-            propietario: true
-          }
+            cliente: true,
+          },
+          orderBy: {
+            fechaSolicitud: 'desc',
+          },
         },
-        cliente: true,
       },
-      orderBy: {
-        fechaSolicitud: 'desc'
-      }
     });
 
-    if (reservas.length === 0) {
+    if (autos.length === 0) {
       return {
-        reservas: [],
-        cantidad: 0
+        autos: [],
+        cantidad: 0,
       };
     }
 
-    // Formatear los datos de cada reserva
-    const reservasFormateadas = reservas.map(reserva => {
-      const auto = reserva.auto;
-      
-      // Calcular cantidad de días
-      const diffTiempo = Math.abs(reserva.fechaFin.getTime() - reserva.fechaInicio.getTime());
-      const dias = Math.ceil(diffTiempo / (1000 * 60 * 60 * 24));
-      
-      // Formatear la fecha (formato: día mes año)
-      const formatearFecha = (fecha: Date) => {
-        const opciones: Intl.DateTimeFormatOptions = { 
-          day: 'numeric', 
-          month: 'short', 
-          year: 'numeric' 
+    // Formatear los datos de cada auto con sus solicitudes pendientes
+    const autosFormateados = autos.map((auto) => {
+      // Formatear la fecha para cada solicitud (formato: día mes)
+      const formatearFechaRango = (fechaInicio: Date, fechaFin: Date) => {
+        const opcionesMes: Intl.DateTimeFormatOptions = {
+          day: 'numeric',
+          month: 'short',
         };
-        return fecha.toLocaleDateString('es-ES', opciones).toLowerCase();
+        const inicio = fechaInicio.toLocaleDateString('es-ES', opcionesMes);
+        const fin = fechaFin.toLocaleDateString('es-ES', opcionesMes);
+        return `${inicio} - ${fin}`;
       };
-      
-      // Calcular costos
-      const precioDiario = Number(auto.precioRentaDiario);
-      const precioTotal = precioDiario * dias;
-      const garantia = Number(auto.montoGarantia);
-      const total = precioTotal + garantia;
 
+      // Mapear cada solicitud pendiente
+      const solicitudesPendientes = auto.reservas.map((reserva) => {
+        return {
+          idReserva: reserva.idReserva.toString(),
+          nombreSolicitante: `${reserva.cliente.nombre} ${reserva.cliente.apellido}`,
+          fechas: formatearFechaRango(reserva.fechaInicio, reserva.fechaFin),
+        };
+      });
+
+      // Verificar si el auto está actualmente rentado
+      const fechaActual = new Date();
+      const estaRentado = auto.reservas.some(
+        (reserva) =>
+          reserva.estado === 'APROBADA' &&
+          fechaActual >= reserva.fechaInicio &&
+          fechaActual <= reserva.fechaFin
+      );
+
+      // Construir el objeto de auto con sus solicitudes
       return {
-        idReserva: reserva.idReserva,
-        idAuto: auto.idAuto,
-        idCliente: reserva.idCliente,
-        fechaSolicitud: formatearFecha(reserva.fechaSolicitud),
-        fechaLimitePago: formatearFecha(reserva.fechaLimitePago),
-        auto: {
-          titulo: `${auto.marca} ${auto.modelo}`,
-          tipo: auto.tipo,
-          año: auto.año.toString(),
-          color: auto.color,
-          placa: auto.placa,
-          transmision: auto.transmision === 'AUTOMATICO' ? 'Automático' : 'Manual',
-          imagenes: auto.imagenes ? auto.imagenes : null
-        },
-        cliente: {
-          nombre: `${reserva.cliente.nombre} ${reserva.cliente.apellido}`,
-          email: reserva.cliente.email,
-          telefono: reserva.cliente.telefono || 'No disponible'
-        },
-        reserva: {
-          fechaInicio: formatearFecha(reserva.fechaInicio),
-          fechaFin: formatearFecha(reserva.fechaFin),
-          dias: dias
-        },
-        costes: {
-          precio: precioDiario,
-          dias: dias,
-          subtotal: precioTotal,
-          garantia: garantia,
-          total: total
-        },
-        estaPagada: reserva.estaPagada
+        idAuto: auto.idAuto.toString(),
+        nombre: `${auto.marca} ${auto.modelo} ${auto.año}`,
+        placa: auto.placa,
+        precioPorDia: Number(auto.precioRentaDiario),
+        imagen: auto.imagenes ? JSON.parse(auto.imagenes)[0] : null,
+        solicitudesPendientes: solicitudesPendientes,
+        estaRentado: estaRentado,
       };
     });
 
     return {
-      reservas: reservasFormateadas,
-      cantidad: reservasFormateadas.length
+      autos: autosFormateados,
+      cantidad: autosFormateados.length,
     };
   } catch (error) {
-    console.error('Error al obtener reservas solicitadas:', error);
+    console.error('Error al obtener autos del propietario:', error);
     throw error;
   }
 }
