@@ -1,7 +1,13 @@
 import { Request, Response } from 'express';
+<<<<<<< Updated upstream
 import { obtenerTopVehiculos, obtenerVehiculoConReserva } from '../services/vehiculoService';
 
 export const getTopVehiculos = async (_req: Request, res: Response): Promise<any> => {
+=======
+import { obtenerTopVehiculos } from '../services/vehiculoService';
+
+export const getTopVehiculos = async (_req: Request, res: Response) => {
+>>>>>>> Stashed changes
   try {
     const data = await obtenerTopVehiculos();
     res.status(200).json(data);
@@ -10,6 +16,7 @@ export const getTopVehiculos = async (_req: Request, res: Response): Promise<any
     res.status(500).json({ error: 'Error al obtener los vehículos con mejor calificación' });
   }
 };
+<<<<<<< Updated upstream
 
 export const getVehiculoConReserva = async (req: Request, res: Response): Promise<any> => {
   const { id } = req.params;
@@ -34,3 +41,5 @@ export const getVehiculoConReserva = async (req: Request, res: Response): Promis
     });
   }
 };
+=======
+>>>>>>> Stashed changes

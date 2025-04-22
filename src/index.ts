@@ -3,9 +3,13 @@ import dotenv from 'dotenv';
 import path from 'path';
 import rutasPago from './routes/pago.routes';
 import qrRoutes from './routes/generarQRRoute';
+<<<<<<< Updated upstream
 import historialBusquedaRoutes from './routes/historialBusquedaRoutes';
 import  vehiculoRoutes  from './routes/vehiculoRoutes';
 import reservasRoutes from './routes/reservas.routes'
+=======
+import  vehiculoRouter  from './routes/vehiculoRoutes';
+>>>>>>> Stashed changes
 
 const cors = require('cors');
 
@@ -43,6 +47,13 @@ app.use('/comprobante', express.static(path.join(process.cwd(), 'src', 'comproba
 }));
 
 
+<<<<<<< Updated upstream
+=======
+// Rutas de APIs
+app.use('/pagos', rutasPago);
+app.use('/', qrRoutes);
+app.use('/vehiculo', vehiculoRouter);
+>>>>>>> Stashed changes
 
 app.listen(3000, () => {
   console.log('Servidor corriendo en http://localhost:3000');
