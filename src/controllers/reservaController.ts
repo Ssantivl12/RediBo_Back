@@ -26,6 +26,8 @@ async function detallesReservaAuto(idReserva: number) {
 
     if (!reserva) {
       throw new Error("Reserva no encontrada");
+    } else if (reserva.estado !== "APROBADA") {
+      throw new Error("No se puede realizar el pago de la reserva");
     }
 
     const auto = reserva.auto;
@@ -111,9 +113,14 @@ export const obtenerDetallesReservaAuto = async (
   } catch (error: any) {
     console.error("Error al obtener detalles de reserva:", error);
 
-    // Manejamos diferentes tipos de errores
+    // Error de reserva no encontrada
     if (error.message === "Reserva no encontrada") {
       return res.status(404).json({ error: "Reserva no encontrada" });
+    }
+
+    // Error de reserva que no esta en estado aprobada
+    if (error.message === "No se puede realizar el pago de la reserva") {
+      return res.status(403).json({ error: "No se puede realizar el pago de la reserva" });
     }
 
     res.status(500).json({
@@ -246,5 +253,119 @@ export const obtenerSolicitudesDeReserva = async (req: Request, res: Response) =
     });
   } finally {
     await prisma.$disconnect();
+  }
+};
+
+/**
+ * Función para aceptar una reserva cambiando su estado a 'APROBADA'
+ */
+
+export const aceptarReserva = async (req: Request, res: Response) => {
+  try {
+    const idReserva = parseInt(req.params.idReserva);
+
+    // Verificamos que el ID sea un número válido
+    if (isNaN(idReserva)) {
+      return res.status(400).json({
+        error: "El ID de reserva debe ser un número válido",
+      });
+    }
+
+    // Buscar la reserva para verificar que existe
+    const reservaExistente = await prisma.reserva.findUnique({
+      where: {
+        idReserva: idReserva,
+      },
+    });
+
+    if (!reservaExistente) {
+      return res.status(404).json({ error: "Reserva no encontrada" });
+    } else if (reservaExistente.estado !== "SOLICITADA") {
+      return res.status(400).json({
+        error: "Esta reserva ya fue procesada previamente",
+      });
+    }
+    // Actualizar el estado de la reserva a 'APROBADA'
+    const reservaActualizada = await prisma.reserva.update({
+      where: {
+        idReserva: idReserva,
+      },
+      data: {
+        estado: "APROBADA",
+      },
+    });
+
+    res.json({
+      message: "Reserva aprobada exitosamente",
+      reserva: {
+        idReserva: reservaActualizada.idReserva,
+        estado: reservaActualizada.estado,
+        fechaInicio: reservaActualizada.fechaInicio,
+        fechaFin: reservaActualizada.fechaFin,
+      },
+    });
+  } catch (error: any) {
+    console.error("Error al aceptar la reserva:", error);
+    res.status(500).json({
+      error: "Error al procesar la solicitud de aprobación",
+      mensaje: error.message,
+    });
+  }
+};
+
+/**
+ * Función para denegar una reserva cambiando su estado a 'RECHAZADA'
+ */
+
+export const denegarReserva = async (req: Request, res: Response) => {
+  try {
+    const idReserva = parseInt(req.params.idReserva);
+    const { motivoRechazo } = req.body; // Opcional: capturar motivo del rechazo
+
+    // Verificamos que el ID sea un número válido
+    if (isNaN(idReserva)) {
+      return res.status(400).json({
+        error: "El ID de reserva debe ser un número válido",
+      });
+    }
+
+    // Buscar la reserva para verificar que existe
+    const reservaExistente = await prisma.reserva.findUnique({
+      where: {
+        idReserva: idReserva,
+      },
+    });
+
+    if (!reservaExistente) {
+      return res.status(404).json({ error: "Reserva no encontrada" });
+    }
+
+    // Actualizar el estado de la reserva a 'RECHAZADA'
+    const reservaActualizada = await prisma.reserva.update({
+      where: {
+        idReserva: idReserva,
+      },
+      data: {
+        estado: "RECHAZADA",
+        // Si tu modelo tiene un campo para almacenar el motivo del rechazo, podrías incluirlo aquí
+        // motivoRechazo: motivoRechazo || "Sin especificar",
+      },
+    });
+
+    res.json({
+      message: "Reserva rechazada exitosamente",
+      reserva: {
+        idReserva: reservaActualizada.idReserva,
+        estado: reservaActualizada.estado,
+        fechaInicio: reservaActualizada.fechaInicio,
+        fechaFin: reservaActualizada.fechaFin,
+      },
+    });
+  } catch (error: any) {
+    console.error("Error al rechazar la reserva:", error);
+    res.status(500).json({
+      error: "Error al procesar la solicitud de rechazo",
+      mensaje: error.message,
+    });
   }
 };

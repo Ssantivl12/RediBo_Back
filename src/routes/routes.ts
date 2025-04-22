@@ -15,7 +15,7 @@ import { Request, Response } from 'express';
 
 //imports locales
 import { marcarActivo, marcarInactivo } from '../controllers/autoController';
-import { obtenerDetallesReservaAuto, obtenerSolicitudesDeReserva } from '../controllers/reservaController';
+import { obtenerDetallesReservaAuto, obtenerSolicitudesDeReserva, aceptarReserva, denegarReserva } from '../controllers/reservaController';
 
 const express = require('express');
 const router = express.Router();
@@ -31,7 +31,10 @@ router.put('/autos/:idAuto/inactivar', marcarInactivo);
 router.get('/reservas/:idReserva/detalles', obtenerDetallesReservaAuto);
 // Obtener todas las reservas solicitadas de un propietario específico
 router.get('/reservas/propietario/:idPropietario', obtenerSolicitudesDeReserva);
-
+// Aceptar una reserva de id idReserva
+router.patch('/reservas/:idReserva/aceptar', aceptarReserva);
+// Denegar una reserva de id idReserva
+router.patch('/reservas/:idReserva/denegar', denegarReserva);
 
 
 router.get('/test', (req: Request, res: Response) => {
