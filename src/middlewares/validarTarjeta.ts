@@ -34,4 +34,5 @@ export function validarTarjeta(
     return errores.length > 0
         ? { valido: true, errores }
         : { valido: true, errores: [] };
+        //
 }
