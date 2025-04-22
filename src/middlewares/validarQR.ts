@@ -39,3 +39,31 @@ export function validarQR(nombreArchivoQR: string) {
     };
   }
 }
+
+
+export function buscarQRPorReserva(idReserva: number) {
+  const tempDir = path.join(__dirname, '..', 'temp');
+  const archivos = fs.readdirSync(tempDir).filter(file => file.endsWith('.json'));
+
+  for (let archivo of archivos) {
+    const rutaJson = path.join(tempDir, archivo);
+
+    try {
+      const contenido = JSON.parse(fs.readFileSync(rutaJson, 'utf-8'));
+      if (contenido.idReserva === String(idReserva)) {
+        const archivoQR = archivo.replace('.json', '.png');
+        return {
+          encontrado: true,
+          archivoQR: archivoQR,
+          archivoJSON: archivo,
+          referencia: contenido.referencia
+        };
+      }
+    } catch (error) {
+      console.error('Error al leer o parsear el archivo JSON:', error);
+    }
+  }
+  return {
+    encontrado: false
+  };
+}

@@ -3,7 +3,7 @@ import { generarQR } from '../controllers/generarQRController';
 
 const router = Router();
 
-router.get('/generarQR/:monto', (req: Request, res: Response) => {
+router.get('/generarQR/:tipo/:monto/:idReserva', (req: Request, res: Response) => {
   generarQR(req, res);
 });
 

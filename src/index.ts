@@ -16,6 +16,16 @@ app.use(cors());
 app.use(express.json());
 
 
+// Rutas de APIs
+app.use('/pagos', rutasPago);
+app.use('/', qrRoutes);
+app.use('/historial', historialBusquedaRoutes);
+app.use('/vehiculo', vehiculoRoutes);
+app.use('/reservas',reservasRoutes);
+
+
+
+
 app.use('/temp', express.static(path.join(process.cwd(), 'src', 'temp'), {
   setHeaders: (res, path) => {
     if (path.endsWith('.png')) {
@@ -24,13 +34,14 @@ app.use('/temp', express.static(path.join(process.cwd(), 'src', 'temp'), {
   }
 }));
 
+app.use('/temp', express.static(path.join(process.cwd(), 'src', 'temp'), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.png')) {
+      res.set('Content-Type', 'image/png');
+    }
+  }
+}));
 
-// Rutas de APIs
-app.use('/pagos', rutasPago);
-app.use('/', qrRoutes);
-app.use('/historial', historialBusquedaRoutes);
-app.use('/vehiculo', vehiculoRoutes);
-app.use('/reservas',reservasRoutes);
 
 
 app.listen(3000, () => {

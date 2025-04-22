@@ -16,7 +16,7 @@ export const realizarPagoQR = async (req: Request, res: Response): Promise<any> 
       concepto,
       correoElectronico
     } = req.body;
-
+    const metodo = "QR";
     // Validación de campos
     if (!nombreArchivoQR || !monto || !reserva_idreserva || !concepto || !correoElectronico) {
       return res.status(400).json({ error: 'Faltan campos obligatorios.' });
@@ -93,7 +93,6 @@ export const registrarPago = async (
       referencia,
       concepto
     );
-
     const imagePath = await generarImagenPago(nuevoPago);
 
     const correoHtml = `
@@ -142,14 +141,14 @@ export const realizarPagoTarjeta = async (req: Request, res: Response): Promise<
       correoElectronico
     } = req.body;
 
-
+const metodo = "TARJETA DÉBITO";
     const { valido, errores } = validarTarjeta(
       nombreTitular,
       numeroTarjeta,
       fechaExpiracion,
       cvv,
       direccion,
-      correoElectronico
+      correoElectronico,
     );
 
     if (!valido) {
