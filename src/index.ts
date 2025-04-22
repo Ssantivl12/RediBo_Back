@@ -34,7 +34,7 @@ app.use('/temp', express.static(path.join(process.cwd(), 'src', 'temp'), {
   }
 }));
 
-app.use('/temp', express.static(path.join(process.cwd(), 'src', 'temp'), {
+app.use('/comprobante', express.static(path.join(process.cwd(), 'src', 'comprobante'), {
   setHeaders: (res, path) => {
     if (path.endsWith('.png')) {
       res.set('Content-Type', 'image/png');

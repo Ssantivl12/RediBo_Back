@@ -173,3 +173,43 @@ export const cancelarReserva = async (req: Request, res: Response): Promise<any>
         return res.status(500).json({ error: 'Error interno al cancelar la reserva.' });
     }
 };
+
+
+let reservasEnMemoria: { [key: string]: number } = {}; // Usamos el ID como clave y el tiempo restante en segundos como valor
+
+export const obtenerTiempoReserva = async (req: Request, res: Response): Promise<any> => {
+  const { idReserva } = req.params;  // Obtenemos el parámetro de la ruta
+
+  try {
+    // Si la reserva no existe en memoria, generar una nueva con 3 horas de tiempo
+    if (!reservasEnMemoria[idReserva]) {
+      const tiempoRestanteEnSegundos = 3 * 60 * 60; // 3 horas en segundos
+      reservasEnMemoria[idReserva] = tiempoRestanteEnSegundos;
+      console.log(`Reserva creada para el ID ${idReserva} con 3 horas de duración.`);
+    }
+
+    // Descontamos el tiempo restante (esto se hace cada vez que se consulta)
+    let tiempoRestante = reservasEnMemoria[idReserva];
+
+    // Si el tiempo restante es 0 o menor, eliminamos la reserva
+    if (tiempoRestante <= 0) {
+      delete reservasEnMemoria[idReserva]; // Elimina la reserva de la memoria
+      return res.json({ success: false, message: "El tiempo de la reserva ya ha expirado." });
+    }
+
+    // Descontamos un segundo cada vez que se consulta
+    reservasEnMemoria[idReserva] = tiempoRestante - 1;
+
+    // Verificar el estado (si el tiempo sigue siendo positivo o no)
+    const estado = reservasEnMemoria[idReserva] > 0;
+
+    return res.json({
+      success: estado, // Devuelve true si el tiempo restante es positivo, false si ha llegado a 0
+      tiempoRestante: reservasEnMemoria[idReserva], // El tiempo restante en segundos
+    });
+
+  } catch (error) {
+    console.error("Error al obtener el tiempo de la reserva:", error);
+    return res.status(500).json({ success: false, message: "Error del servidor" });
+  }
+};
