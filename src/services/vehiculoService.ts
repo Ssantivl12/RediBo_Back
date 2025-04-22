@@ -2,8 +2,13 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// FUNCIÓN MODIFICADA
 export const obtenerTopVehiculos = async () => {
   const resultado = await prisma.vehiculo.findMany({
+    where: {
+      disponible: "sí",
+      estado: "activo",
+    },
     select: {
       idvehiculo: true,
       marca: true,
@@ -28,7 +33,7 @@ export const obtenerTopVehiculos = async () => {
 
       return {
         idvehiculo: vehiculo.idvehiculo,
-        imagen:vehiculo.imagen,
+        imagen: vehiculo.imagen,
         marca: vehiculo.marca,
         modelo: vehiculo.modelo,
         tarifa: vehiculo.tarifa,
@@ -42,7 +47,7 @@ export const obtenerTopVehiculos = async () => {
   return vehiculosConPromedio;
 };
 
-
+// FUNCIÓN ORIGINAL TAL COMO LA TENÍAS
 export const obtenerVehiculoConReserva = async (idvehiculo: number) => {
   const vehiculo = await prisma.vehiculo.findUnique({
     where: { idvehiculo },
