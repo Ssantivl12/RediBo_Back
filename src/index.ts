@@ -4,9 +4,13 @@ import path from 'path';
 import rutasPago from './routes/pago.routes';
 import qrRoutes from './routes/generarQRRoute';
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import historialBusquedaRoutes from './routes/historialBusquedaRoutes';
 import  vehiculoRoutes  from './routes/vehiculoRoutes';
 import reservasRoutes from './routes/reservas.routes'
+=======
+import  vehiculoRouter  from './routes/vehiculoRoutes';
+>>>>>>> Stashed changes
 =======
 import  vehiculoRouter  from './routes/vehiculoRoutes';
 >>>>>>> Stashed changes
@@ -53,6 +57,9 @@ app.use('/comprobante', express.static(path.join(process.cwd(), 'src', 'comproba
 app.use('/pagos', rutasPago);
 app.use('/', qrRoutes);
 app.use('/vehiculo', vehiculoRouter);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 app.listen(3000, () => {
