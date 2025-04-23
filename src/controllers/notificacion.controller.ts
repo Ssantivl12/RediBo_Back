@@ -21,7 +21,6 @@ export class NotificacionController {
       if (prioridad) filtros.prioridad = prioridad as PrioridadNotificacion;
       if (tipoEntidad) filtros.tipoEntidad = tipoEntidad as string;
 
-      if (limit) filtros.limit = parseInt(limit as string);
       if (offset) filtros.offset = parseInt(offset as string);
 
       const resultado = await this.notificacionService.obtenerNotificaciones(filtros);
