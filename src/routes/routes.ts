@@ -32,9 +32,9 @@ router.get('/reservas/:idReserva/detalles', obtenerDetallesReservaAuto);
 // Obtener todas las reservas solicitadas de un propietario específico
 router.get('/reservas/propietario/:idPropietario', obtenerSolicitudesDeReserva);
 // Aceptar una reserva de id idReserva
-router.patch('/reservas/:idReserva/aceptar', aceptarReserva);
+router.put('/reservas/:idReserva/aceptar', aceptarReserva);
 // Denegar una reserva de id idReserva
-router.patch('/reservas/:idReserva/denegar', denegarReserva);
+router.put('/reservas/:idReserva/denegar', denegarReserva);
 
 
 router.get('/test', (req: Request, res: Response) => {
