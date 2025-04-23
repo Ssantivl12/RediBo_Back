@@ -320,7 +320,6 @@ export const aceptarReserva = async (req: Request, res: Response) => {
 export const denegarReserva = async (req: Request, res: Response) => {
   try {
     const idReserva = parseInt(req.params.idReserva);
-    const { motivoRechazo } = req.body; // Opcional: capturar motivo del rechazo
 
     // Verificamos que el ID sea un número válido
     if (isNaN(idReserva)) {
@@ -338,6 +337,10 @@ export const denegarReserva = async (req: Request, res: Response) => {
 
     if (!reservaExistente) {
       return res.status(404).json({ error: "Reserva no encontrada" });
+    } else if (reservaExistente.estado !== "SOLICITADA") {
+      return res.status(400).json({
+        error: "Esta reserva ya fue procesada previamente",
+      });
     }
 
     // Actualizar el estado de la reserva a 'RECHAZADA'
