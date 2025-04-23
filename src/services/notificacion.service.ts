@@ -81,14 +81,12 @@ export class NotificacionService {
                 if (filtros.hasta) where.creadoEn.lte = filtros.hasta;
             }
 
-            const take = filtros.limit || 10;
             const skip = filtros.offset || 0;
 
             const [notificaciones, total] = await Promise.all([
                 prisma.notificacion.findMany({
                     where,
                     orderBy: { creadoEn: 'desc' },
-                    take,
                     skip
                 }),
                 prisma.notificacion.count({ where })
@@ -97,8 +95,8 @@ export class NotificacionService {
             return {
                 notificaciones,
                 total,
-                page: Math.floor(skip / take) + 1,
-                limit: take
+                page: skip > 0 ? Math.floor(skip / (notificaciones.length || 1)) + 1 : 1,
+                limit: total
             };
         } catch (error) {
             console.error('Error al obtener notificaciones:', error);
