@@ -4,7 +4,7 @@ import { SSEController } from '../controllers/sse.controller';
 
 export const createNotificacionRoutes = (
   notificacionController: NotificacionController,
-  sseController: SSEController
+  sseController: SSEController,
 ) => {
   const router = Router();
 
@@ -48,18 +48,6 @@ export const createNotificacionRoutes = (
   router.get(
     '/notificaciones-no-leidas/:usuarioId',
     (req, res) => notificacionController.obtenerConteoNoLeidas(req, res)
-  );
-
-  // generar notificación de renta finalizada
-  router.post(
-    '/generar-renta-concluida/:rentaId',
-    generarNotificacionRentaConcluida
-  );
-
-  // generar notificacion de renta cancelada
-  router.post(
-    '/generar-renta-cancelada/:rentaId',
-    generarNotificacionRentaCancelada
   );
 
   // obtener notificaciones para el dropdown (> 3)

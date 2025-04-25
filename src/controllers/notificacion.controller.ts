@@ -1,13 +1,17 @@
 import { Request, Response } from 'express';
-import { NotificacionService, notificarRentaConcluida, notificarRentaCancelada } from '../services/notificacion.service';
+import { NotificacionService } from '../services/notificacion.service';
 import { TipoDeNotificacion, PrioridadNotificacion } from '@prisma/client';
+import { RentaMonitorService } from '../services/rentaMonitor.service';
+import prisma from '../config/database';
 
 
 export class NotificacionController {
   private notificacionService: NotificacionService;
+  private rentaMonitorService: RentaMonitorService;
 
   constructor(notificacionService: NotificacionService) {
     this.notificacionService = notificacionService;
+    this.rentaMonitorService = new RentaMonitorService();
   }
 
   async obtenerPanelNotificaciones(req: Request, res: Response): Promise<void> {
@@ -141,32 +145,63 @@ export class NotificacionController {
 export async function generarNotificacionRentaConcluida(req: Request, res: Response) {
   const { rentaId } = req.params;
   try {
-    const creada = await notificarRentaConcluida(rentaId);
+    // Obtener información de la renta
+    const renta = await prisma.renta.findUnique({
+      where: { id: rentaId },
+      include: {
+        auto: {
+          include: {
+            propietario: true
+          }
+        },
+        cliente: true
+      }
+    });
 
-    if (creada) {
-      res.json({ message: 'Notificación generada correctamente.' });
-    } else {
-      res.json({ message: 'La notificación ya existía o la renta aún no ha concluido.' });
+    if (!renta) {
+      return res.status(404).json({ error: 'Renta no encontrada' });
     }
+
+    const rentaMonitorService = new RentaMonitorService();
+    
+    await rentaMonitorService.notificarRentaFinalizada(renta);
+
+    res.json({ message: 'Notificación de renta finalizada generada correctamente.' });
   } catch (error) {
+    console.error('Error al generar notificación:', error);
     res.status(500).json({ error: 'Error al generar la notificación.' });
   }
 }
 
 /**
- * Endpoint para generar notificación de renta Cancelada
+ * Endpoint para generar notificación de renta cancelada
  */
 export async function generarNotificacionRentaCancelada(req: Request, res: Response) {
   const { rentaId } = req.params;
   try {
-    const creada = await notificarRentaCancelada(rentaId);
-    
-    if (creada) {
-      res.json({ message: 'Notificación generada correctamente.' });
-    } else {
-      res.json({ message: 'La notificación ya existía o la renta aún no ha concluido.' });
+    const renta = await prisma.renta.findUnique({
+      where: { id: rentaId },
+      include: {
+        auto: {
+          include: {
+            propietario: true
+          }
+        },
+        cliente: true
+      }
+    });
+
+    if (!renta) {
+      return res.status(404).json({ error: 'Renta no encontrada' });
     }
+
+    const rentaMonitorService = new RentaMonitorService();
+
+    await rentaMonitorService.notificarRentaCancelada(renta);
+
+    res.json({ message: 'Notificación de renta cancelada generada correctamente.' });
   } catch (error) {
+    console.error('Error al generar notificación:', error);
     res.status(500).json({ error: 'Error al generar la notificación.' });
   }
 }
