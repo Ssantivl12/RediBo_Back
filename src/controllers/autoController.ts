@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import { stripTypeScriptTypes } from "module";
 
 const prisma = new PrismaClient();
 
