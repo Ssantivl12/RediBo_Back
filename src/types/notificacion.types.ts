@@ -22,4 +22,5 @@ export interface NotificacionFiltro {
     tipoEntidad?: string;
     limit?: number;
     offset?: number;
+    haSidoBorrada?: boolean;
 }
