@@ -4,10 +4,6 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 
 import autoRoutes from "./routes/autoRoutes";
-import { getDefaultAutoSelectFamilyAttemptTimeout } from 'net';
-
-// Cargar variables de entorno
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -24,7 +20,6 @@ app.get('/', (req, res) => {
 
 app.use('/api', autoRoutes);
 
-// End point para verificar la salud de la conexión de la API
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
