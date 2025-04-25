@@ -5,22 +5,26 @@ import { stripTypeScriptTypes } from "module";
 const prisma = new PrismaClient();
 
 export const getAutos = async (req: Request, res: Response) => {
-    try{
-        const autos = await prisma.auto.findMany();
+  try {
+    const autos = await prisma.auto.findMany({
+      include: {
+        imagenes: true, // 👈 Asegura que se incluyan las imágenes
+      },
+    });
 
-        res.status(200).json({
-            succes: true,
-            data: autos,
-        });
-
-    }catch (error){
-        res.status(500).json({
-            success: false,
-            message: "Error en obtener los autos",
-            error: error instanceof Error? error.message : "Error desconocido",
-        });
-    }
+    res.status(200).json({
+      success: true,
+      data: autos,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error en obtener los autos",
+      error: error instanceof Error ? error.message : "Error desconocido",
+    });
+  }
 };
+
 
 export const getAutoId = async (req: Request, res: Response): Promise<void> => {
     const id = parseInt(req.params.id, 10);

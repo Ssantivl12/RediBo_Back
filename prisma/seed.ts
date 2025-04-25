@@ -53,6 +53,8 @@ async function main() {
         transmision: 'Automática',
         combustible: 'Gasolina',
         capacidad: 5,
+        capacidadMaletero: 3,
+        tipoAuto: 'Familiar',
         propietarioId: 3
       },
       {
@@ -69,6 +71,8 @@ async function main() {
         transmision: 'Manual',
         combustible: 'Gasolina',
         capacidad: 4,
+        capacidadMaletero: 4,
+        tipoAuto: 'Pequeño',
         propietarioId: 2
       },
       {
@@ -85,6 +89,8 @@ async function main() {
         transmision: 'Automática',
         combustible: 'Diésel',
         capacidad: 5,
+        capacidadMaletero: 2,
+        tipoAuto: 'Mediano',
         propietarioId: 2
       },
       {
@@ -101,6 +107,8 @@ async function main() {
         transmision: 'Manual',
         combustible: 'Gasolina',
         capacidad: 5,
+        capacidadMaletero: 5,
+        tipoAuto: 'Familiar',
         propietarioId: 3
       }
     ]

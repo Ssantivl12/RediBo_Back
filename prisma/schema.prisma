@@ -43,6 +43,8 @@ model Auto {
   transmision       String
   combustible       String
   capacidad         Int               @db.SmallInt
+  capacidadMaletero Int               @db.SmallInt
+  tipoAuto          String
   propietarioId     Int
   propietario       Usuario            @relation(fields: [propietarioId], references: [id])
   historialMantenimiento HistorialMantenimiento[]
