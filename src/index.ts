@@ -2,13 +2,19 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import { v4 as uuidv4 } from 'uuid';
+
 import { SSEService } from './services/sse.service';
 import { NotificacionService } from './services/notificacion.service';
+import { RentaService } from './services/renta.service';
+import { RentaMonitorService } from './services/rentaMonitor.service';
+
 import { NotificacionController } from './controllers/notificacion.controller';
-import { NotificacionJob } from './jobs/notificacion.job';
 import { SSEController } from './controllers/sse.controller';
+import { RentaController } from './controllers/renta.controller';
+
 import { createNotificacionRoutes } from './routes/notificacion.routes';
-import { v4 as uuidv4 } from 'uuid';
+import { createRentaRoutes } from './routes/renta.routes';
 
 dotenv.config();
 
@@ -17,7 +23,7 @@ const PORT = process.env.PORT || 3000;
 
 // Middlewares
 app.use(cors({
-  origin: '*', 
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -40,39 +46,44 @@ app.use((req, res, next) => {
   next();
 });
 
-
-// services
+// Services initialization
 const sseService = new SSEService();
 const notificacionService = new NotificacionService(sseService);
+const rentaMonitorService = new RentaMonitorService();
+const rentaService = new RentaService();
 
-// controllers
+// Controllers initialization
 const notificacionController = new NotificacionController(notificacionService);
 const sseController = new SSEController(sseService);
+const rentaController = new RentaController();
 
 // Configurar ping periódico para el SSE
 setInterval(() => {
   sseService.enviarPing();
 }, 30000); // 30 segundos
 
-// Rutas
+// Routes configuration
 app.use('/api/notificaciones', createNotificacionRoutes(notificacionController, sseController));
+app.use('/api', createRentaRoutes(rentaController));
+
+// SSE endpoint for notifications
 app.get('/api/notificaciones/sse/:usuarioId', (req, res) => {
   sseController.conectar(req, res);
 });
 
-// End point para verificar la salud de la conexión de la API
+// Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
-NotificacionJob.iniciar();
 
+// Handle graceful shutdown
 process.on('SIGINT', () => {
   sseService.cleanup();
   process.exit(0);
 });
 
-
+// Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
