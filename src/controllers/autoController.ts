@@ -7,7 +7,7 @@ export const getAutos = async (req: Request, res: Response) => {
   try {
     const autos = await prisma.auto.findMany({
       include: {
-        imagenes: true, // 👈 Asegura que se incluyan las imágenes
+        imagenes: true,
       },
     });
 
