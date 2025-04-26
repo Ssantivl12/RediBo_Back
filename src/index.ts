@@ -26,7 +26,8 @@ app.use('/reservas',reservasRoutes);
 
 
 
-app.use('/temp', express.static(path.join(process.cwd(), 'src', 'temp'), {
+// Ruta pública para comprobantes (se sirve desde public/cmp)
+app.use('/cmp', express.static(path.join(process.cwd(), 'public', 'cmp'), {
   setHeaders: (res, path) => {
     if (path.endsWith('.png')) {
       res.set('Content-Type', 'image/png');
@@ -34,13 +35,15 @@ app.use('/temp', express.static(path.join(process.cwd(), 'src', 'temp'), {
   }
 }));
 
-app.use('/comprobante', express.static(path.join(process.cwd(), 'src', 'comprobante'), {
+// Ruta pública para archivos QR (se sirve desde public/qr)
+app.use('/qr', express.static(path.join(process.cwd(), 'public', 'qr'), {
   setHeaders: (res, path) => {
     if (path.endsWith('.png')) {
       res.set('Content-Type', 'image/png');
     }
   }
 }));
+
 
 
 

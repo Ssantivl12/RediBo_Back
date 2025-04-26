@@ -2,8 +2,32 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export const obtenerTopVehiculos = async () => {
-  const resultado = await prisma.vehiculo.findMany({
+// Tipo personalizado para incluir las calificaciones
+interface VehiculoConCalificaciones {
+  idvehiculo: number;
+  imagen: string;
+  placa: string;
+  descripcion: string | null;
+  marca: string;
+  modelo: string;
+  tarifa: number;
+  color: string;
+  calificaciones: { puntuacion: number }[];
+}
+
+// Devuelve los 5 vehículos con mejor promedio de calificaciones
+export const obtenerTopVehiculos = async (): Promise<{
+  idvehiculo: number;
+  imagen: string;
+  placa: string;
+  descripcion: string | null;
+  marca: string;
+  modelo: string;
+  tarifa: number;
+  color: string;
+  promedio_calificacion: number;
+}[]> => {
+  const resultado: VehiculoConCalificaciones[] = await prisma.vehiculo.findMany({
     select: {
       idvehiculo: true,
       marca: true,
@@ -21,7 +45,6 @@ export const obtenerTopVehiculos = async () => {
     },
   });
 
-  // Procesar promedios
   const vehiculosConPromedio = resultado
     .map((vehiculo) => {
       const total = vehiculo.calificaciones.reduce((acc, val) => acc + val.puntuacion, 0);
@@ -30,7 +53,7 @@ export const obtenerTopVehiculos = async () => {
 
       return {
         idvehiculo: vehiculo.idvehiculo,
-        imagen:vehiculo.imagen,
+        imagen: vehiculo.imagen,
         placa: vehiculo.placa,
         descripcion: vehiculo.descripcion,
         marca: vehiculo.marca,
@@ -41,13 +64,29 @@ export const obtenerTopVehiculos = async () => {
       };
     })
     .sort((a, b) => b.promedio_calificacion - a.promedio_calificacion)
-    .slice(0, 5); // Top 5
+    .slice(0, 5);
 
   return vehiculosConPromedio;
 };
 
-
-export const obtenerVehiculoConReserva = async (idvehiculo: number) => {
+// Devuelve los detalles de un vehículo con su última reserva
+export const obtenerVehiculoConReserva = async (idvehiculo: number): Promise<{
+  idvehiculo: number;
+  imagen: string;
+  placa: string;
+  descripcion: string | null;
+  marca: string;
+  modelo: string;
+  tarifa: number;
+  incluido_en_reserva: boolean;
+  reserva: {
+    fecha_inicio: Date;
+    fecha_fin: Date;
+    idreserva: number;
+    estado: string;
+    pagado: boolean;
+  } | null;
+}> => {
   const vehiculo = await prisma.vehiculo.findUnique({
     where: { idvehiculo },
     select: {
@@ -59,8 +98,8 @@ export const obtenerVehiculoConReserva = async (idvehiculo: number) => {
       modelo: true,
       tarifa: true,
       reservas: {
-        orderBy: { fecha_creacion: "desc" },
-        take: 1, // Última reserva
+        orderBy: { fecha_creacion: 'desc' },
+        take: 1,
         select: {
           fecha_inicio: true,
           fecha_fin: true,
@@ -73,7 +112,7 @@ export const obtenerVehiculoConReserva = async (idvehiculo: number) => {
   });
 
   if (!vehiculo) {
-    throw new Error("Vehículo no encontrado");
+    throw new Error('Vehículo no encontrado');
   }
 
   return {

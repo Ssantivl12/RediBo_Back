@@ -9,6 +9,7 @@ export const generarQR = async (req: Request, res: Response) => {
   try {
     const { tipo, monto, idReserva } = req.params;
 
+    // Validación de parámetros
     if (!monto) {
       return res.status(400).json({ error: 'Monto obligatorio para generar QR.' });
     }
@@ -22,70 +23,76 @@ export const generarQR = async (req: Request, res: Response) => {
     }
 
     const reservaId = Number(idReserva);
-    const tempDir = path.join(__dirname, '..', 'temp');
-    const resultado = buscarQRPorReserva(reservaId);
 
-    // Si el tipo es "regenerar", eliminamos los archivos anteriores si existen
+    // Ruta pública donde se guardarán los archivos QR y JSON
+    const publicDir = path.join(process.cwd(), 'public', 'qr'); // Carpeta pública accesible
+
+    // Crear directorio si no existe
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir, { recursive: true });
+    }
+
+    // Buscar si ya existe un QR asociado a la reserva
+    const resultado = await buscarQRPorReserva(reservaId);
+
+    // Si es "regenerar", eliminar QR y JSON anteriores si existen
     if (tipo === 'regenerar' && resultado.encontrado) {
-      const archivoQR = resultado.archivoQR;
-      const archivoJSON = resultado.archivoJSON;
+      const rutaQRExistente = path.join(publicDir, resultado.archivoQR || '');
+      const rutaJSONExistente = path.join(publicDir, resultado.archivoJSON || '');
 
-      if (archivoQR && archivoJSON) {
-        const rutaAnteriorQR = path.join(tempDir, archivoQR);
-        const rutaAnteriorJson = path.join(tempDir, archivoJSON);
-
-        try {
-          if (fs.existsSync(rutaAnteriorJson)) fs.unlinkSync(rutaAnteriorJson);
-          if (fs.existsSync(rutaAnteriorQR)) fs.unlinkSync(rutaAnteriorQR);
-          console.log(`Archivos anteriores eliminados: ${rutaAnteriorQR}, ${rutaAnteriorJson}`);
-        } catch (err) {
-          console.error('Error al eliminar archivos existentes:', err);
-        }
-      } else {
-        console.warn('No se encontraron nombres de archivo para eliminar.');
+      try {
+        if (fs.existsSync(rutaQRExistente)) fs.unlinkSync(rutaQRExistente);
+        if (fs.existsSync(rutaJSONExistente)) fs.unlinkSync(rutaJSONExistente);
+        console.log(`Archivos antiguos eliminados: ${rutaQRExistente}, ${rutaJSONExistente}`);
+      } catch (err) {
+        console.error('Error al eliminar archivos anteriores:', err);
       }
     }
 
-    // Si se quiere crear y ya existe, no se debe generar nuevamente
+    // Si es "crear" y ya existe un QR, retornar la información
     if (tipo === 'crear' && resultado.encontrado) {
+      const rutaQRExistente = path.join(publicDir, resultado.archivoQR || '');
+      let base64 = '';
+
+      if (fs.existsSync(rutaQRExistente)) {
+        const buffer = fs.readFileSync(rutaQRExistente);
+        base64 = buffer.toString('base64');
+      }
+
       return res.json({
         mensaje: 'QR ya existente para esta reserva',
         archivoQR: resultado.archivoQR,
         archivoJSON: resultado.archivoJSON,
-        referencia: resultado.referencia
+        referencia: resultado.referencia,
+        qrBase64: base64
       });
     }
 
-    // Generamos nueva información de QR
+    // Generar nuevo QR
     const referencia = 'QR-' + generarCodigoComprobante();
     const fecha = new Date().toISOString();
-    const datos = {
-      idReserva,
-      referencia,
-      monto,
-      fecha
-    };
+    const datos = { idReserva, referencia, monto, fecha };
 
-    // Asegurar que el directorio temporal exista
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
-
-    // Generar nombre base único para los archivos
     const nombreBase = `qr_${Date.now()}`;
-    const rutaJson = path.join(tempDir, `${nombreBase}.json`);
-    const rutaQR = path.join(tempDir, `${nombreBase}.png`);
+    const archivoJson = `${nombreBase}.json`;
+    const archivoQRNuevo = `${nombreBase}.png`;
 
-    // Guardar archivo JSON
+    const rutaJson = path.join(publicDir, archivoJson);
+    const rutaQR = path.join(publicDir, archivoQRNuevo);
+
+    // Guardar datos en archivo JSON
     fs.writeFileSync(rutaJson, JSON.stringify(datos, null, 2), 'utf-8');
 
-    // Contenido del QR que se generará
     const contenidoQR = `idReserva: ${idReserva}, Monto: ${monto}, Referencia: ${referencia}, Fecha: ${fecha}`;
 
-    // Generar archivo QR en formato PNG
+    // Generar el QR
     await QRCode.toFile(rutaQR, contenidoQR);
 
-    // Programar eliminación de archivos temporales después de 10 minutos
+    // Leer y convertir QR a base64
+    const buffer = fs.readFileSync(rutaQR);
+    const base64 = buffer.toString('base64');
+
+    // Eliminación automática en 10 minutos
     setTimeout(() => {
       try {
         if (fs.existsSync(rutaQR)) fs.unlinkSync(rutaQR);
@@ -94,18 +101,29 @@ export const generarQR = async (req: Request, res: Response) => {
       } catch (err) {
         console.error('Error al eliminar archivos temporales:', err);
       }
-    }, 10 * 60 * 1000); // 10 minutos
+    }, 3 * 60 * 1000); // 3 minutos
 
-    // Respuesta exitosa
     return res.json({
       mensaje: 'QR generado correctamente',
-      archivoQR: `${nombreBase}.png`,
-      archivoJSON: `${nombreBase}.json`,
-      referencia
+      archivoQR: archivoQRNuevo,
+      archivoJSON: archivoJson,
+      referencia,
+      qrBase64: base64,
+      urlQR: `https://vercelbackspeedcode.onrender.com/qr/${archivoQRNuevo}` // URL pública para acceder al QR
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error al generar QR:', error);
-    return res.status(500).json({ error: 'Error interno al generar el QR.' });
+    if (error instanceof Error) {
+      return res.status(500).json({
+        error: 'Error interno al generar el QR.',
+        message: error.message,
+        stack: error.stack
+      });
+    } else {
+      return res.status(500).json({
+        error: 'Error desconocido al generar el QR.'
+      });
+    }
   }
 };
