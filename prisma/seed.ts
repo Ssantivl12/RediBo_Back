@@ -152,6 +152,8 @@ async function main() {
         transmision: 'Automática',
         combustible: 'Gasolina',
         capacidad: 5,
+        capacidadMaletero: 5,
+        tipoAuto: 'Familiar',
         propietarioId: 4
       },
       {
@@ -168,6 +170,8 @@ async function main() {
         transmision: 'Automática',
         combustible: 'Gasolina',
         capacidad: 5,
+        capacidadMaletero: 5,
+        tipoAuto: 'Familiar',
         propietarioId: 5
       },
       {
@@ -184,6 +188,8 @@ async function main() {
         transmision: 'Automática',
         combustible: 'Híbrido',
         capacidad: 7,
+        capacidadMaletero: 5,
+        tipoAuto: 'Familiar',
         propietarioId: 6
       }
     ]
@@ -417,27 +423,23 @@ async function main() {
       { autoId: 1, direccionImagen: '/imagenesAutos/Toyota/Lado.png' },
       { autoId: 1, direccionImagen: '/imagenesAutos/Toyota/Lateral.png' },
       { autoId: 1, direccionImagen: '/imagenesAutos/Toyota/Parte_posterior.png' },
-      { autoId: 1, direccionImagen: '/imagenesAutos/Toyota/Interior_delantero.jpg' },
-      { autoId: 1, direccionImagen: '/imagenesAutos/Toyota/Tablero.jpg' },
+
       
       // Honda Civic
       { autoId: 2, direccionImagen: '/imagenesAutos/Honda/Lateral.jpg' },
       { autoId: 2, direccionImagen: '/imagenesAutos/Honda/Interior.png' },
       { autoId: 2, direccionImagen: '/imagenesAutos/Honda/Interior_sillas.png' },
-      { autoId: 2, direccionImagen: '/imagenesAutos/Honda/Motor.jpg' },
       
       // Ford Focus
       { autoId: 3, direccionImagen: '/imagenesAutos/Ford/Lateral.jpeg' },
       { autoId: 3, direccionImagen: '/imagenesAutos/Ford/Interior.jpeg' },
       { autoId: 3, direccionImagen: '/imagenesAutos/Ford/Lateral_Trasera.jpeg' },
       { autoId: 3, direccionImagen: '/imagenesAutos/Ford/Vista_Lateral.jpeg' },
-      { autoId: 3, direccionImagen: '/imagenesAutos/Ford/Maletero.jpg' },
       
       // Chevrolet Onix
       { autoId: 4, direccionImagen: '/imagenesAutos/Chevrolet/frontal.png' },
       { autoId: 4, direccionImagen: '/imagenesAutos/Chevrolet/Interior.png' },
       { autoId: 4, direccionImagen: '/imagenesAutos/Chevrolet/Lateral.png' },
-      { autoId: 4, direccionImagen: '/imagenesAutos/Chevrolet/Trasera.jpg' },
       
       // Volkswagen Golf
       { autoId: 5, direccionImagen: '/imagenesAutos/Volkswagen/Frontal.jpg' },
