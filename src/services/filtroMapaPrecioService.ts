@@ -1,27 +1,55 @@
 import { prisma } from '../config/database';
 
-
-export const getAllVehiculos = async () => {
+export const obtenerVehiculosDisponibles = async () => {
   const vehiculos = await prisma.vehiculo.findMany({
+    where: {
+      disponible: "sí",
+    },
+    orderBy: {
+      idvehiculo: 'asc',
+    },
     select: {
-      imagen: true,
+      idvehiculo: true,
       tarifa: true,
-      marca: true,
-      modelo: true,
       ubicacion: {
         select: {
           latitud: true,
-          amplitud: true
-        }
-      }
+          amplitud: true,
+        },
+      },
+    },
+  });
+  return vehiculos.map(v => ({
+    idVehiculo: v.idvehiculo,
+    precio: v.tarifa,
+    latitud: v.ubicacion?.latitud,
+    amplitud: v.ubicacion?.amplitud,
+  }));
+};
+
+export const getVehiculoPorId = async (id: number) => {
+  const v = await prisma.vehiculo.findUnique({
+    where: {
+      idvehiculo: id,
+    },
+    select: {
+      idvehiculo: true,
+      imagen: true,
+      marca: true,
+      modelo: true,
+      descripcion: true,
+      tarifa: true
     }
   });
 
-  return vehiculos.map(v => ({
+  if (!v) return null;
+
+  return {
+    id: v.idvehiculo,
     imagen: v.imagen,
-    precio: v.tarifa,
-    nombre_modelo: `${v.marca}-${v.modelo}`,
-    latitud: v.ubicacion?.latitud,
-    amplitud: v.ubicacion?.amplitud
-  }));
+    nombre: `${v.marca} - ${v.modelo}`,
+    descripcion: v.descripcion,
+    precio: v.tarifa
+  };
 };
+
