@@ -1,5 +1,5 @@
 import { prisma } from '../config/database';
-
+//gpsS
 export const obtenerVehiculosDisponibles = async () => {
   const vehiculos = await prisma.vehiculo.findMany({
     where: {
