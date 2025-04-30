@@ -6,6 +6,8 @@ import qrRoutes from './routes/generarQRRoute';
 import historialBusquedaRoutes from './routes/historialBusquedaRoutes';
 import  vehiculoRoutes  from './routes/vehiculoRoutes';
 import reservasRoutes from './routes/reservas.routes'
+import mapaRoutes from './routes/filtroMapaPrecioRoutes';
+
 
 const cors = require('cors');
 
@@ -22,7 +24,7 @@ app.use('/', qrRoutes);
 app.use('/historial', historialBusquedaRoutes);
 app.use('/vehiculo', vehiculoRoutes);
 app.use('/reservas',reservasRoutes);
-
+app.use('/mapa',mapaRoutes);
 
 
 
