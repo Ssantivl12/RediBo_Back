@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { obtenerTodosLosVehiculos } from '../controllers/filtroMapaPrecioController';
+import { getVehiculosDisponibles } from '../controllers/filtroMapaPrecioController';
 
 const router = Router();
 
-router.get('/gps', obtenerTodosLosVehiculos);
+router.get('/gps', getVehiculosDisponibles);
 
 export default router;

@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
-import { getAllVehiculos } from '../services/filtroMapaPrecioService';
+import {obtenerVehiculosDisponibles} from '../services/filtroMapaPrecioService';
 
-export const obtenerTodosLosVehiculos = async (req: Request, res: Response) => {
+export const getVehiculosDisponibles = async (req: Request, res: Response): Promise<any> => {
   try {
-    const vehiculos = await getAllVehiculos();
-    res.status(200).json(vehiculos);
+    const vehiculos = await obtenerVehiculosDisponibles();
+    res.json(vehiculos);
   } catch (error) {
-    console.error('Error al obtener los vehículos:', error);
-    res.status(500).json({ error: 'Error al obtener los vehículos' });
+    console.error('Error al obtener vehículos disponibles:', error);
+    res.status(500).json({ mensaje: 'Error al obtener los vehículos' });
   }
 };
