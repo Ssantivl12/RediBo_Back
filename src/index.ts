@@ -52,3 +52,18 @@ app.use('/qr', express.static(path.join(process.cwd(), 'public', 'qr'), {
 app.listen(3000, () => {
   console.log('Servidor corriendo en http://localhost:3000');
 });
+//Ruta para historia de gps 
+import express from 'express';
+import vehiculosRoutes from './routes/vehiculos.routes';
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
+
+// Usar la ruta de vehículos
+app.use('/vehiculos', vehiculosRoutes);
+
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
+});
