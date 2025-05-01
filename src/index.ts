@@ -9,7 +9,7 @@ import historialBusquedaRoutes from './routes/historialBusquedaRoutes';
 import vehiculoRoutes from './routes/vehiculoRoutes';
 import reservasRoutes from './routes/reservas.routes';
 import mapaRoutes from './routes/filtroMapaPrecioRoutes';
-//import vehiculosRoutes from './routes/vehiculos.routes'; // la nueva ruta para GPS
+import filtroGPSPersonalizadaRoutes from './routes/filtroGPSPersonalizadaRoutes'; // ✅ Ruta GPS personalizada
 
 const app = express();
 dotenv.config();
@@ -24,7 +24,7 @@ app.use('/historial', historialBusquedaRoutes);
 app.use('/vehiculo', vehiculoRoutes);
 app.use('/reservas', reservasRoutes);
 app.use('/mapa', mapaRoutes);
-//app.use('/vehiculos', vehiculosRoutes); // Ruta para el filtrado por GPS
+app.use('/vehiculos', filtroGPSPersonalizadaRoutes); // ✅ Se registró la ruta /vehiculos/cercanos
 
 // Ruta pública para comprobantes (se sirve desde public/cmp)
 app.use(
