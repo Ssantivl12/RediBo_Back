@@ -29,6 +29,7 @@ model Usuario {
 }
 
 // Modelo para automóviles
+// Modelo para automóviles 
 model Auto {
   idAuto            Int                @id @default(autoincrement())
   idPropietario     Int
@@ -52,12 +53,23 @@ model Auto {
   estado            EstadoAuto         @default(ACTIVO)  // ACTIVO o INACTIVO (si esta inactivo no sale en el sistema para rentar)
   fechaAdquisicion  DateTime           @default(now())
   historialMantenimiento HistorialMantenimiento[]
-  imagenes          String?
+  imagenes          Imagen[]           // Relación con las imágenes del auto
   asientos          Int                @default(5) // Cantidad de asientos
+  capacidadMaletero Int                // Nueva propiedad: capacidad del maletero
   transmision       Transmision        // Tipo de transmisión (Automático, Manual)
   combustible       Combustible        // Tipo de combustible (Gasolina, Diesel, Eléctrico)
   
   @@map("autos")
+}
+
+// Nuevo modelo para imágenes de autos
+model Imagen {
+  idImagen          Int                @id @default(autoincrement())
+  idAuto            Int
+  auto              Auto               @relation(fields: [idAuto], references: [idAuto])
+  direccionImagen   String             // URL o ruta de la imagen
+  
+  @@map("imagenes")
 }
 
 
