@@ -6,14 +6,12 @@ import cors from 'cors';
 import rutasPago from './routes/pago.routes';
 import qrRoutes from './routes/generarQRRoute';
 import historialBusquedaRoutes from './routes/historialBusquedaRoutes';
-import vehiculoRoutes from './routes/vehiculoRoutes';
 import reservasRoutes from './routes/reservas.routes';
 import mapaRoutes from './routes/filtroMapaPrecioRoutes';
-//import vehiculosRoutes from './routes/vehiculos.routes'; // la nueva ruta para GPS
+import filtroXFechasRoutes from './routes/filtroXFechasRoutes'; // Nueva ruta agregada
 
 const app = express();
 dotenv.config();
-
 app.use(cors());
 app.use(express.json());
 
@@ -21,29 +19,28 @@ app.use(express.json());
 app.use('/pagos', rutasPago);
 app.use('/', qrRoutes);
 app.use('/historial', historialBusquedaRoutes);
-app.use('/vehiculo', vehiculoRoutes);
 app.use('/reservas', reservasRoutes);
 app.use('/mapa', mapaRoutes);
-//app.use('/vehiculos', vehiculosRoutes); // Ruta para el filtrado por GPS
+app.use('/vehiculos', filtroXFechasRoutes); // Nueva ruta para filtro por fecha
 
-// Ruta pública para comprobantes (se sirve desde public/cmp)
+// Archivos estáticos para comprobantes
 app.use(
   '/cmp',
   express.static(path.join(process.cwd(), 'public', 'cmp'), {
-    setHeaders: (res, path) => {
-      if (path.endsWith('.png')) {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.png')) {
         res.set('Content-Type', 'image/png');
       }
     },
   })
 );
 
-// Ruta pública para archivos QR (se sirve desde public/qr)
+// Archivos estáticos para códigos QR
 app.use(
   '/qr',
   express.static(path.join(process.cwd(), 'public', 'qr'), {
-    setHeaders: (res, path) => {
-      if (path.endsWith('.png')) {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.png')) {
         res.set('Content-Type', 'image/png');
       }
     },
