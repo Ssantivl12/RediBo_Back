@@ -8,7 +8,7 @@ import qrRoutes from './routes/generarQRRoute';
 import historialBusquedaRoutes from './routes/historialBusquedaRoutes';
 import reservasRoutes from './routes/reservas.routes';
 import mapaRoutes from './routes/filtroMapaPrecioRoutes';
-import filtroXFechasRoutes from './routes/filtroXFechasRoutes'; // Nueva ruta agregada
+//import vehiculosRoutes from './routes/vehiculos.routes'; // la nueva ruta para GPS
 
 const app = express();
 dotenv.config();
@@ -21,7 +21,7 @@ app.use('/', qrRoutes);
 app.use('/historial', historialBusquedaRoutes);
 app.use('/reservas', reservasRoutes);
 app.use('/mapa', mapaRoutes);
-app.use('/vehiculos', filtroXFechasRoutes); // Nueva ruta para filtro por fecha
+//app.use('/vehiculos', vehiculosRoutes); // Ruta para el filtrado por GPS
 
 // Archivos estáticos para comprobantes
 app.use(

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { buscarVehiculosCercanos } from '../controllers/vehiculos.controller';
+import { buscarVehiculosCercanos } from '../controllers/filtroGPSPersonalizadaController';  // Correcto
 
 const router = Router();
 
