@@ -14,11 +14,6 @@ import filtroAeropuertoRoutes from './routes/filtroAeropuertoRoutes';
 
 const app = express();
 dotenv.config();
-<<<<<<< Updated upstream
-=======
-
-
->>>>>>> Stashed changes
 app.use(cors());
 app.use(express.json());
 
