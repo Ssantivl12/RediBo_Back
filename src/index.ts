@@ -9,9 +9,16 @@ import historialBusquedaRoutes from './routes/historialBusquedaRoutes';
 import reservasRoutes from './routes/reservas.routes';
 import mapaRoutes from './routes/filtroMapaPrecioRoutes';
 //import vehiculosRoutes from './routes/vehiculos.routes'; // la nueva ruta para GPS
+import filtroAeropuertoRoutes from './routes/filtroAeropuertoRoutes';
+
 
 const app = express();
 dotenv.config();
+<<<<<<< Updated upstream
+=======
+
+
+>>>>>>> Stashed changes
 app.use(cors());
 app.use(express.json());
 
@@ -22,6 +29,7 @@ app.use('/historial', historialBusquedaRoutes);
 app.use('/reservas', reservasRoutes);
 app.use('/mapa', mapaRoutes);
 //app.use('/vehiculos', vehiculosRoutes); // Ruta para el filtrado por GPS
+app.use('/aeropuerto', filtroAeropuertoRoutes);
 
 // Archivos estáticos para comprobantes
 app.use(
