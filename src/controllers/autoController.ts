@@ -11,11 +11,37 @@ export const getAutos = async (req: Request, res: Response) => {
       },
     });
 
+    const autosConPromedio = [];
+    
+    for (const auto of autos) {
+      const comentarios = await prisma.comentario.findMany({
+        where: {
+          autoId: auto.id,
+        },
+        select: {
+          calificacion: true,
+        },
+      });
+      
+      let promedioCalificacion = 0;
+      if (comentarios.length > 0) {
+        const sumaCalificaciones = comentarios.reduce((suma, comentario) => suma + comentario.calificacion, 0);
+        promedioCalificacion = sumaCalificaciones / comentarios.length;
+      }
+      
+      autosConPromedio.push({
+        ...auto,
+        promedioCalificacion: Number(promedioCalificacion.toFixed(1)),
+      });
+    }
+    
     res.status(200).json({
       success: true,
-      data: autos,
+      data: autosConPromedio,
     });
+    
   } catch (error) {
+    console.error("Error en getAutos:", error);
     res.status(500).json({
       success: false,
       message: "Error en obtener los autos",
@@ -23,7 +49,6 @@ export const getAutos = async (req: Request, res: Response) => {
     });
   }
 };
-
 
 export const getAutoId = async (req: Request, res: Response): Promise<void> => {
     const id = parseInt(req.params.id, 10);
