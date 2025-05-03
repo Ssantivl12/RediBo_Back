@@ -46,7 +46,8 @@ export const getAutoId = async (req: Request, res: Response): Promise<void> => {
             select: {
               id: true,
               nombre: true,
-              apellido: true, 
+              apellido: true,
+              telefono: true,
             },
           },
           imagenes: true,
