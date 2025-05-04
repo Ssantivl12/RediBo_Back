@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
   provider = "prisma-client-js"
@@ -23,7 +18,7 @@ model Usuario {
   fechaRegistro     DateTime           @default(now())
   contraseña        String
   esAdmin           Boolean            @default(false)
-  autos             Auto[]             // Relación con los autos que posee
+  autos             Auto[]             
   comentarios       Comentario[]
 }
 
@@ -36,7 +31,7 @@ model Auto {
   color             String    
   precioRentaDiario Decimal            @db.Decimal(10, 2)
   montoGarantia     Decimal            @db.Decimal(10, 2)
-  estado            EstadoAuto         @default(ACTIVO)  // ACTIVO o INACTIVO (si esta inactivo no sale en el sistema para rentar)
+  estado            EstadoAuto         @default(ACTIVO)  
   fechaAdquisicion  DateTime           @default(now())
   kilometraje       Int                @default(0)
   descripcion       String?
@@ -50,7 +45,7 @@ model Auto {
   historialMantenimiento HistorialMantenimiento[]
   comentarios       Comentario[]
   imagenes          Imagen[]
-  disponibilidad    Disponibilidad[]   // Periodos de no disponibilidad (por mantenimiento)
+  disponibilidad    Disponibilidad[]   
 }
 
 model Comentario {
@@ -101,8 +96,8 @@ enum MotivoNoDisponibilidad {
 }
 
 enum EstadoAuto {
-  ACTIVO            // El auto está en la plataforma y puede ser reservado
-  INACTIVO          // El auto no está disponible, no puede ser reservado
+  ACTIVO           
+  INACTIVO          
 }
 
 enum TipoMantenimiento {
