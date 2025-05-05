@@ -32,8 +32,8 @@ model Usuario {
 
 // Modelo para notificaciones
 model Notificacion {
-  idNotificacion            String                @id @default(uuid())
-  idUsuario     Int  // ! no me dejo poner el idUsuario como String sin que salga errores, desconozco el motivo
+  idNotificacion            Int                @id @default(autoincrement())
+  idUsuario     Int
   titulo        String                @db.VarChar(100)
   mensaje       String
   idEntidad     String?
@@ -54,10 +54,23 @@ model Notificacion {
   @@index([idUsuario, haSidoBorrada])
 }
 
+model Ubicacion {
+  idUbicacion       Int                @id @default(autoincrement())
+  nombre            String             @unique
+  descripcion       String?
+  latitud           Float              // Coordenada de latitud
+  longitud          Float              // Coordenada de longitud
+  esActiva          Boolean            @default(true)
+  autos             Auto[]             // Relación con los autos que se rentaran en esta ubicación
+  @@map("ubicaciones")
+}
+
 // Modelo para automóviles 
 model Auto {
   idAuto            Int                @id @default(autoincrement())
   idPropietario     Int
+  idUbicacion       Int
+  ubicacion         Ubicacion          @relation(fields: [idUbicacion], references: [idUbicacion])
   propietario       Usuario            @relation(fields: [idPropietario], references: [idUsuario])
   marca             String
   modelo            String
@@ -86,6 +99,7 @@ model Auto {
   diasTotalRenta     Int?               // Total de días que ha sido rentado
   vecesAlquilado     Int?               // Total de veces que ha sido alquilado
   @@map("autos")
+  @@index([idUbicacion])
 }
 
 // Nuevo modelo para imágenes de autos
