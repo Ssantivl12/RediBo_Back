@@ -3,7 +3,7 @@ import {
   obtenerUltimasBusquedas,
   registrarBusqueda,
   autocompletarBusquedas,
-} from '../services/HistorialBusquedaService';
+} from '../services/historialBusquedaService';
 
 export const verUltimasBusquedas = async (req: Request, res: Response): Promise<void> => {
   try {
