@@ -10,8 +10,6 @@ import reservasRoutes from './routes/reservas.routes';
 import mapaRoutes from './routes/filtroMapaPrecioRoutes';
 //import vehiculosRoutes from './routes/vehiculos.routes'; // la nueva ruta para GPS
 import filtroAeropuertoRoutes from './routes/filtroAeropuertoRoutes';
-import filtroXFechasRoutes from './routes/filtroXFechasRoutes'; // asegúrate de que la ruta sea correcta
-
 
 
 const app = express();
@@ -27,7 +25,6 @@ app.use('/reservas', reservasRoutes);
 app.use('/mapa', mapaRoutes);
 //app.use('/vehiculos', vehiculosRoutes); // Ruta para el filtrado por GPS
 app.use('/aeropuerto', filtroAeropuertoRoutes);
-app.use('/', filtroXFechasRoutes);
 
 // Archivos estáticos para comprobantes
 app.use(
