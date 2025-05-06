@@ -13,6 +13,11 @@ export async function filtroXFechasHandler(req: Request, res: Response) {
     const end = new Date(endDate as string);
 
     const vehicles = await getAvailableVehiclesByDate(start, end);
+
+    if (vehicles.length === 0) {
+      return res.status(200).json({ message: 'No hay autos disponibles en ese rango de fechas.' });
+    }
+
     res.json(vehicles);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
