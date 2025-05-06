@@ -25,6 +25,7 @@ CREATE TABLE "Usuario" (
 -- CreateTable
 CREATE TABLE "Auto" (
     "id" SERIAL NOT NULL,
+    "idUbicacion" INTEGER NOT NULL,
     "marca" TEXT NOT NULL,
     "modelo" TEXT NOT NULL,
     "año" INTEGER NOT NULL,
@@ -39,9 +40,24 @@ CREATE TABLE "Auto" (
     "transmision" TEXT NOT NULL,
     "combustible" TEXT NOT NULL,
     "capacidad" SMALLINT NOT NULL,
+    "capacidadMaletero" INTEGER NOT NULL,
+    "tipoAuto" TEXT NOT NULL,
+    "garantia" DECIMAL(10,2) NOT NULL,
     "propietarioId" INTEGER NOT NULL,
 
     CONSTRAINT "Auto_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ubicaciones" (
+    "idUbicacion" SERIAL NOT NULL,
+    "nombre" TEXT NOT NULL,
+    "descripcion" TEXT,
+    "latitud" DOUBLE PRECISION NOT NULL,
+    "longitud" DOUBLE PRECISION NOT NULL,
+    "esActiva" BOOLEAN NOT NULL DEFAULT true,
+
+    CONSTRAINT "ubicaciones_pkey" PRIMARY KEY ("idUbicacion")
 );
 
 -- CreateTable
@@ -96,6 +112,12 @@ CREATE UNIQUE INDEX "Usuario_email_key" ON "Usuario"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Auto_placa_key" ON "Auto"("placa");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ubicaciones_nombre_key" ON "ubicaciones"("nombre");
+
+-- AddForeignKey
+ALTER TABLE "Auto" ADD CONSTRAINT "Auto_idUbicacion_fkey" FOREIGN KEY ("idUbicacion") REFERENCES "ubicaciones"("idUbicacion") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Auto" ADD CONSTRAINT "Auto_propietarioId_fkey" FOREIGN KEY ("propietarioId") REFERENCES "Usuario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

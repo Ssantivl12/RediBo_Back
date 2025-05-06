@@ -3,7 +3,41 @@ import { PrismaClient, EstadoAuto, MotivoNoDisponibilidad, TipoMantenimiento } f
 const prisma = new PrismaClient();
 
 async function main() {
-  // Usuarios
+  // Ubicaciones - Nuevo modelo que debemos crear primero
+  const ubicaciones = await prisma.ubicacion.createMany({
+    data: [
+      {
+        nombre: 'Centro de la Ciudad',
+        descripcion: 'Ubicación céntrica con acceso rápido a principales avenidas',
+        latitud: -17.783817,
+        longitud: -63.180173,
+        esActiva: true
+      },
+      {
+        nombre: 'Zona Norte',
+        descripcion: 'Área residencial en el norte de la ciudad',
+        latitud: -17.765432,
+        longitud: -63.175678,
+        esActiva: true
+      },
+      {
+        nombre: 'Terminal de Buses',
+        descripcion: 'Cerca de la terminal para llegadas y salidas de viajes',
+        latitud: -17.798765,
+        longitud: -63.190123,
+        esActiva: true
+      },
+      {
+        nombre: 'Zona Sur',
+        descripcion: 'Área comercial y residencial en el sur',
+        latitud: -17.810234,
+        longitud: -63.185678,
+        esActiva: true
+      }
+    ]
+  });
+
+  // Usuarios - Sin cambios
   const usuarios = await prisma.usuario.createMany({
     data: [
       {
@@ -63,7 +97,7 @@ async function main() {
     ]
   });
 
-  // Autos
+  // Autos - Agregamos idUbicacion y garantia
   const autos = await prisma.auto.createMany({
     data: [
       {
@@ -82,7 +116,9 @@ async function main() {
         capacidad: 5,
         capacidadMaletero: 3,
         tipoAuto: 'Familiar',
-        propietarioId: 3
+        propietarioId: 3,
+        idUbicacion: 1,
+        garantia: 500.00
       },
       {
         marca: 'Honda',
@@ -100,7 +136,9 @@ async function main() {
         capacidad: 4,
         capacidadMaletero: 4,
         tipoAuto: 'Pequeño',
-        propietarioId: 2
+        propietarioId: 2,
+        idUbicacion: 2,
+        garantia: 600.00
       },
       {
         marca: 'Ford',
@@ -118,7 +156,9 @@ async function main() {
         capacidad: 5,
         capacidadMaletero: 2,
         tipoAuto: 'Mediano',
-        propietarioId: 2
+        propietarioId: 2,
+        idUbicacion: 1,
+        garantia: 700.00
       },
       {
         marca: 'Chevrolet',
@@ -136,7 +176,9 @@ async function main() {
         capacidad: 5,
         capacidadMaletero: 5,
         tipoAuto: 'Familiar',
-        propietarioId: 3
+        propietarioId: 3,
+        idUbicacion: 3,
+        garantia: 550.00
       },
       {
         marca: 'Volkswagen',
@@ -154,7 +196,9 @@ async function main() {
         capacidad: 5,
         capacidadMaletero: 5,
         tipoAuto: 'Familiar',
-        propietarioId: 4
+        propietarioId: 4,
+        idUbicacion: 2,
+        garantia: 750.00
       },
       {
         marca: 'Nissan',
@@ -172,7 +216,9 @@ async function main() {
         capacidad: 5,
         capacidadMaletero: 5,
         tipoAuto: 'Familiar',
-        propietarioId: 5
+        propietarioId: 5,
+        idUbicacion: 4,
+        garantia: 625.00
       },
       {
         marca: 'Hyundai',
@@ -190,12 +236,14 @@ async function main() {
         capacidad: 7,
         capacidadMaletero: 5,
         tipoAuto: 'Familiar',
-        propietarioId: 6
+        propietarioId: 6,
+        idUbicacion: 3,
+        garantia: 850.00
       }
     ]
   });
 
-  // Comentarios
+  // Comentarios - Sin cambios
   await prisma.comentario.createMany({
     data: [
       {
@@ -267,7 +315,7 @@ async function main() {
     ]
   });
 
-  // Historial de Mantenimiento
+  // Historial de Mantenimiento - Sin cambios
   await prisma.historialMantenimiento.createMany({
     data: [
       {
@@ -354,7 +402,7 @@ async function main() {
     ]
   });
 
-  // Disponibilidad
+  // Disponibilidad - Sin cambios
   await prisma.disponibilidad.createMany({
     data: [
       {
@@ -416,7 +464,7 @@ async function main() {
     ]
   });
 
-  // Imágenes
+  // Imágenes - Sin cambios
   await prisma.imagen.createMany({
     data: [
       // Toyota Corolla

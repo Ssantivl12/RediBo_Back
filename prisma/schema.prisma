@@ -24,6 +24,8 @@ model Usuario {
 
 model Auto {
   id                Int                @id @default(autoincrement())
+  idUbicacion       Int
+  ubicacion         Ubicacion          @relation(fields: [idUbicacion], references: [idUbicacion])
   marca             String
   modelo            String
   año               Int
@@ -40,12 +42,24 @@ model Auto {
   capacidad         Int               @db.SmallInt
   capacidadMaletero Int               
   tipoAuto          String
+  garantia          Decimal           @db.Decimal(10, 2)
   propietarioId     Int
   propietario       Usuario            @relation(fields: [propietarioId], references: [id])
   historialMantenimiento HistorialMantenimiento[]
   comentarios       Comentario[]
   imagenes          Imagen[]
   disponibilidad    Disponibilidad[]   
+}
+
+model Ubicacion {
+  idUbicacion       Int                @id @default(autoincrement())
+  nombre            String             @unique
+  descripcion       String?
+  latitud           Float              
+  longitud          Float              
+  esActiva          Boolean            @default(true)
+  autos             Auto[]             
+  @@map("ubicaciones")
 }
 
 model Comentario {
