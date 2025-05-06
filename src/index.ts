@@ -16,12 +16,9 @@ import filtroAeropuertoRoutes from './routes/filtroAeropuertoRoutes';
 import filtroXFechasRoutes from './routes/filtroXFechasRoutes';
 
 const app = express();
-<<<<<<< HEAD
 dotenv.config();
-=======
 
-// Middlewares
->>>>>>> 169d51288102e1a9bce5f1b904e2e624761ee5d4
+// Middleware
 app.use(cors());
 app.use(express.json());
 

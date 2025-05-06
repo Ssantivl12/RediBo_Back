@@ -40,18 +40,18 @@ export const autocompletarAeropuerto = async (req: Request, res: Response) : Pro
 
 export const obtenerVehiculosCercanos = async (req: Request, res: Response): Promise<any> => {
   const schema = z.object({
-    idaeropuerto: z.coerce.number().int(), // convierte string a número
+    id: z.coerce.number().int(), // <-- importante: coerce para aceptar string
   });
 
-  const parsed = schema.safeParse(req.body);
+  const parsed = schema.safeParse(req.params); // <-- se usa req.params
 
   if (!parsed.success) {
-    return res.status(400).json({ mensaje: 'Debe seleccionar un aeropuerto válido.' });
+    return res.status(400).json({ mensaje: 'Debe proporcionar un ID de aeropuerto válido.' });
   }
 
   try {
     const aeropuerto = await prisma.aeropuerto.findUnique({
-      where: { idaeropuerto: parsed.data.idaeropuerto },
+      where: { idaeropuerto: parsed.data.id },
     });
 
     if (!aeropuerto) {

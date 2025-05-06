@@ -9,7 +9,7 @@ console.log('autocompletarAeropuerto es:', autocompletarAeropuerto);
 const router = Router();
 
 router.get('/autocompletar', autocompletarAeropuerto);
-router.post('/vehiculos-cercanos', obtenerVehiculosCercanos);
+router.get('/vehiculos-cercanos/:id', obtenerVehiculosCercanos);
 
 export default router;
 
