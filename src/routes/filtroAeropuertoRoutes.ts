@@ -1,3 +1,4 @@
+/*
 import { Router } from 'express';
 import {
   autocompletarAeropuerto,
@@ -12,4 +13,15 @@ router.get('/autocompletar', autocompletarAeropuerto);
 router.post('/vehiculos-cercanos', obtenerVehiculosCercanos);
 
 export default router;
+*/
 
+// routes/filtroAeropuertoRoutes.ts
+import { Router } from 'express';
+import { autocompletarAeropuerto, obtenerVehiculosCercanos } from '../controllers/filtroAeropuertoController';
+
+const router = Router();
+
+router.get('/autocompletar', autocompletarAeropuerto);
+router.post('/vehiculos-cercanos', obtenerVehiculosCercanos);
+
+export default router;
