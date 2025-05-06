@@ -41,3 +41,10 @@ model Rental {
   auto       Auto     @relation(fields: [autoId], references: [id])
   renter     Renter   @relation(fields: [renterId], references: [id])
 }
+model Alert {
+  id      Int    @id @default(autoincrement())
+  title   String
+  message String
+  date    String
+}
+

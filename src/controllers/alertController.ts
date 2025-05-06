@@ -1,27 +1,38 @@
-import { Request, Response } from 'express';
-import { alerts } from '../data/alerts';
+import { Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
 
-export const getAllAlerts = (req: Request, res: Response): void => {
-  res.json(alerts);
+const prisma = new PrismaClient();
+
+export const getAllAlerts = async (_req: Request, res: Response) => {
+  try {
+    const alerts = await prisma.alert.findMany();
+    res.json(alerts);
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener alertas" });
+  }
 };
 
-export const getAlertById = (req: Request, res: Response): void => {
+export const getAlertById = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const alert = alerts.find(a => a.id === Number(id));
-  if (!alert) {
-    res.status(404).json({ message: 'Alerta no encontrada' });
-    return;
+  try {
+    const alert = await prisma.alert.findUnique({
+      where: { id: parseInt(id) },
+    });
+    if (!alert) {
+      return res.status(404).json({ error: "Alerta no encontrada" });
+    }
+    res.json(alert);
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener alerta" });
   }
-  res.json(alert);
 };
 
-export const deleteAlert = (req: Request, res: Response): void => {
+export const deleteAlert = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const index = alerts.findIndex(a => a.id === Number(id));
-  if (index === -1) {
-    res.status(404).json({ message: 'Alerta no encontrada' });
-    return;
+  try {
+    await prisma.alert.delete({ where: { id: parseInt(id) } });
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: "Error al eliminar alerta" });
   }
-  alerts.splice(index, 1);
-  res.json({ message: 'Alerta eliminada correctamente' });
 };

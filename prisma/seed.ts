@@ -22,19 +22,18 @@ async function main() {
     )
   );
 
-  // Crear autos (4 para host1, 3 para host2)
+  // Crear autos
   const autos = await Promise.all([
     prisma.auto.create({ data: { marca: 'Toyota', modelo: 'Corolla', color: 'Rojo', imagen: 'https://picsum.photos/200', hostId: host1.id } }),
     prisma.auto.create({ data: { marca: 'Honda', modelo: 'Civic', color: 'Azul', imagen: 'https://picsum.photos/201', hostId: host1.id } }),
     prisma.auto.create({ data: { marca: 'Mazda', modelo: '3', color: 'Negro', imagen: 'https://picsum.photos/202', hostId: host1.id } }),
     prisma.auto.create({ data: { marca: 'Chevrolet', modelo: 'Onix', color: 'Gris', imagen: 'https://picsum.photos/203', hostId: host1.id } }),
-  
     prisma.auto.create({ data: { marca: 'Ford', modelo: 'Focus', color: 'Blanco', imagen: 'https://picsum.photos/204', hostId: host2.id } }),
     prisma.auto.create({ data: { marca: 'Volkswagen', modelo: 'Jetta', color: 'Verde', imagen: 'https://picsum.photos/205', hostId: host2.id } }),
     prisma.auto.create({ data: { marca: 'Hyundai', modelo: 'Elantra', color: 'Plateado', imagen: 'https://picsum.photos/206', hostId: host2.id } }),
   ]);
 
-  // Crear rentals con fechas variadas
+  // Crear rentals
   await Promise.all([
     prisma.rental.create({ data: { autoId: autos[0].id, renterId: renters[0].id, startDate: new Date('2025-03-01'), endDate: new Date('2025-03-03') } }),
     prisma.rental.create({ data: { autoId: autos[0].id, renterId: renters[1].id, startDate: new Date('2025-03-05'), endDate: new Date('2025-03-10') } }),
@@ -52,11 +51,34 @@ async function main() {
     prisma.rental.create({ data: { autoId: autos[0].id, renterId: renters[3].id, startDate: new Date('2025-04-26'), endDate: new Date('2025-04-28') } }),
     prisma.rental.create({ data: { autoId: autos[0].id, renterId: renters[4].id, startDate: new Date('2025-04-29'), endDate: new Date('2025-05-01') } }),
   ]);
+
+  // Crear alertas
+  await prisma.alert.createMany({
+    data: [
+      {
+        title: "Revisión urgente",
+        message: "El auto Toyota Corolla necesita revisión inmediata.",
+        date: "2025-04-15",
+      },
+      {
+        title: "Mantenimiento preventivo",
+        message: "El auto Honda Civic debe ser revisado pronto.",
+        date: "2025-04-18",
+      },
+      {
+        title: "Limpieza general",
+        message: "El auto Mazda 3 debe pasar por lavado completo.",
+        date: "2025-04-19",
+      },
+    ],
+  });
+
+  console.log("✅ Datos insertados con éxito.");
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error:', e);
+    console.error("❌ Error durante la carga:", e);
   })
   .finally(async () => {
     await prisma.$disconnect();
