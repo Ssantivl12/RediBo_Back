@@ -9,32 +9,28 @@ export const getAutos = async (req: Request, res: Response) => {
       include: {
         imagenes: true,
         ubicacion: true,
+        comentarios: {
+          select: {
+            calificacion: true,
+          }
+        }
       },
     });
 
-    const autosConPromedio = [];
-    
-    for (const auto of autos) {
-      const comentarios = await prisma.comentario.findMany({
-        where: {
-          autoId: auto.id,
-        },
-        select: {
-          calificacion: true,
-        },
-      });
-      
+    const autosConPromedio = autos.map(auto => {
       let promedioCalificacion = 0;
+      const comentarios = auto.comentarios || [];
+
       if (comentarios.length > 0) {
         const sumaCalificaciones = comentarios.reduce((suma, comentario) => suma + comentario.calificacion, 0);
         promedioCalificacion = sumaCalificaciones / comentarios.length;
       }
-      
-      autosConPromedio.push({
+
+      return {
         ...auto,
         promedioCalificacion: Number(promedioCalificacion.toFixed(1)),
-      });
-    }
+      };
+    });
     
     res.status(200).json({
       success: true,
