@@ -21,11 +21,13 @@ model Usuario {
   fechaRegistro     DateTime           @default(now())
   contraseña        String
   esAdmin           Boolean            @default(false)
-  rol               RolUsuario       @default(RENTADOR) // Rol del usuario (arrendador, rentador o driver)
+  // ! Rol del usuario eliminado, ya que el usuario puede ser dos cosas a la vez(arrendador, rentador o driver)
   notificaciones    Notificacion[]     // Relación con las notificaciones
   autos             Auto[]             // Relación con los autos que posee
   reservas          Reserva[]          // Relación con sus reservas como cliente
   comentariosEscritos Comentario[]     // Comentarios que este usuario ha escrito sobre autos
+  calificacionesRecibidas CalificacionUsuario[] @relation("UsuarioCalificado") // Calificaciones que este usuario ha recibido
+  calificacionesRealizadas CalificacionUsuario[] @relation("UsuarioCalificador") // Calificaciones que este usuario ha dado a otros
   
   @@map("usuarios")
 }
@@ -145,6 +147,7 @@ model Reserva {
   garantia          Garantia?
   comentario        Comentario?        // Un comentario puede estar asociado a una reserva específica
   estaPagada        Boolean            @default(false)  // Indica si la reserva está pagada
+  calificacionUsuario CalificacionUsuario?
 
   @@map("reservas")
 }
@@ -200,13 +203,37 @@ model Comentario {
   auto              Auto               @relation(fields: [idAuto], references: [idAuto])
   idUsuario         Int                // Usuario que escribió el comentario
   usuario           Usuario            @relation(fields: [idUsuario], references: [idUsuario])
-  contenido         String
+  contenido         String?
   calificacion      Int                @db.SmallInt
   fechaCreacion     DateTime           @default(now())
   idReserva         Int?               @unique
   reserva           Reserva?           @relation(fields: [idReserva], references: [idReserva])
   
   @@map("comentarios")
+}
+
+// Modelo para calificaciones de usuarios
+model CalificacionUsuario {
+  idCalificacion    Int                @id @default(autoincrement())
+  idCalificador     Int                // Usuario que da la calificación
+  calificador       Usuario            @relation("UsuarioCalificador", fields: [idCalificador], references: [idUsuario])
+  idCalificado      Int                // Usuario que recibe la calificación
+  calificado        Usuario            @relation("UsuarioCalificado", fields: [idCalificado], references: [idUsuario])
+  puntuacion        Int                @db.SmallInt     // Puntuación (de 1 a 5)
+  comentario        String?            // Comentario opcional
+  fechaCreacion     DateTime           @default(now())
+  idReserva         Int                @unique          // Reserva asociada a esta calificación
+  reserva           Reserva            @relation(fields: [idReserva], references: [idReserva])
+  tipoCalificacion  TipoCalificacionUsuario // Para diferenciar si es calificación como arrendador o arrendatario
+  
+  @@map("calificaciones_usuarios")
+  @@index([idCalificado])
+  @@index([idCalificador])
+}
+
+enum TipoCalificacionUsuario {
+  ARRENDADOR    // Calificación al dueño del auto
+  ARRENDATARIO  // Calificación al cliente que rentó
 }
 
 enum EstadoReserva {
