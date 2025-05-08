@@ -1,9 +1,9 @@
-import { PrismaClient, EstadoAuto, MotivoNoDisponibilidad, TipoMantenimiento } from '@prisma/client';
+import { PrismaClient, EstadoAuto, MotivoNoDisponibilidad, TipoMantenimiento, Transmision, Combustible, MetodoPago, EstadoReserva, EstadoGarantia, TipoPago, TipoCalificacionUsuario, PrioridadNotificacion, TipoDeNotificacion } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Ubicaciones - Nuevo modelo que debemos crear primero
+  // Ubicaciones - Sin cambios
   const ubicaciones = await prisma.ubicacion.createMany({
     data: [
       {
@@ -37,7 +37,7 @@ async function main() {
     ]
   });
 
-  // Usuarios - Sin cambios
+  // Usuarios - Adaptado según nuevo esquema, sin cambios significativos
   const usuarios = await prisma.usuario.createMany({
     data: [
       {
@@ -97,229 +97,261 @@ async function main() {
     ]
   });
 
-  // Autos - Agregamos idUbicacion y garantia
+  // Autos - Adaptado según nuevo esquema
   const autos = await prisma.auto.createMany({
     data: [
       {
+        idPropietario: 3,
+        idUbicacion: 1,
         marca: 'Toyota',
         modelo: 'Corolla',
+        descripcion: 'Auto cómodo y económico.',
+        precioRentaDiario: 55.50,
+        montoGarantia: 200.00,
+        kilometraje: 15000,
+        calificacionPromedio: 4.5,
+        totalComentarios: 2,
+        tipo: 'Familiar',
         año: 2020,
         placa: 'ABC-1234',
         color: 'Negro',
-        precioRentaDiario: 55.50,
-        montoGarantia: 200.00,
         estado: EstadoAuto.ACTIVO,
-        kilometraje: 15000,
-        descripcion: 'Auto cómodo y económico.',
-        transmision: 'Automática',
-        combustible: 'Gasolina',
-        capacidad: 5,
+        asientos: 5,
         capacidadMaletero: 3,
-        tipoAuto: 'Familiar',
-        propietarioId: 3,
-        idUbicacion: 1,
-        garantia: 500.00
+        transmision: Transmision.AUTOMATICO,
+        combustible: Combustible.GASOLINA,
+        diasTotalRenta: 0,
+        vecesAlquilado: 0
       },
       {
+        idPropietario: 2,
+        idUbicacion: 2,
         marca: 'Honda',
         modelo: 'Civic',
+        descripcion: 'Con buen rendimiento.',
+        precioRentaDiario: 60.00,
+        montoGarantia: 250.00,
+        kilometraje: 18000,
+        calificacionPromedio: 2.5,
+        totalComentarios: 2,
+        tipo: 'Pequeño',
         año: 2019,
         placa: 'XYZ-5678',
         color: 'Rojo',
-        precioRentaDiario: 60.00,
-        montoGarantia: 250.00,
         estado: EstadoAuto.INACTIVO,
-        kilometraje: 18000,
-        descripcion: 'Con buen rendimiento.',
-        transmision: 'Manual',
-        combustible: 'Gasolina',
-        capacidad: 4,
+        asientos: 4,
         capacidadMaletero: 4,
-        tipoAuto: 'Pequeño',
-        propietarioId: 2,
-        idUbicacion: 2,
-        garantia: 600.00
+        transmision: Transmision.MANUAL,
+        combustible: Combustible.GASOLINA,
+        diasTotalRenta: 0,
+        vecesAlquilado: 0
       },
       {
+        idPropietario: 2,
+        idUbicacion: 1,
         marca: 'Ford',
         modelo: 'Focus',
+        descripcion: 'Ideal para viajes largos.',
+        precioRentaDiario: 70.00,
+        montoGarantia: 300.00,
+        kilometraje: 10000,
+        calificacionPromedio: 4.5,
+        totalComentarios: 2,
+        tipo: 'Mediano',
         año: 2021,
         placa: 'QWE-9876',
         color: 'Blanco',
-        precioRentaDiario: 70.00,
-        montoGarantia: 300.00,
         estado: EstadoAuto.ACTIVO,
-        kilometraje: 10000,
-        descripcion: 'Ideal para viajes largos.',
-        transmision: 'Automática',
-        combustible: 'Diésel',
-        capacidad: 5,
+        asientos: 5,
         capacidadMaletero: 2,
-        tipoAuto: 'Mediano',
-        propietarioId: 2,
-        idUbicacion: 1,
-        garantia: 700.00
+        transmision: Transmision.AUTOMATICO,
+        combustible: Combustible.DIESEL,
+        diasTotalRenta: 0,
+        vecesAlquilado: 0
       },
       {
+        idPropietario: 3,
+        idUbicacion: 3,
         marca: 'Chevrolet',
         modelo: 'Onix',
+        descripcion: 'Compacto pero eficiente.',
+        precioRentaDiario: 65.00,
+        montoGarantia: 220.00,
+        kilometraje: 12000,
+        calificacionPromedio: 4.0,
+        totalComentarios: 1,
+        tipo: 'Familiar',
         año: 2022,
         placa: 'DEF-4567',
         color: 'Azul',
-        precioRentaDiario: 65.00,
-        montoGarantia: 220.00,
         estado: EstadoAuto.ACTIVO,
-        kilometraje: 12000,
-        descripcion: 'Compacto pero eficiente.',
-        transmision: 'Manual',
-        combustible: 'Gasolina',
-        capacidad: 5,
+        asientos: 5,
         capacidadMaletero: 5,
-        tipoAuto: 'Familiar',
-        propietarioId: 3,
-        idUbicacion: 3,
-        garantia: 550.00
+        transmision: Transmision.MANUAL,
+        combustible: Combustible.GASOLINA,
+        diasTotalRenta: 0,
+        vecesAlquilado: 0
       },
       {
+        idPropietario: 4,
+        idUbicacion: 2,
         marca: 'Volkswagen',
         modelo: 'Golf',
+        descripcion: 'Deportivo y ágil.',
+        precioRentaDiario: 75.00,
+        montoGarantia: 350.00,
+        kilometraje: 8000,
+        calificacionPromedio: 5.0,
+        totalComentarios: 1,
+        tipo: 'Familiar',
         año: 2021,
         placa: 'GHI-8910',
         color: 'Gris',
-        precioRentaDiario: 75.00,
-        montoGarantia: 350.00,
         estado: EstadoAuto.ACTIVO,
-        kilometraje: 8000,
-        descripcion: 'Deportivo y ágil.',
-        transmision: 'Automática',
-        combustible: 'Gasolina',
-        capacidad: 5,
+        asientos: 5,
         capacidadMaletero: 5,
-        tipoAuto: 'Familiar',
-        propietarioId: 4,
-        idUbicacion: 2,
-        garantia: 750.00
+        transmision: Transmision.AUTOMATICO,
+        combustible: Combustible.GASOLINA,
+        diasTotalRenta: 0,
+        vecesAlquilado: 0
       },
       {
+        idPropietario: 5,
+        idUbicacion: 4,
         marca: 'Nissan',
         modelo: 'Sentra',
+        descripcion: 'Confortable y espacioso.',
+        precioRentaDiario: 62.50,
+        montoGarantia: 275.00,
+        kilometraje: 22000,
+        calificacionPromedio: 3.0,
+        totalComentarios: 1,
+        tipo: 'Familiar',
         año: 2020,
         placa: 'JKL-1112',
         color: 'Plateado',
-        precioRentaDiario: 62.50,
-        montoGarantia: 275.00,
         estado: EstadoAuto.INACTIVO,
-        kilometraje: 22000,
-        descripcion: 'Confortable y espacioso.',
-        transmision: 'Automática',
-        combustible: 'Gasolina',
-        capacidad: 5,
+        asientos: 5,
         capacidadMaletero: 5,
-        tipoAuto: 'Familiar',
-        propietarioId: 5,
-        idUbicacion: 4,
-        garantia: 625.00
+        transmision: Transmision.AUTOMATICO,
+        combustible: Combustible.GASOLINA,
+        diasTotalRenta: 0,
+        vecesAlquilado: 0
       },
       {
+        idPropietario: 6,
+        idUbicacion: 3,
         marca: 'Hyundai',
         modelo: 'Tucson',
+        descripcion: 'SUV familiar con gran espacio.',
+        precioRentaDiario: 85.00,
+        montoGarantia: 400.00,
+        kilometraje: 5000,
+        calificacionPromedio: 4.5,
+        totalComentarios: 2,
+        tipo: 'Familiar',
         año: 2022,
         placa: 'MNO-1314',
         color: 'Verde',
-        precioRentaDiario: 85.00,
-        montoGarantia: 400.00,
         estado: EstadoAuto.ACTIVO,
-        kilometraje: 5000,
-        descripcion: 'SUV familiar con gran espacio.',
-        transmision: 'Automática',
-        combustible: 'Híbrido',
-        capacidad: 7,
+        asientos: 7,
         capacidadMaletero: 5,
-        tipoAuto: 'Familiar',
-        propietarioId: 6,
-        idUbicacion: 3,
-        garantia: 850.00
+        transmision: Transmision.AUTOMATICO,
+        combustible: Combustible.HIBRIDO,
+        diasTotalRenta: 0,
+        vecesAlquilado: 0
       }
     ]
   });
 
-  // Comentarios - Sin cambios
+  // Comentarios - Adaptado según nuevo esquema
   await prisma.comentario.createMany({
     data: [
       {
-        autoId: 1,
-        usuarioId: 2,
+        idAuto: 1,
+        idUsuario: 2,
         contenido: 'Muy buen auto, limpio y eficiente.',
-        calificacion: 5
+        calificacion: 5,
+        fechaCreacion: new Date()
       },
       {
-        autoId: 1,
-        usuarioId: 4,
+        idAuto: 1,
+        idUsuario: 4,
         contenido: 'Excelente rendimiento de combustible.',
-        calificacion: 4
+        calificacion: 4,
+        fechaCreacion: new Date()
       },
       {
-        autoId: 2,
-        usuarioId: 1,
+        idAuto: 2,
+        idUsuario: 1,
         contenido: 'El auto estaba algo sucio, pero funcionaba bien.',
-        calificacion: 3
+        calificacion: 3,
+        fechaCreacion: new Date()
       },
       {
-        autoId: 2,
-        usuarioId: 5,
+        idAuto: 2,
+        idUsuario: 5,
         contenido: 'Problemas con el aire acondicionado.',
-        calificacion: 2
+        calificacion: 2,
+        fechaCreacion: new Date()
       },
       {
-        autoId: 3,
-        usuarioId: 2,
+        idAuto: 3,
+        idUsuario: 2,
         contenido: 'Excelente experiencia, lo recomiendo.',
-        calificacion: 4
+        calificacion: 4,
+        fechaCreacion: new Date()
       },
       {
-        autoId: 3,
-        usuarioId: 6,
+        idAuto: 3,
+        idUsuario: 6,
         contenido: 'Muy cómodo para viajes largos.',
-        calificacion: 5
+        calificacion: 5,
+        fechaCreacion: new Date()
       },
       {
-        autoId: 4,
-        usuarioId: 3,
+        idAuto: 4,
+        idUsuario: 3,
         contenido: 'Buen auto para ciudad.',
-        calificacion: 4
+        calificacion: 4,
+        fechaCreacion: new Date()
       },
       {
-        autoId: 5,
-        usuarioId: 4,
+        idAuto: 5,
+        idUsuario: 4,
         contenido: 'Divertido de manejar, muy deportivo.',
-        calificacion: 5
+        calificacion: 5,
+        fechaCreacion: new Date()
       },
       {
-        autoId: 6,
-        usuarioId: 5,
+        idAuto: 6,
+        idUsuario: 5,
         contenido: 'Espacioso pero con alto consumo.',
-        calificacion: 3
+        calificacion: 3,
+        fechaCreacion: new Date()
       },
       {
-        autoId: 7,
-        usuarioId: 6,
+        idAuto: 7,
+        idUsuario: 6,
         contenido: 'Perfecto para familia grande.',
-        calificacion: 5
+        calificacion: 5,
+        fechaCreacion: new Date()
       },
       {
-        autoId: 7,
-        usuarioId: 1,
+        idAuto: 7,
+        idUsuario: 1,
         contenido: 'Tecnología avanzada a bordo.',
-        calificacion: 4
+        calificacion: 4,
+        fechaCreacion: new Date()
       }
     ]
   });
 
-  // Historial de Mantenimiento - Sin cambios
+  // Historial de Mantenimiento - Adaptado según nuevo esquema
   await prisma.historialMantenimiento.createMany({
     data: [
       {
-        autoId: 1,
+        idAuto: 1,
         fechaInicio: new Date('2024-12-10'),
         fechaFin: new Date('2024-12-10'),
         descripcion: 'Cambio de aceite y filtros.',
@@ -328,7 +360,7 @@ async function main() {
         kilometraje: 14000
       },
       {
-        autoId: 1,
+        idAuto: 1,
         fechaInicio: new Date('2025-03-15'),
         fechaFin: new Date('2025-03-15'),
         descripcion: 'Rotación de llantas.',
@@ -337,7 +369,7 @@ async function main() {
         kilometraje: 14800
       },
       {
-        autoId: 2,
+        idAuto: 2,
         fechaInicio: new Date('2024-11-01'),
         fechaFin: new Date('2024-11-03'),
         descripcion: 'Reparación del sistema eléctrico.',
@@ -346,7 +378,7 @@ async function main() {
         kilometraje: 17000
       },
       {
-        autoId: 2,
+        idAuto: 2,
         fechaInicio: new Date('2025-02-20'),
         fechaFin: new Date('2025-02-21'),
         descripcion: 'Reparación de aire acondicionado.',
@@ -355,7 +387,7 @@ async function main() {
         kilometraje: 17500
       },
       {
-        autoId: 3,
+        idAuto: 3,
         fechaInicio: new Date('2025-01-15'),
         fechaFin: new Date('2025-01-15'),
         descripcion: 'Revisión general anual.',
@@ -364,7 +396,7 @@ async function main() {
         kilometraje: 9500
       },
       {
-        autoId: 4,
+        idAuto: 4,
         fechaInicio: new Date('2025-03-01'),
         fechaFin: new Date('2025-03-01'),
         descripcion: 'Cambio de bujías.',
@@ -373,7 +405,7 @@ async function main() {
         kilometraje: 11500
       },
       {
-        autoId: 5,
+        idAuto: 5,
         fechaInicio: new Date('2025-04-10'),
         fechaFin: new Date('2025-04-10'),
         descripcion: 'Alineación y balanceo.',
@@ -382,7 +414,7 @@ async function main() {
         kilometraje: 7500
       },
       {
-        autoId: 6,
+        idAuto: 6,
         fechaInicio: new Date('2025-02-05'),
         fechaFin: new Date('2025-02-07'),
         descripcion: 'Cambio de transmisión.',
@@ -391,7 +423,7 @@ async function main() {
         kilometraje: 21000
       },
       {
-        autoId: 7,
+        idAuto: 7,
         fechaInicio: new Date('2025-01-20'),
         fechaFin: new Date('2025-01-20'),
         descripcion: 'Primer mantenimiento.',
@@ -402,60 +434,60 @@ async function main() {
     ]
   });
 
-  // Disponibilidad - Sin cambios
+  // Disponibilidad - Adaptado según nuevo esquema
   await prisma.disponibilidad.createMany({
     data: [
       {
-        autoId: 1,
+        idAuto: 1,
         fechaInicio: new Date('2025-04-20'),
         fechaFin: new Date('2025-04-22'),
         motivo: MotivoNoDisponibilidad.USO_PERSONAL,
         descripcion: 'Viaje del dueño.'
       },
       {
-        autoId: 1,
+        idAuto: 1,
         fechaInicio: new Date('2025-05-15'),
         fechaFin: new Date('2025-05-20'),
         motivo: MotivoNoDisponibilidad.OTRO,
         descripcion: 'Rentado por cliente.'
       },
       {
-        autoId: 2,
+        idAuto: 2,
         fechaInicio: new Date('2025-05-01'),
         fechaFin: new Date('2025-05-03'),
         motivo: MotivoNoDisponibilidad.MANTENIMIENTO,
         descripcion: 'Revisión de frenos.'
       },
       {
-        autoId: 3,
+        idAuto: 3,
         fechaInicio: new Date('2025-04-25'),
         fechaFin: new Date('2025-04-28'),
         motivo: MotivoNoDisponibilidad.OTRO,
         descripcion: 'Reservado para evento de empresa.'
       },
       {
-        autoId: 4,
+        idAuto: 4,
         fechaInicio: new Date('2025-05-10'),
         fechaFin: new Date('2025-05-15'),
         motivo: MotivoNoDisponibilidad.USO_PERSONAL,
         descripcion: 'Rentado para vacaciones.'
       },
       {
-        autoId: 5,
+        idAuto: 5,
         fechaInicio: new Date('2025-04-30'),
         fechaFin: new Date('2025-05-05'),
         motivo: MotivoNoDisponibilidad.USO_PERSONAL,
         descripcion: 'Viaje familiar del propietario.'
       },
       {
-        autoId: 6,
+        idAuto: 6,
         fechaInicio: new Date('2025-04-15'),
         fechaFin: new Date('2025-05-15'),
         motivo: MotivoNoDisponibilidad.MANTENIMIENTO,
         descripcion: 'Reparación mayor de motor.'
       },
       {
-        autoId: 7,
+        idAuto: 7,
         fechaInicio: new Date('2025-05-01'),
         fechaFin: new Date('2025-05-10'),
         motivo: MotivoNoDisponibilidad.OTRO,
@@ -464,47 +496,214 @@ async function main() {
     ]
   });
 
-  // Imágenes - Sin cambios
+  // Imágenes - Sin cambios, manteniendo exactamente las mismas rutas
   await prisma.imagen.createMany({
     data: [
       // Toyota Corolla
-      { autoId: 1, direccionImagen: '/imagenesAutos/Toyota/Lado.png' },
-      { autoId: 1, direccionImagen: '/imagenesAutos/Toyota/Lateral.png' },
-      { autoId: 1, direccionImagen: '/imagenesAutos/Toyota/Parte_posterior.png' },
+      { idAuto: 1, direccionImagen: '/imagenesAutos/Toyota/Lado.png' },
+      { idAuto: 1, direccionImagen: '/imagenesAutos/Toyota/Lateral.png' },
+      { idAuto: 1, direccionImagen: '/imagenesAutos/Toyota/Parte_posterior.png' },
 
-      
+
       // Honda Civic
-      { autoId: 2, direccionImagen: '/imagenesAutos/Honda/Lateral.jpg' },
-      { autoId: 2, direccionImagen: '/imagenesAutos/Honda/Interior.png' },
-      { autoId: 2, direccionImagen: '/imagenesAutos/Honda/Interior_sillas.png' },
-      
+      { idAuto: 2, direccionImagen: '/imagenesAutos/Honda/Lateral.jpg' },
+      { idAuto: 2, direccionImagen: '/imagenesAutos/Honda/Interior.png' },
+      { idAuto: 2, direccionImagen: '/imagenesAutos/Honda/Interior_sillas.png' },
+
       // Ford Focus
-      { autoId: 3, direccionImagen: '/imagenesAutos/Ford/Lateral.jpeg' },
-      { autoId: 3, direccionImagen: '/imagenesAutos/Ford/Interior.jpeg' },
-      { autoId: 3, direccionImagen: '/imagenesAutos/Ford/Lateral_Trasera.jpeg' },
-      { autoId: 3, direccionImagen: '/imagenesAutos/Ford/Vista_Lateral.jpeg' },
-      
+      { idAuto: 3, direccionImagen: '/imagenesAutos/Ford/Lateral.jpeg' },
+      { idAuto: 3, direccionImagen: '/imagenesAutos/Ford/Interior.jpeg' },
+      { idAuto: 3, direccionImagen: '/imagenesAutos/Ford/Lateral_Trasera.jpeg' },
+      { idAuto: 3, direccionImagen: '/imagenesAutos/Ford/Vista_Lateral.jpeg' },
+
       // Chevrolet Onix
-      { autoId: 4, direccionImagen: '/imagenesAutos/Chevrolet/frontal.png' },
-      { autoId: 4, direccionImagen: '/imagenesAutos/Chevrolet/Interior.png' },
-      { autoId: 4, direccionImagen: '/imagenesAutos/Chevrolet/Lateral.png' },
-      
+      { idAuto: 4, direccionImagen: '/imagenesAutos/Chevrolet/frontal.png' },
+      { idAuto: 4, direccionImagen: '/imagenesAutos/Chevrolet/Interior.png' },
+      { idAuto: 4, direccionImagen: '/imagenesAutos/Chevrolet/Lateral.png' },
+
       // Volkswagen Golf
-      { autoId: 5, direccionImagen: '/imagenesAutos/Volkswagen/Frontal.jpg' },
-      { autoId: 5, direccionImagen: '/imagenesAutos/Volkswagen/Perfil.jpg' },
-      { autoId: 5, direccionImagen: '/imagenesAutos/Volkswagen/Interior_techos.jpg' },
-      { autoId: 5, direccionImagen: '/imagenesAutos/Volkswagen/Asientos.jpg' },
-      
+      { idAuto: 5, direccionImagen: '/imagenesAutos/Volkswagen/Frontal.jpg' },
+      { idAuto: 5, direccionImagen: '/imagenesAutos/Volkswagen/Perfil.jpg' },
+      { idAuto: 5, direccionImagen: '/imagenesAutos/Volkswagen/Interior_techos.jpg' },
+      { idAuto: 5, direccionImagen: '/imagenesAutos/Volkswagen/Asientos.jpg' },
+
       // Nissan Sentra
-      { autoId: 6, direccionImagen: '/imagenesAutos/Nissan/Frontal.jpg' },
-      { autoId: 6, direccionImagen: '/imagenesAutos/Nissan/Lateral.jpg' },
-      { autoId: 6, direccionImagen: '/imagenesAutos/Nissan/Panel.jpg' },
-      
+      { idAuto: 6, direccionImagen: '/imagenesAutos/Nissan/Frontal.jpg' },
+      { idAuto: 6, direccionImagen: '/imagenesAutos/Nissan/Lateral.jpg' },
+      { idAuto: 6, direccionImagen: '/imagenesAutos/Nissan/Panel.jpg' },
+
       // Hyundai Tucson
-      { autoId: 7, direccionImagen: '/imagenesAutos/Hyundai/Frontal.jpg' },
-      { autoId: 7, direccionImagen: '/imagenesAutos/Hyundai/Interior_espacioso.jpg' },
-      { autoId: 7, direccionImagen: '/imagenesAutos/Hyundai/Tercera_fila.jpg' },
-      { autoId: 7, direccionImagen: '/imagenesAutos/Hyundai/Maletero.jpg' }
+      { idAuto: 7, direccionImagen: '/imagenesAutos/Hyundai/Frontal.jpg' },
+      { idAuto: 7, direccionImagen: '/imagenesAutos/Hyundai/Interior_espacioso.jpg' },
+      { idAuto: 7, direccionImagen: '/imagenesAutos/Hyundai/Tercera_fila.jpg' },
+      { idAuto: 7, direccionImagen: '/imagenesAutos/Hyundai/Maletero.jpg' }
+    ]
+  });
+
+  // Crear algunas reservas de ejemplo
+  const reservas = await prisma.reserva.createMany({
+    data: [
+      {
+        fechaInicio: new Date('2025-05-15'),
+        fechaFin: new Date('2025-05-20'),
+        idAuto: 1,
+        idCliente: 4,
+        estado: EstadoReserva.CONFIRMADA,
+        fechaSolicitud: new Date('2025-05-01'),
+        fechaAprobacion: new Date('2025-05-02'),
+        fechaLimitePago: new Date('2025-05-10'),
+        montoTotal: 277.50, // 5 días * 55.50
+        kilometrajeInicial: 15000,
+        estaPagada: true
+      },
+      {
+        fechaInicio: new Date('2025-05-01'),
+        fechaFin: new Date('2025-05-10'),
+        idAuto: 7,
+        idCliente: 1,
+        estado: EstadoReserva.CONFIRMADA,
+        fechaSolicitud: new Date('2025-04-15'),
+        fechaAprobacion: new Date('2025-04-16'),
+        fechaLimitePago: new Date('2025-04-25'),
+        montoTotal: 850.00, // 10 días * 85.00
+        kilometrajeInicial: 5000,
+        estaPagada: true
+      },
+      {
+        fechaInicio: new Date('2025-06-01'),
+        fechaFin: new Date('2025-06-07'),
+        idAuto: 3,
+        idCliente: 5,
+        estado: EstadoReserva.SOLICITADA,
+        fechaSolicitud: new Date('2025-05-15'),
+        fechaLimitePago: new Date('2025-05-25'),
+        montoTotal: 490.00, // 7 días * 70.00
+        estaPagada: false
+      }
+    ]
+  });
+
+  // Crear pagos para reservas confirmadas
+  await prisma.pago.createMany({
+    data: [
+      {
+        idReserva: 1,
+        monto: 277.50,
+        fechaPago: new Date('2025-05-05'),
+        metodoPago: MetodoPago.QR,
+        referencia: 'PAG-00001',
+        tipo: TipoPago.RENTA
+      },
+      {
+        idReserva: 1,
+        monto: 200.00,
+        fechaPago: new Date('2025-05-05'),
+        metodoPago: MetodoPago.TARJETA_DEBITO,
+        referencia: 'PAG-00002',
+        tipo: TipoPago.GARANTIA
+      },
+      {
+        idReserva: 2,
+        monto: 850.00,
+        fechaPago: new Date('2025-04-20'),
+        metodoPago: MetodoPago.QR,
+        referencia: 'PAG-00003',
+        tipo: TipoPago.RENTA
+      },
+      {
+        idReserva: 2,
+        monto: 400.00,
+        fechaPago: new Date('2025-04-20'),
+        metodoPago: MetodoPago.QR,
+        referencia: 'PAG-00004',
+        tipo: TipoPago.GARANTIA
+      }
+    ]
+  });
+
+  // Crear garantías para reservas confirmadas
+  await prisma.garantia.createMany({
+    data: [
+      {
+        idReserva: 1,
+        monto: 200.00,
+        fechaDeposito: new Date('2025-05-05'),
+        estado: EstadoGarantia.DEPOSITADA,
+        comprobante: 'comp_garantia_001.pdf'
+      },
+      {
+        idReserva: 2,
+        monto: 400.00,
+        fechaDeposito: new Date('2025-04-20'),
+        estado: EstadoGarantia.DEPOSITADA,
+        comprobante: 'comp_garantia_002.pdf'
+      }
+    ]
+  });
+
+  // Crear algunas notificaciones de ejemplo
+  await prisma.notificacion.createMany({
+    data: [
+      {
+        idUsuario: 1,
+        titulo: 'Reserva confirmada',
+        mensaje: 'Tu reserva para el Hyundai Tucson ha sido confirmada',
+        idEntidad: '2',
+        tipoEntidad: 'reserva',
+        tipo: TipoDeNotificacion.RESERVA_APROBADA,
+        prioridad: PrioridadNotificacion.ALTA
+      },
+      {
+        idUsuario: 3,
+        titulo: 'Nueva solicitud de reserva',
+        mensaje: 'Has recibido una nueva solicitud de reserva para tu Toyota Corolla',
+        idEntidad: '1',
+        tipoEntidad: 'reserva',
+        tipo: TipoDeNotificacion.RESERVA_SOLICITADA,
+        prioridad: PrioridadNotificacion.MEDIA
+      },
+      {
+        idUsuario: 6,
+        titulo: 'Reserva recibida',
+        mensaje: 'Has recibido una nueva solicitud de reserva para tu Hyundai Tucson',
+        idEntidad: '2',
+        tipoEntidad: 'reserva',
+        tipo: TipoDeNotificacion.RESERVA_SOLICITADA,
+        prioridad: PrioridadNotificacion.MEDIA
+      },
+      {
+        idUsuario: 2,
+        titulo: 'Nueva solicitud de reserva',
+        mensaje: 'Has recibido una nueva solicitud de reserva para tu Ford Focus',
+        idEntidad: '3',
+        tipoEntidad: 'reserva',
+        tipo: TipoDeNotificacion.RESERVA_SOLICITADA,
+        prioridad: PrioridadNotificacion.MEDIA
+      }
+    ]
+  });
+
+  // Crear algunas calificaciones de usuarios
+  await prisma.calificacionUsuario.createMany({
+    data: [
+      {
+        idCalificador: 3,
+        idCalificado: 4,
+        puntuacion: 5,
+        comentario: 'Excelente cliente, muy puntual',
+        fechaCreacion: new Date('2025-05-21'),
+        idReserva: 1,
+        tipoCalificacion: TipoCalificacionUsuario.ARRENDATARIO
+      },
+      {
+        idCalificador: 4,
+        idCalificado: 3,
+        puntuacion: 4,
+        comentario: 'Vehículo en excelentes condiciones',
+        fechaCreacion: new Date('2025-05-21'),
+        idReserva: 2,  // Cambiado de 1 a 2
+        tipoCalificacion: TipoCalificacionUsuario.ARRENDADOR
+      }
     ]
   });
 }

@@ -59,12 +59,12 @@ export const getAutoId = async (req: Request, res: Response): Promise<void> => {
     try {
       const auto = await prisma.auto.findUnique({
         where: {
-          id: id,
+          idAuto: id,
         },
         include: {
           propietario: {
             select: {
-              id: true,
+              idUsuario: true,
               nombre: true,
               apellido: true,
               telefono: true,
@@ -109,12 +109,12 @@ export const getComentarios = async (req: Request, res: Response): Promise<void>
     try {
       const comentarios = await prisma.comentario.findMany({
         where: {
-          autoId: autoId,
+          idAuto: autoId,
         },
         include: {
           usuario: {
             select: {
-              id: true,
+              idUsuario: true,
               nombre: true,
               apellido: true, 
             },
@@ -153,7 +153,7 @@ export const getComentarios = async (req: Request, res: Response): Promise<void>
     try {
       const host = await prisma.usuario.findUnique({
         where: {
-          id:id
+          idUsuario:id
         },
       });
   
