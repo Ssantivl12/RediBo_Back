@@ -147,7 +147,7 @@ model Reserva {
   garantia          Garantia?
   comentario        Comentario?        // Un comentario puede estar asociado a una reserva específica
   estaPagada        Boolean            @default(false)  // Indica si la reserva está pagada
-  calificacionUsuario CalificacionUsuario?
+  calificaciones CalificacionUsuario[] // Calificaciones asociadas a esta reserva
 
   @@map("reservas")
 }
@@ -222,7 +222,7 @@ model CalificacionUsuario {
   puntuacion        Int                @db.SmallInt     // Puntuación (de 1 a 5)
   comentario        String?            // Comentario opcional
   fechaCreacion     DateTime           @default(now())
-  idReserva         Int                @unique          // Reserva asociada a esta calificación
+  idReserva         Int                // Reserva asociada a esta calificación
   reserva           Reserva            @relation(fields: [idReserva], references: [idReserva])
   tipoCalificacion  TipoCalificacionUsuario // Para diferenciar si es calificación como arrendador o arrendatario
   
