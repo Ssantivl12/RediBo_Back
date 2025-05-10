@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from '../lib/prisma';
+import { isValid, parseISO } from "date-fns";
+import { Transmision } from "@prisma/client";
 
 export const getAutos = async (req: Request, res: Response) => {
   try {
@@ -178,4 +180,67 @@ export const getComentarios = async (req: Request, res: Response): Promise<void>
       });
     }
   };
+
+export const getAutosDisponiblesPorFecha = async (req: Request, res: Response): Promise<void> => {
+  const { inicio, fin } = req.params;
+
+  const fechaInicio = parseISO(inicio);
+  const fechaFin = parseISO(fin);
+
+  if (!isValid(fechaInicio) || !isValid(fechaFin) || fechaInicio > fechaFin) {
+    res.status(400).json({
+      success: false,
+      message: "Fechas inválidas o fuera de rango.",
+    });
+    return;
+  }
+
   
+  fechaInicio.setHours(0, 0, 0, 0);
+  fechaFin.setHours(23, 59, 59, 999);
+
+  try {
+    const fechaInicio = parseISO(inicio).toISOString().split("T")[0]; // '2025-05-09'
+    const fechaFin = parseISO(fin).toISOString().split("T")[0];
+    const autosDisponibles = await prisma.auto.findMany({
+      where: {
+        disponibilidad: {
+          none: {
+            AND: [
+              {
+                fechaInicio: { lte: new Date(`${fechaFin}T23:59:59.999Z`) },
+              },
+              {
+                fechaFin: { gte: new Date(`${fechaInicio}T00:00:00.000Z`) },
+              },
+            ],
+          },
+        },
+      },
+        select: {
+          idAuto: true,
+          marca:true,
+          modelo:true,
+          capacidadMaletero:true,
+          asientos:true,
+          transmision:true,
+          combustible:true,
+          precioRentaDiario:true,
+          calificacionPromedio:true,
+          imagenes:true,
+        },
+      });
+  
+      res.status(200).json({
+        success: true,
+        data: autosDisponibles,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener autos disponibles.",
+        error: error instanceof Error ? error.message : "Error desconocido",
+      });
+    }
+  };
+
