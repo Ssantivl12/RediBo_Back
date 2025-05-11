@@ -195,10 +195,6 @@ export const getAutosDisponiblesPorFecha = async (req: Request, res: Response): 
     return;
   }
 
-  
-  fechaInicio.setHours(0, 0, 0, 0);
-  fechaFin.setHours(23, 59, 59, 999);
-
   try {
     const fechaInicio = parseISO(inicio).toISOString().split("T")[0]; // '2025-05-09'
     const fechaFin = parseISO(fin).toISOString().split("T")[0];
@@ -213,6 +209,15 @@ export const getAutosDisponiblesPorFecha = async (req: Request, res: Response): 
               {
                 fechaFin: { gte: new Date(`${fechaInicio}T00:00:00.000Z`) },
               },
+            ],
+          },
+        },
+        reservas: {
+          none: {
+            AND: [
+              { estado: "CONFIRMADA" },
+              { fechaInicio: { lte: new Date(`${fechaFin}T23:59:59.999Z`) } },
+              { fechaFin: { gte: new Date(`${fechaInicio}T00:00:00.000Z`) } },
             ],
           },
         },
