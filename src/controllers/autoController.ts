@@ -182,5 +182,65 @@ export const ponerEnMantenimiento = async (req: Request, res: Response) => {
   }
 };
 
+// Controlador para finalizar mantenimiento de un auto
+export const finalizarMantenimiento = async (req: Request, res: Response) => {
+  try {
+    const idHistorial = parseInt(req.params.idHistorial);
+    
+    // Validar id del historial de mantenimiento
+    if (isNaN(idHistorial)) {
+      return res.status(400).json({ error: 'ID de historial de mantenimiento inválido' });
+    }
 
+    // Transacción para finalizar mantenimiento
+    const resultado = await prisma.$transaction(async (tx) => {
+      // Actualizar registro de mantenimiento
+      const mantenimiento = await tx.historialMantenimiento.update({
+        where: { idHistorial: idHistorial },
+        data: { 
+          fechaFin: new Date() 
+        }
+      });
+
+      // Buscar el registro de disponibilidad relacionado
+      const disponibilidad = await tx.disponibilidad.findFirst({
+        where: { 
+          idAuto: mantenimiento.idAuto, 
+          motivo: 'MANTENIMIENTO' 
+        }
+      });
+
+      // Actualizar registro de disponibilidad
+      if (disponibilidad) {
+        await tx.disponibilidad.update({
+          where: { idDisponibilidad: disponibilidad.idDisponibilidad },
+          data: { fechaFin: new Date() }
+        });
+      }
+
+      // Marcar el auto como activo nuevamente
+      const autoActualizado = await tx.auto.update({
+        where: { idAuto: mantenimiento.idAuto },
+        data: { estado: 'ACTIVO' }
+      });
+
+      return { mantenimiento, autoActualizado };
+    });
+    
+    return res.status(200).json({
+      mensaje: 'Mantenimiento finalizado exitosamente',
+      ...resultado
+    });
+    
+  } catch (error: any) {
+    console.error('Error al finalizar mantenimiento:', error);
+    
+    // Manejar errores específicos de Prisma
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Registro de mantenimiento no encontrado' });
+    }
+    
+    return res.status(500).json({ error: 'Error al procesar la solicitud de finalización de mantenimiento' });
+  }
+};
 
