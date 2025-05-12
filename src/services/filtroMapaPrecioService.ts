@@ -32,24 +32,29 @@ export const getVehiculoPorId = async (id: number) => {
     where: {
       idvehiculo: id,
     },
-    select: {
-      idvehiculo: true,
-      imagen: true,
-      marca: true,
-      modelo: true,
-      descripcion: true,
-      tarifa: true
-    }
+    include: {
+      calificaciones: {
+        select: {
+          puntuacion: true,
+        },
+      },
+    },
   });
 
   if (!v) return null;
+
+  const calificaciones = v.calificaciones || [];
+  const promedio =
+    calificaciones.length > 0
+      ? calificaciones.reduce((acc, c) => acc + c.puntuacion, 0) / calificaciones.length
+      : null;
 
   return {
     id: v.idvehiculo,
     imagen: v.imagen,
     nombre: `${v.marca} - ${v.modelo}`,
     descripcion: v.descripcion,
-    precio: v.tarifa
+    precio: v.tarifa,
+    calificacion: promedio,
   };
 };
-
