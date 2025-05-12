@@ -53,6 +53,31 @@ CREATE TABLE "usuarios" (
 );
 
 -- CreateTable
+CREATE TABLE "drivers" (
+    "idDriver" SERIAL NOT NULL,
+    "idUsuario" INTEGER NOT NULL,
+    "licencia" TEXT NOT NULL,
+    "fechaExpiracion" TIMESTAMP(3) NOT NULL,
+    "tipoLicencia" TEXT,
+    "añosExperiencia" INTEGER,
+    "disponible" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "drivers_pkey" PRIMARY KEY ("idDriver")
+);
+
+-- CreateTable
+CREATE TABLE "usuario_drivers" (
+    "id" SERIAL NOT NULL,
+    "idUsuario" INTEGER NOT NULL,
+    "idDriver" INTEGER NOT NULL,
+    "fechaAsignacion" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "usuario_drivers_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Notificacion" (
     "idNotificacion" SERIAL NOT NULL,
     "idUsuario" INTEGER NOT NULL,
@@ -224,6 +249,18 @@ CREATE TABLE "calificaciones_usuarios" (
 CREATE UNIQUE INDEX "usuarios_email_key" ON "usuarios"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "drivers_idUsuario_key" ON "drivers"("idUsuario");
+
+-- CreateIndex
+CREATE INDEX "usuario_drivers_idUsuario_idx" ON "usuario_drivers"("idUsuario");
+
+-- CreateIndex
+CREATE INDEX "usuario_drivers_idDriver_idx" ON "usuario_drivers"("idDriver");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "usuario_drivers_idUsuario_idDriver_key" ON "usuario_drivers"("idUsuario", "idDriver");
+
+-- CreateIndex
 CREATE INDEX "Notificacion_idUsuario_idx" ON "Notificacion"("idUsuario");
 
 -- CreateIndex
@@ -261,6 +298,15 @@ CREATE INDEX "calificaciones_usuarios_idCalificado_idx" ON "calificaciones_usuar
 
 -- CreateIndex
 CREATE INDEX "calificaciones_usuarios_idCalificador_idx" ON "calificaciones_usuarios"("idCalificador");
+
+-- AddForeignKey
+ALTER TABLE "drivers" ADD CONSTRAINT "drivers_idUsuario_fkey" FOREIGN KEY ("idUsuario") REFERENCES "usuarios"("idUsuario") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "usuario_drivers" ADD CONSTRAINT "usuario_drivers_idUsuario_fkey" FOREIGN KEY ("idUsuario") REFERENCES "usuarios"("idUsuario") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "usuario_drivers" ADD CONSTRAINT "usuario_drivers_idDriver_fkey" FOREIGN KEY ("idDriver") REFERENCES "drivers"("idDriver") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Notificacion" ADD CONSTRAINT "Notificacion_idUsuario_fkey" FOREIGN KEY ("idUsuario") REFERENCES "usuarios"("idUsuario") ON DELETE CASCADE ON UPDATE CASCADE;

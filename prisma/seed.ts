@@ -3,7 +3,6 @@ import { PrismaClient, EstadoAuto, MotivoNoDisponibilidad, TipoMantenimiento, Tr
 const prisma = new PrismaClient();
 
 async function main() {
-  // Ubicaciones - Sin cambios
   const ubicaciones = await prisma.ubicacion.createMany({
     data: [
       {
@@ -37,7 +36,6 @@ async function main() {
     ]
   });
 
-  // Usuarios - Adaptado según nuevo esquema, sin cambios significativos
   const usuarios = await prisma.usuario.createMany({
     data: [
       {
@@ -97,7 +95,118 @@ async function main() {
     ]
   });
 
-  // Autos - Adaptado según nuevo esquema
+  const todosUsuarios = await prisma.usuario.findMany({
+    select: {
+      idUsuario: true,
+      nombre: true,
+      email: true
+    }
+  });
+  
+  const drivers = await prisma.driver.createMany({
+    data: [
+      {
+        idUsuario: todosUsuarios[0].idUsuario,
+        licencia: "DRV-12345",
+        fechaExpiracion: new Date("2026-05-15"),
+        tipoLicencia: "B",
+        añosExperiencia: 5,
+        disponible: true
+      },
+      {
+        idUsuario: todosUsuarios[3].idUsuario,
+        licencia: "DRV-67890",
+        fechaExpiracion: new Date("2025-08-22"),
+        tipoLicencia: "A",
+        añosExperiencia: 3,
+        disponible: true
+      },
+      {
+        idUsuario: todosUsuarios[4].idUsuario,
+        licencia: "DRV-54321",
+        fechaExpiracion: new Date("2027-03-10"),
+        tipoLicencia: "B",
+        añosExperiencia: 7,
+        disponible: false
+      }
+    ]
+  });
+  
+  const todosDrivers = await prisma.driver.findMany({
+    select: {
+      idDriver: true,
+      idUsuario: true
+    }
+  });
+  
+  const findDriverIdSafely = (userIndex: number) => {
+    const userId = todosUsuarios[userIndex].idUsuario;
+    const driver = todosDrivers.find(d => d.idUsuario === userId);
+    
+    if (!driver) {
+      console.warn(`Warning: No driver found for user ${userId} (index ${userIndex})`);
+      return null;
+    }
+    
+    return driver.idDriver;
+  };
+  
+  const usuarioDriverData = [];
+  
+  const driverForUser0 = findDriverIdSafely(0);
+  if (driverForUser0) {
+    usuarioDriverData.push({
+      idUsuario: todosUsuarios[1].idUsuario,
+      idDriver: driverForUser0,
+      fechaAsignacion: new Date()
+    });
+    
+    usuarioDriverData.push({
+      idUsuario: todosUsuarios[5].idUsuario,
+      idDriver: driverForUser0,
+      fechaAsignacion: new Date()
+    });
+  }
+  
+  const driverForUser3 = findDriverIdSafely(3);
+  if (driverForUser3) {
+    usuarioDriverData.push({
+      idUsuario: todosUsuarios[1].idUsuario,
+      idDriver: driverForUser3,
+      fechaAsignacion: new Date()
+    });
+    
+    usuarioDriverData.push({
+      idUsuario: todosUsuarios[3].idUsuario,
+      idDriver: driverForUser3,
+      fechaAsignacion: new Date()
+    });
+  }
+  
+  const driverForUser4 = findDriverIdSafely(4);
+  if (driverForUser4) {
+    usuarioDriverData.push({
+      idUsuario: todosUsuarios[2].idUsuario,
+      idDriver: driverForUser4,
+      fechaAsignacion: new Date()
+    });
+    
+    usuarioDriverData.push({
+      idUsuario: todosUsuarios[5].idUsuario,
+      idDriver: driverForUser4,
+      fechaAsignacion: new Date()
+    });
+  }
+  
+  if (usuarioDriverData.length > 0) {
+    const usuariosDrivers = await prisma.usuarioDriver.createMany({
+      data: usuarioDriverData
+    });
+    console.log(`Created ${usuarioDriverData.length} usuarioDriver relationships`);
+  } else {
+    console.log('No valid usuarioDriver relationships to create');
+  }
+
   const autos = await prisma.auto.createMany({
     data: [
       {
@@ -264,7 +373,6 @@ async function main() {
     ]
   });
 
-  // Comentarios - Adaptado según nuevo esquema
   await prisma.comentario.createMany({
     data: [
       {
@@ -347,7 +455,6 @@ async function main() {
     ]
   });
 
-  // Historial de Mantenimiento - Adaptado según nuevo esquema
   await prisma.historialMantenimiento.createMany({
     data: [
       {
@@ -434,7 +541,6 @@ async function main() {
     ]
   });
 
-  // Disponibilidad - Adaptado según nuevo esquema
   await prisma.disponibilidad.createMany({
     data: [
       {
@@ -496,7 +602,6 @@ async function main() {
     ]
   });
 
-  // Imágenes - Sin cambios, manteniendo exactamente las mismas rutas
   await prisma.imagen.createMany({
     data: [
       // Toyota Corolla
@@ -583,7 +688,6 @@ async function main() {
     ]
   });
 
-  // Crear pagos para reservas confirmadas
   await prisma.pago.createMany({
     data: [
       {
@@ -701,7 +805,7 @@ async function main() {
         puntuacion: 4,
         comentario: 'Vehículo en excelentes condiciones',
         fechaCreacion: new Date('2025-05-21'),
-        idReserva: 2,  // Cambiado de 1 a 2
+        idReserva: 2,  
         tipoCalificacion: TipoCalificacionUsuario.ARRENDADOR
       }
     ]

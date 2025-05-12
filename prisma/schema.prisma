@@ -1,5 +1,3 @@
-
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -22,11 +20,51 @@ model Usuario {
   notificaciones    Notificacion[]     
   autos             Auto[]             
   reservas          Reserva[]         
-  comentariosEscritos Comentario[]    
+  comentariosEscritos Comentario[]
   calificacionesRecibidas CalificacionUsuario[] @relation("UsuarioCalificado")
   calificacionesRealizadas CalificacionUsuario[] @relation("UsuarioCalificador")
   
+  // Relación con Driver (si este usuario es un driver)
+  driver            Driver?
+  
+  // Relación muchos a muchos con drivers asignados
+  driversAsignados  UsuarioDriver[]
+  
   @@map("usuarios")
+}
+
+model Driver {
+  idDriver          Int                @id @default(autoincrement())
+  idUsuario         Int                @unique
+  usuario           Usuario            @relation(fields: [idUsuario], references: [idUsuario], onDelete: Cascade)
+  licencia          String             
+  fechaExpiracion   DateTime           
+  tipoLicencia      String?            
+  añosExperiencia   Int?               
+  disponible        Boolean            @default(true)
+  
+  asignadoA         UsuarioDriver[]
+  
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  @@map("drivers")
+}
+
+model UsuarioDriver {
+  id                Int                @id @default(autoincrement())
+  idUsuario         Int               
+  idDriver          Int                
+  
+  usuario           Usuario            @relation(fields: [idUsuario], references: [idUsuario], onDelete: Cascade)
+  driver            Driver             @relation(fields: [idDriver], references: [idDriver], onDelete: Cascade)
+  
+  fechaAsignacion   DateTime           @default(now())       
+  
+  @@unique([idUsuario, idDriver])     
+  @@map("usuario_drivers")
+  @@index([idUsuario])
+  @@index([idDriver])
 }
 
 model Notificacion {
@@ -80,7 +118,7 @@ model Auto {
   totalComentarios  Int                @default(0)
   reservas          Reserva[]
   disponibilidad    Disponibilidad[]  
-  // ** Detalles adicionales del auto **
+
   tipo              String             
   año               Int
   placa             String             @unique

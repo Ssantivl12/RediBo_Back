@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from '../lib/prisma';
 import { isValid, parseISO } from "date-fns";
-import { Transmision } from "@prisma/client";
 
 export const getAutos = async (req: Request, res: Response) => {
   try {
@@ -196,7 +195,7 @@ export const getAutosDisponiblesPorFecha = async (req: Request, res: Response): 
   }
 
   try {
-    const fechaInicio = parseISO(inicio).toISOString().split("T")[0]; // '2025-05-09'
+    const fechaInicio = parseISO(inicio).toISOString().split("T")[0];
     const fechaFin = parseISO(fin).toISOString().split("T")[0];
     const autosDisponibles = await prisma.auto.findMany({
       where: {
@@ -230,6 +229,7 @@ export const getAutosDisponiblesPorFecha = async (req: Request, res: Response): 
           asientos:true,
           transmision:true,
           combustible:true,
+          kilometraje:true,
           precioRentaDiario:true,
           calificacionPromedio:true,
           imagenes:true,
@@ -249,3 +249,36 @@ export const getAutosDisponiblesPorFecha = async (req: Request, res: Response): 
     }
   };
 
+  export const getDrivers = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = parseInt(req.params.id, 10);
+  
+      if (isNaN(userId)) {
+        res.status(400).json({ error: 'ID de usuario inválido' });
+        return;
+      }
+  
+      const usuario = await prisma.usuario.findUnique({
+        where: { idUsuario: userId },
+        include: {
+          driversAsignados: {
+            include: {
+              driver: true,
+            },
+          },
+        },
+      });
+  
+      if (!usuario) {
+        res.status(404).json({ error: 'Usuario no encontrado' });
+        return;
+      }
+  
+      const drivers = usuario.driversAsignados.map((asignacion) => asignacion.driver);
+  
+      res.status(200).json(drivers);
+    } catch (error) {
+      console.error('Error al obtener los drivers:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  };
