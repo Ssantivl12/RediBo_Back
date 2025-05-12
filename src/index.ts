@@ -3,35 +3,36 @@ import dotenv from 'dotenv';
 import path from 'path';
 import cors from 'cors';
 
-dotenv.config(); // Cargar variables de entorno primero
-
-// Rutas
 import rutasPago from './routes/pago.routes';
 import qrRoutes from './routes/generarQRRoute';
 import historialBusquedaRoutes from './routes/historialBusquedaRoutes';
 import reservasRoutes from './routes/reservas.routes';
 import mapaRoutes from './routes/filtroMapaPrecioRoutes';
-// import vehiculosRoutes from './routes/vehiculos.routes'; // Para GPS si se habilita
+import vehiculosRoutes from './routes/vehiculoRoutes'; 
 import filtroAeropuertoRoutes from './routes/filtroAeropuertoRoutes';
 import filtroXFechasRoutes from './routes/filtroXFechasRoutes';
+import filtroGPS from './routes/filtroGPSRoutes';
 
 const app = express();
 dotenv.config();
-
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Rutas API
+// Rutas de APIs
 app.use('/pagos', rutasPago);
 app.use('/', qrRoutes);
 app.use('/historial', historialBusquedaRoutes);
 app.use('/reservas', reservasRoutes);
+app.use('/vehiculo', vehiculosRoutes); 
+
+
+
 app.use('/mapa', mapaRoutes);
 app.use('/aeropuerto', filtroAeropuertoRoutes);
-app.use('/vehiculos', filtroXFechasRoutes); // Ahora todo lo relacionado a vehículos entra aquí
+app.use('/vehiculosxfechas', filtroXFechasRoutes);
+app.use('/vehiculosxgps', filtroGPS);
 
-// Rutas estáticas para comprobantes
+// Archivos estáticos para comprobantes
 app.use(
   '/cmp',
   express.static(path.join(process.cwd(), 'public', 'cmp'), {
@@ -43,7 +44,7 @@ app.use(
   })
 );
 
-// Rutas estáticas para códigos QR
+// Archivos estáticos para códigos QR
 app.use(
   '/qr',
   express.static(path.join(process.cwd(), 'public', 'qr'), {

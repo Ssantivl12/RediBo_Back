@@ -14,17 +14,21 @@ export const obtenerVehiculosDisponibles = async () => {
       ubicacion: {
         select: {
           latitud: true,
-          amplitud: true,
+          longitud: true,
         },
       },
     },
   });
-  return vehiculos.map(v => ({
-    idVehiculo: v.idvehiculo,
-    precio: v.tarifa,
-    latitud: v.ubicacion?.latitud,
-    amplitud: v.ubicacion?.amplitud,
-  }));
+
+  // Filtra vehículos con latitud y longitud válidas
+  return vehiculos
+    .filter(v => v.ubicacion?.latitud !== null && v.ubicacion?.longitud !== null)
+    .map(v => ({
+      idVehiculo: v.idvehiculo,
+      precio: v.tarifa,
+      latitud: v.ubicacion!.latitud!,
+      amplitud: v.ubicacion!.longitud!,
+    }));
 };
 
 export const getVehiculoPorId = async (id: number) => {
@@ -32,29 +36,24 @@ export const getVehiculoPorId = async (id: number) => {
     where: {
       idvehiculo: id,
     },
-    include: {
-      calificaciones: {
-        select: {
-          puntuacion: true,
-        },
-      },
-    },
+    select: {
+      idvehiculo: true,
+      imagen: true,
+      marca: true,
+      modelo: true,
+      descripcion: true,
+      tarifa: true
+    }
   });
 
   if (!v) return null;
-
-  const calificaciones = v.calificaciones || [];
-  const promedio =
-    calificaciones.length > 0
-      ? calificaciones.reduce((acc, c) => acc + c.puntuacion, 0) / calificaciones.length
-      : null;
 
   return {
     id: v.idvehiculo,
     imagen: v.imagen,
     nombre: `${v.marca} - ${v.modelo}`,
     descripcion: v.descripcion,
-    precio: v.tarifa,
-    calificacion: promedio,
+    precio: v.tarifa
   };
 };
+

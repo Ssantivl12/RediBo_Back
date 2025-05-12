@@ -35,7 +35,7 @@ export async function obtenerVehiculosCercanosService(idAeropuerto: number) {
 
   const vehiculos = await prisma.vehiculo.findMany({
     where: {
-      estado: "activo",  // Filtrar por vehículos disponibles
+      disponible: "sí",  // Filtrar por vehículos disponibles
       ubicacion: {
         latitud: { not: null },
         longitud: { not: null },
