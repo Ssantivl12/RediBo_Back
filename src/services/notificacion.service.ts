@@ -5,9 +5,17 @@ import { SSEService } from './sse.service';
 
 export class NotificacionService {
     private sseService: SSEService;
+    private static instance: NotificacionService;
 
-    constructor() {
+    private constructor() {
         this.sseService = SSEService.getInstance();
+    }
+
+    public static getInstance(): NotificacionService {
+        if (!NotificacionService.instance) {
+            NotificacionService.instance = new NotificacionService();
+        }
+        return NotificacionService.instance;
     }
 
     async crearNotificacion(notificacionData: NotificacionDTO) {
@@ -47,6 +55,8 @@ export class NotificacionService {
           if (filtros.leido !== undefined) where.leido = filtros.leido;
           if (filtros.prioridad)   where.prioridad   = filtros.prioridad;
           if (filtros.tipoEntidad) where.tipoEntidad = filtros.tipoEntidad;
+
+          where.haSidoBorrado = false;
       
           if (filtros.desde || filtros.hasta) {
             where.creadoEn = {};
@@ -56,8 +66,7 @@ export class NotificacionService {
       
           const take = filtros.limit  || 10;
           const skip = filtros.offset || 0;
-      
-          // 1) Traemos las notificaciones “planas”
+
           const [rawNotificaciones, total] = await Promise.all([
             prisma.notificacion.findMany({
               where,
@@ -274,8 +283,11 @@ export class NotificacionService {
                 throw new Error('No tienes permiso para eliminar esta notificación');
             }
 
-            await prisma.notificacion.delete({
-                where: { id }
+            const actualizada = await prisma.notificacion.update({
+                where: { id },
+                data: {
+                    haSidoBorrado: true
+                }
             });
 
             this.sseService.enviarNotificacion({
@@ -296,7 +308,8 @@ export class NotificacionService {
             const count = await prisma.notificacion.count({
                 where: {
                     usuarioId,
-                    leido: false
+                    leido: false,
+                    haSidoBorrado: false
                 }
             });
 
@@ -313,288 +326,10 @@ export async function obtenerNoLeidas(userId: string) {
       where: {
         usuarioId: userId,
         leido: false,
+        haSidoBorrado: false
       },
       orderBy: {
         creadoEn: 'desc',
       },
     });
-}
-
-/**
- * Genera una notificación cuando una renta ha concluido.
- * @param rentaId ID de la renta finalizada
- */
-export async function notificarRentaConcluida(rentaId: string): Promise<boolean> {
-    const notificacionService = new NotificacionService();
-    
-    const renta = await prisma.renta.findUnique({
-      where: { id: rentaId },
-      include: {
-        auto: true,
-        cliente: true,
-      },
-    });
-  
-    if (renta && renta.fechaFin < new Date()) {
-      const notificacionExistente = await prisma.notificacion.findFirst({
-        where: {
-          usuarioId: renta.cliente.id,
-          entidadId: renta.id,
-          tipo: 'ALQUILER_FINALIZADO',
-        },
-      });
-  
-      if (notificacionExistente) {
-        return false;
-      }
-  
-      const mensaje = `Se le informa que su renta del vehículo ${renta.auto.modelo} del modelo ${renta.auto.marca} y con placa ${renta.auto.placa} ha concluido, muchas gracias por usar nuestro servicio de renta\natte: REDIBO`;
-  
-      await notificacionService.crearNotificacion({
-        usuarioId: renta.cliente.id,
-        titulo: 'Tiempo de Renta Concluido',
-        mensaje,
-        tipo: 'ALQUILER_FINALIZADO',
-        prioridad: 'MEDIA',
-        entidadId: renta.id,
-        tipoEntidad: 'Renta',
-      });
-      
-      return true;
-    } else {
-      return false;
-    }
-}
-
-/**
- * Genera una notificación cuando una renta es cancelada.
- * @param rentaId ID de la renta cancelada
- */
-export async function notificarRentaCancelada(rentaId: string): Promise<boolean> {
-    const notificacionService = new NotificacionService();
-  
-    try {
-        const renta = await prisma.renta.findUnique({
-            where: { id: rentaId },
-            include: {
-                auto: {
-                    include: {
-                        propietario: true,
-                    },
-                },
-                cliente: true,
-            },
-        });
-    
-        if (!renta) {
-            console.error(`La renta ${rentaId} no existe.`);
-            return false;
-        }
-    
-        const propietario = renta.auto.propietario;
-        if (!propietario) {
-            console.error(`El vehículo ${renta.auto.id} no tiene propietario asignado.`);
-            return false;
-        }
-
-        //console.log(`Enviando notificación de cancelación al propietario: ${propietario.id}`);
-    
-        const notificacionExistente = await prisma.notificacion.findFirst({
-            where: {
-                usuarioId: propietario.id,
-                entidadId: renta.id,
-                tipo: 'RESERVA_CANCELADA',
-            },
-        });
-
-        if (notificacionExistente) {
-            //console.log(`Ya existe una notificación de cancelación para la renta ${rentaId}`);
-            return false;
-        }
-    
-        const mensaje = 
-            `Se le informa que la renta del vehículo ${renta.auto.modelo} ` +
-            `(${renta.auto.marca}, placa ${renta.auto.placa}) ha sido cancelada.\n` +
-            `Atte: REDIBO`;
-    
-        const notificacion = await notificacionService.crearNotificacion({
-            usuarioId: propietario.id,
-            titulo: 'Renta Cancelada',
-            mensaje,
-            tipo: 'RESERVA_CANCELADA',
-            prioridad: 'ALTA',
-            entidadId: renta.id,
-            tipoEntidad: 'Renta',
-        });
-
-        console.log(`Notificación creada exitosamente para el usuario ${propietario.id}`);
-        return true;
-    } catch (error) {
-        console.error('Error al notificar renta cancelada:', error);
-        return false;
-    }
-}
-
-/**
- * Genera una notificación cuando un vehículo recibe una calificación o comentario.
- * @param calificacionId ID de la calificación realizada
- */
-export async function notificarNuevaCalificacion(rentaId: string): Promise<boolean> {
-    const notificacionService = new NotificacionService();
-  
-    try {
-        // Obtener la calificación por rentaId en lugar de id
-        const calificacion = await prisma.calificacion.findUnique({
-            where: { rentaId: rentaId },
-            include: {
-                renta: {
-                    include: {
-                        auto: {
-                            include: {
-                                propietario: true
-                            }
-                        },
-                        cliente: true
-                    }
-                }
-            }
-        });
-    
-        if (!calificacion) {
-            console.error(`No existe calificación para la renta ${rentaId}.`);
-            return false;
-        }
-    
-        const propietario = calificacion.renta.auto.propietario;
-        if (!propietario) {
-            console.error(`El vehículo ${calificacion.renta.auto.id} no tiene propietario asignado.`);
-            return false;
-        }
-
-        console.log(`Enviando notificación de nueva calificación al propietario: ${propietario.id}`);
-    
-        // Verificar si ya existe una notificación para esta calificación
-        const notificacionExistente = await prisma.notificacion.findFirst({
-            where: {
-                usuarioId: propietario.id,
-                entidadId: calificacion.id, // Usamos el id de la calificación
-                tipo: 'VEHICULO_CALIFICADO',
-            },
-        });
-
-        if (notificacionExistente) {
-            console.log(`Ya existe una notificación para la calificación ${calificacion.id}`);
-            return false;
-        }
-    
-        // Crear el mensaje de la notificación
-        let mensaje = `Su vehículo ${calificacion.renta.auto.modelo} ` +
-            `(${calificacion.renta.auto.marca}, placa ${calificacion.renta.auto.placa}) ha recibido ` +
-            `una calificación de ${calificacion.puntuacion} estrellas`;
-        
-        if (calificacion.comentario) {
-            mensaje += ` con el siguiente comentario: "${calificacion.comentario}"\n`;
-        } else {
-            mensaje += ".\n";
-        }
-        
-        mensaje += `Calificado por: ${calificacion.renta.cliente.nombre} ${calificacion.renta.cliente.apellido}\n` +
-            `Atte: REDIBO`;
-    
-        // Crear la notificación
-        const notificacion = await notificacionService.crearNotificacion({
-            usuarioId: propietario.id,
-            titulo: 'Calificación Recibida',
-            mensaje,
-            tipo: 'VEHICULO_CALIFICADO',
-            prioridad: 'MEDIA',
-            entidadId: calificacion.id, // Usamos el id de la calificación
-            tipoEntidad: 'Calificacion',
-        });
-
-        console.log(`Notificación de calificación creada exitosamente para el usuario ${propietario.id}`);
-        return true;
-    } catch (error) {
-        console.error('Error al notificar nueva calificación:', error);
-        return false;
-    }
-}
-
-/**
- * Genera una notificación cuando una reserva ha sido confirmada (parcial o totalmente).
- * @param reservaId ID de la reserva confirmada
- */
-export async function notificarReservaConfirmada(reservaId: string): Promise<boolean> {
-    const notificacionService = new NotificacionService();
-
-    try {
-        const reserva = await prisma.reserva.findUnique({
-            where: { idReserva: reservaId },
-            include: {
-                cliente: true,
-                auto: true,
-            }
-        });
-
-        if (!reserva) {
-            console.error(`Reserva ${reservaId} no encontrada.`);
-            return false;
-        }
-
-        if (reserva.estado !== 'CONFIRMADA') {
-            console.log(`La reserva ${reservaId} no está confirmada, estado actual: ${reserva.estado}`);
-            return false;
-        }
-
-        const notificacionExistente = await prisma.notificacion.findFirst({
-            where: {
-                usuarioId: reserva.idCliente,
-                entidadId: reserva.idReserva,
-                tipo: 'RESERVA_CONFIRMADA',
-            },
-        });
-
-        if (notificacionExistente) {
-            //console.log(`Ya existe una notificación de confirmación para la reserva ${reservaId}`);
-            return false;
-        }
-
-        const montoPagado = reserva.montoPagado.equals(reserva.montoTotal)? `100%` : `50% con un monto de ${reserva.montoPagado}`;
-        const formatDate = new Intl.DateTimeFormat('es-ES', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        });
-
-        let mensaje = `Su reserva del vehículo ${reserva.auto.modelo} ${reserva.auto.marca}, con placa ${reserva.auto.placa} ` +
-                      `ha sido confirmada con un pago del ${montoPagado}.`;
-
-        if (!reserva.estaPagada && reserva.fechaLimitePago) {
-            const fechaLimite = formatDate.format(new Date(reserva.fechaLimitePago));
-            const diferenciaPago = reserva.montoTotal.sub(reserva.montoPagado);
-            mensaje += ` Debe completar el pago restante de ${diferenciaPago} antes del <strong>${fechaLimite}</strong>`;
-        }
-
-        mensaje += `\nAtte: REDIBO`;
-
-        await notificacionService.crearNotificacion({
-            usuarioId: reserva.idCliente,
-            titulo: 'Reserva Confirmada',
-            mensaje,
-            tipo: 'RESERVA_CONFIRMADA',
-            prioridad: 'ALTA',
-            entidadId: reserva.idReserva,
-            tipoEntidad: 'Reserva',
-        });
-
-        console.log(`Notificación de reserva confirmada enviada a usuario ${reserva.idCliente}`);
-        return true;
-
-    } catch (error) {
-        console.error('Error al notificar reserva confirmada:', error);
-        return false;
-    }
 }
