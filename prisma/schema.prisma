@@ -75,6 +75,7 @@ model Notificacion {
   leido         Boolean               @default(false)
   leidoEn       DateTime?
   creadoEn      DateTime              @default(now())
+  haSidoBorrado Boolean               @default(false)
   actualizadoEn DateTime              @updatedAt
 
   @@index([usuarioId])
@@ -145,11 +146,12 @@ model Reserva {
 }
 
 model Calificacion {
-  id            String   @id @default(uuid())
-  puntuacion    Int      @db.SmallInt
-  comentario    String?  @db.Text
-  rentaId       String   @unique 
-  fechaCreacion DateTime @default(now())
+  id                  String   @id @default(uuid())
+  puntuacion          Int      @db.SmallInt
+  comentario          String?  @db.Text
+  rentaId             String   @unique 
+  fechaCalificacion   DateTime @default(now())
+  fechaActualizacion  DateTime?
   
   renta         Renta    @relation(fields: [rentaId], references: [id], onDelete: Cascade)
 
