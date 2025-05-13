@@ -1,12 +1,11 @@
 import { Router } from 'express';
-import { NotificacionController, generarNotificacionRentaConcluida, generarNotificacionRentaCancelada, generarNotificacionNuevaCalificacion, generarNotificacionReservaConfirmada } from '../controllers/notificacion.controller';
+import { NotificacionController } from '../controllers/notificacion.controller';
 import { SSEController } from '../controllers/sse.controller';
 import { SSEService } from '../services/sse.service';
 import { NotificacionService } from '../services/notificacion.service';
 
-// Usar la instancia única del servicio SSE
 const sseService = SSEService.getInstance();
-const notificacionService = new NotificacionService();
+const notificacionService = NotificacionService.getInstance();
 const notificacionController = new NotificacionController(notificacionService);
 const sseController = new SSEController(sseService);
 
@@ -53,29 +52,6 @@ export const createNotificacionRoutes = () => {
   router.get(
     '/notificaciones-no-leidas/:usuarioId',
     (req, res) => notificacionController.obtenerConteoNoLeidas(req, res)
-  );
-
-  // generar notificación de renta finalizada
-  router.post(
-    '/generar-renta-concluida/:rentaId',
-    generarNotificacionRentaConcluida
-  );
-
-  // generar notificacion de renta cancelada
-  router.post(
-    '/generar-renta-cancelada/:rentaId',
-    generarNotificacionRentaCancelada
-  );
-
-  // generar notificación de nueva calificación para un vehículo
-  router.post(
-    '/generar-notificacion-calificacion/:rentaId', 
-    generarNotificacionNuevaCalificacion
-  );
-
-  router.post(
-    '/generar-reserva-confirmada/:reservaId',
-    generarNotificacionReservaConfirmada
   );
 
   // obtener notificaciones para el dropdown (> 3)

@@ -1,16 +1,17 @@
-//SIMULACION DE LOS CONTROLES DE RESERVA PARA USO DE LAS NOTIFICACIONES
 import { Request, Response } from 'express';
-import { ReservaService } from '../services/reserva.service';
 import { EstadoReserva } from '@prisma/client';
+import { ReservaService } from '../services/reserva.service';
 
 export class ReservaController {
   private reservaService: ReservaService;
 
-  constructor(reservaService: ReservaService) {
-    this.reservaService = reservaService;
+  constructor() {
+    this.reservaService = ReservaService.getInstance();
   }
 
-  // Cambiar el estado de una reserva
+  /**
+   * Cambiar el estado de una reserva
+   */
   async cambiarEstadoReserva(req: Request, res: Response): Promise<void> {
     try {
       const { reservaId } = req.params;
@@ -21,11 +22,35 @@ export class ReservaController {
         return;
       }
 
-      const reserva = await this.reservaService.cambiarEstadoReserva(reservaId, nuevoEstado as EstadoReserva);
-      res.json(reserva);
+      const resultado = await this.reservaService.cambiarEstadoReserva(
+        reservaId, 
+        nuevoEstado as EstadoReserva
+      );
+      
+      res.json(resultado);
     } catch (error: any) {
       console.error('Error al cambiar el estado de la reserva:', error);
-      res.status(500).json({ error: error.message || 'Error al cambiar el estado de la reserva.' });
+      res.status(500).json({ 
+        error: error.message || 'Error al cambiar el estado de la reserva.' 
+      });
+    }
+  }
+
+  /**
+   * Confirmar el depósito de una reserva
+   */
+  async confirmarDeposito(req: Request, res: Response): Promise<void> {
+    try {
+      const { reservaId } = req.params;
+      
+      const resultado = await this.reservaService.confirmarDeposito(reservaId);
+      
+      res.json(resultado);
+    } catch (error: any) {
+      console.error('Error al confirmar el depósito:', error);
+      res.status(500).json({ 
+        error: error.message || 'Error al confirmar el depósito de la reserva.' 
+      });
     }
   }
 }

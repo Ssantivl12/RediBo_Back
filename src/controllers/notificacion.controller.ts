@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { NotificacionService, notificarRentaConcluida, notificarRentaCancelada, notificarNuevaCalificacion, notificarReservaConfirmada } from '../services/notificacion.service';
+import { NotificacionService } from '../services/notificacion.service';
 import { TipoDeNotificacion, PrioridadNotificacion } from '@prisma/client';
 
 
@@ -136,77 +136,4 @@ export class NotificacionController {
   }
 }
 
-/**
- * Endpoint para generar notificación de renta finalizada
- */
-export async function generarNotificacionRentaConcluida(req: Request, res: Response) {
-  const { rentaId } = req.params;
-  try {
-    const creada = await notificarRentaConcluida(rentaId);
-
-    if (creada) {
-      res.json({ message: 'Notificación generada correctamente.' });
-    } else {
-      res.json({ message: 'La notificación ya existía o la renta aún no ha concluido.' });
-    }
-  } catch (error) {
-    res.status(500).json({ error: 'Error al generar la notificación.' });
-  }
-}
-
-/**
- * Endpoint para generar notificación de renta Cancelada
- */
-export async function generarNotificacionRentaCancelada(req: Request, res: Response) {
-  const { rentaId } = req.params;
-  try {
-    const creada = await notificarRentaCancelada(rentaId);
-    
-    if (creada) {
-      res.json({ message: 'Notificación generada correctamente.' });
-    } else {
-      res.json({ message: 'La notificación ya existía o la renta aún no ha concluido.' });
-    }
-  } catch (error) {
-    res.status(500).json({ error: 'Error al generar la notificación.' });
-  }
-}
-
-/**
- * Endpoint para generar notificación de nueva calificación
- */
-export async function generarNotificacionNuevaCalificacion(req: Request, res: Response) {
-  const { rentaId } = req.params;  // Cambiado de calificacionId a rentaId
-  try {
-    const creada = await notificarNuevaCalificacion(rentaId);
-    
-    if (creada) {
-      res.json({ message: 'Notificación de calificación generada correctamente.' });
-    } else {
-      res.json({ message: 'La notificación ya existía o no se encontró la calificación.' });
-    }
-  } catch (error) {
-    console.error('Error al generar notificación de calificación:', error);
-    res.status(500).json({ error: 'Error al generar la notificación de calificación.' });
-  }
-}
-
-/**
- * Endpoint para generar notificación de reserva confirmada
- */
-export async function generarNotificacionReservaConfirmada(req: Request, res: Response) {
-  const { reservaId } = req.params;
-  try {
-    const creada = await notificarReservaConfirmada(reservaId);
-
-    if (creada) {
-      res.json({ message: 'Notificación generada correctamente.' });
-    } else {
-      res.json({ message: 'La notificación ya existía o la reserva no está confirmada.' });
-    }
-  } catch (error) {
-    console.error('Error al generar la notificación de reserva confirmada:', error);
-    res.status(500).json({ error: 'Error al generar la notificación de reserva confirmada.' });
-  }
-}
 
