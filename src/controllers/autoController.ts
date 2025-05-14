@@ -244,3 +244,174 @@ export const finalizarMantenimiento = async (req: Request, res: Response) => {
   }
 };
 
+// Función para obtener todos los autos de un propietario con su estado actual (Gestionar vehiculos)
+async function obtenerAutosPropietario(idPropietario: number) {
+  // Obtener la fecha actual para comparar con las reservas y mantenimientos
+  const fechaActual = new Date();
+
+  // Obtener todos los autos del propietario
+  const autos = await prisma.auto.findMany({
+    where: {
+      idPropietario: idPropietario
+    },
+    include: {
+      // Incluir las reservas activas (no finalizadas)
+      reservas: {
+        where: {
+          OR: [
+            { estado: 'CONFIRMADA' },
+            { estado: 'EN_CURSO' },
+            { estado: 'APROBADA' }
+          ],
+          fechaFin: {
+            gte: fechaActual
+          }
+        },
+        orderBy: {
+          fechaInicio: 'asc'
+        },
+        include: {
+          cliente: {
+            select: {
+              idUsuario: true,
+              nombre: true,
+              apellido: true,
+              email: true,
+              telefono: true
+            }
+          }
+        }
+      },
+      // Incluir mantenimientos actuales
+      historialMantenimiento: {
+        where: {
+          OR: [
+            { fechaFin: null },
+            { fechaFin: { gte: fechaActual } }
+          ],
+          fechaInicio: { lte: fechaActual }
+        },
+        orderBy: {
+          fechaInicio: 'asc'
+        }
+      },
+      // Incluir disponibilidad (periodos en los que no está disponible)
+      disponibilidad: {
+        where: {
+          fechaInicio: { lte: fechaActual },
+          fechaFin: { gte: fechaActual }
+        }
+      },
+      // Incluir información de ubicación
+      ubicacion: true
+    }
+  });
+
+  // Transformar los datos para agregar información de estado
+  const autosConEstado = autos.map(auto => {
+    // Verificar si el auto está en una renta activa
+    const rentaActiva = auto.reservas.length > 0 ? auto.reservas[0] : null;
+    
+    // Verificar si el auto está en mantenimiento
+    const mantenimientoActivo = auto.historialMantenimiento.length > 0 ? 
+      auto.historialMantenimiento[0] : null;
+    
+    // Verificar si el auto está en periodo de no disponibilidad
+    const periodoNoDisponible = auto.disponibilidad.length > 0 ? 
+      auto.disponibilidad[0] : null;
+
+    // Determinar el estado actual del auto
+    let estadoActual = null;
+    if (rentaActiva) {
+      estadoActual = {
+        tipo: 'RENTA_ACTIVA',
+        datos: {
+          idReserva: rentaActiva.idReserva,
+          fechaInicio: rentaActiva.fechaInicio,
+          fechaFin: rentaActiva.fechaFin,
+          estado: rentaActiva.estado,
+          cliente: rentaActiva.cliente,
+          accionPosible: rentaActiva.estado === 'EN_CURSO' ? 'FINALIZAR_RENTA' : 'CANCELAR_RESERVA'
+        }
+      };
+    } else if (mantenimientoActivo) {
+      estadoActual = {
+        tipo: 'EN_MANTENIMIENTO',
+        datos: {
+          idHistorial: mantenimientoActivo.idHistorial,
+          fechaInicio: mantenimientoActivo.fechaInicio,
+          fechaFinPrevista: mantenimientoActivo.fechaFin,
+          tipoMantenimiento: mantenimientoActivo.tipoMantenimiento,
+          descripcion: mantenimientoActivo.descripcion,
+          accionPosible: 'FINALIZAR_MANTENIMIENTO'
+        }
+      };
+    } else if (periodoNoDisponible) {
+      estadoActual = {
+        tipo: 'NO_DISPONIBLE',
+        datos: {
+          idDisponibilidad: periodoNoDisponible.idDisponibilidad,
+          fechaInicio: periodoNoDisponible.fechaInicio,
+          fechaFin: periodoNoDisponible.fechaFin,
+          motivo: periodoNoDisponible.motivo,
+          descripcion: periodoNoDisponible.descripcion,
+          accionPosible: 'FINALIZAR_PERIODO_NO_DISPONIBLE'
+        }
+      };
+    } else {
+      estadoActual = {
+        tipo: 'DISPONIBLE',
+        datos: {
+          accionPosible: auto.estado === 'ACTIVO' ? 'MARCAR_NO_DISPONIBLE' : 'MARCAR_DISPONIBLE'
+        }
+      };
+    }
+
+    // Retornar el auto con su estado actual
+    return {
+      ...auto,
+      reservas: undefined, // Quitamos los arrays originales para evitar duplicación
+      historialMantenimiento: undefined,
+      disponibilidad: undefined,
+      estadoActual
+    };
+  });
+
+  return autosConEstado;
+}
+
+// Controlador para manejar la solicitud de obtener autos de un propietario
+export const obtenerAutosDelPropietario = async (req: Request, res: Response) => {
+  try {
+    const idPropietario = parseInt(req.params.idArrendador);
+    
+    // Validar id del propietario
+    if (isNaN(idPropietario)) {
+      return res.status(400).json({ error: 'ID de propietario inválido' });
+    }
+    
+    // Verificar si el propietario existe
+    const propietarioExiste = await prisma.usuario.findUnique({
+      where: { idUsuario: idPropietario }
+    });
+    
+    if (!propietarioExiste) {
+      return res.status(404).json({ error: 'Propietario no encontrado' });
+    }
+    
+    const autos = await obtenerAutosPropietario(idPropietario);
+    
+    return res.status(200).json({
+      cantidad: autos.length,
+      autos: autos
+    });
+    
+  } catch (error: any) {
+    console.error('Error al obtener autos del propietario:', error);
+    
+    return res.status(500).json({ 
+      error: 'Error al procesar la solicitud',
+      detalle: error.message 
+    });
+  }
+};
