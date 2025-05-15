@@ -35,7 +35,7 @@ router.put('/autos/:idAuto/inactivar', marcarInactivo);
 // Poner un auto en mantenimiento
 router.post('/autos/:idAuto/mantenimiento', ponerEnMantenimiento);
 // Finalizar mantenimiento de un auto
-router.post('/mantenimiento/:idMantenimiento/finalizar', finalizarMantenimiento);
+router.post('/mantenimiento/:idHistorial/finalizar', finalizarMantenimiento);
 
 
 // ******* RESERVA CONTROLLER ********

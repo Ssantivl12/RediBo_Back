@@ -202,7 +202,11 @@ export const finalizarMantenimiento = async (req: Request, res: Response) => {
         where: { idHistorial: idHistorial },
         data: { 
           fechaFin: new Date() 
+        },
+        include: {
+          auto: true
         }
+
       });
 
       // Buscar el registro de disponibilidad relacionado
