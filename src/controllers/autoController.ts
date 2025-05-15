@@ -177,8 +177,11 @@ export const ponerEnMantenimiento = async (req: Request, res: Response) => {
     
   } catch (error: any) {
     console.error('Error al poner auto en mantenimiento:', error);
-    
-    return res.status(500).json({ error: 'Error al procesar la solicitud de mantenimiento' });
+
+    return res.status(500).json({
+      error: 'Error al procesar la solicitud de mantenimiento',
+      detalle: error.message || error.toString()
+    });
   }
 };
 
