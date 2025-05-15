@@ -224,8 +224,6 @@ export const finalizarMantenimiento = async (req: Request, res: Response) => {
           data: { fechaFin: fechaBolivia }
         });
       }
-      console.log(new Date());
-      console.log(new Date().toLocaleString('es-BO'));
 
       // Marcar el auto como activo nuevamente
       const autoActualizado = await tx.auto.update({
@@ -271,10 +269,7 @@ async function obtenerAutosPropietario(idPropietario: number) {
             { estado: 'CONFIRMADA' },
             { estado: 'EN_CURSO' },
             { estado: 'APROBADA' }
-          ],
-          fechaFin: {
-            gte: fechaActual
-          }
+          ]
         },
         orderBy: {
           fechaInicio: 'asc'
@@ -318,8 +313,40 @@ async function obtenerAutosPropietario(idPropietario: number) {
 
   // Transformar los datos para agregar información de estado
   const autosConEstado = autos.map(auto => {
-    // Verificar si el auto está en una renta activa
-    const rentaActiva = auto.reservas.length > 0 ? auto.reservas[0] : null;
+    // Identificar si hay una reserva en estado EN_CURSO con fecha fin pasada (necesita ser liberada)
+    const reservaParaLiberar = auto.reservas.find(
+      reserva => reserva.estado === 'EN_CURSO' && new Date(reserva.fechaFin) < fechaActual
+    );
+    
+    // Si hay una reserva para liberar, es prioridad mostrarla
+    if (reservaParaLiberar) {
+      return {
+        ...auto,
+        reservas: undefined,
+        historialMantenimiento: undefined,
+        disponibilidad: undefined,
+        estadoActual: {
+          tipo: 'RENTA_FINALIZADA_POR_LIBERAR',
+          datos: {
+            idReserva: reservaParaLiberar.idReserva,
+            fechaInicio: reservaParaLiberar.fechaInicio,
+            fechaFin: reservaParaLiberar.fechaFin,
+            estado: reservaParaLiberar.estado,
+            cliente: reservaParaLiberar.cliente,
+            accionPosible: 'FINALIZAR_RENTA'
+          }
+        }
+      };
+    }
+
+    // Verificar otras condiciones si no hay reserva para liberar
+    // Filtrar las reservas que siguen vigentes (fechaFin >= fechaActual)
+    const reservasVigentes = auto.reservas.filter(reserva => 
+      new Date(reserva.fechaFin) >= fechaActual
+    );
+    
+    // Verificar si el auto está en una renta activa vigente
+    const rentaActiva = reservasVigentes.length > 0 ? reservasVigentes[0] : null;
     
     // Verificar si el auto está en mantenimiento
     const mantenimientoActivo = auto.historialMantenimiento.length > 0 ? 
@@ -421,6 +448,146 @@ export const obtenerAutosDelPropietario = async (req: Request, res: Response) =>
     return res.status(500).json({ 
       error: 'Error al procesar la solicitud',
       detalle: error.message 
+    });
+  }
+};
+
+// Función para liberar un auto de una renta en curso
+async function liberarAutoDeRenta(idReserva: number) {
+  // Obtener la fecha actual
+  const fechaActual = new Date();
+
+  // Buscar la reserva para verificar que exista y su estado
+  const reserva = await prisma.reserva.findUnique({
+    where: { idReserva },
+    include: {
+      auto: true
+    }
+  });
+
+  // Verificar si la reserva existe
+  if (!reserva) {
+    throw new Error('Reserva no encontrada');
+  }
+
+  // Verificar que la reserva esté en estado "EN_CURSO"
+  if (reserva.estado !== 'EN_CURSO') {
+    throw new Error(`No se puede liberar una reserva con estado: ${reserva.estado}`);
+  }
+
+  // Verificar que la fecha actual sea posterior a la fecha de finalización de la reserva
+  if (fechaActual < reserva.fechaFin) {
+    throw new Error('No se puede finalizar la reserva antes de la fecha acordada');
+  }
+
+  // Actualizar la reserva a estado "FINALIZADA" en una transacción
+  return await prisma.$transaction(async (tx) => {
+    // Actualizar el estado de la reserva
+    const reservaActualizada = await tx.reserva.update({
+      where: { idReserva },
+      data: { 
+        estado: 'FINALIZADA',
+        kilometrajeFinal: reserva.auto.kilometraje // Guardar el kilometraje final del auto
+      },
+      include: {
+        auto: true,
+        cliente: {
+          select: {
+            idUsuario: true,
+            nombre: true,
+            apellido: true,
+            email: true,
+            telefono: true
+          }
+        }
+      }
+    });
+
+    // Actualizar las estadísticas del vehículo
+    // Calculamos la duración de la renta en días
+    const duracionRenta = Math.ceil(
+      (reserva.fechaFin.getTime() - reserva.fechaInicio.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    await tx.auto.update({
+      where: { idAuto: reserva.idAuto },
+      data: {
+        diasTotalRenta: {
+          increment: duracionRenta
+        },
+        vecesAlquilado: {
+          increment: 1
+        }
+      }
+    });
+
+    // Crear notificación para el propietario del auto
+    await tx.notificacion.create({
+      data: {
+        idUsuario: reserva.auto.idPropietario,
+        titulo: 'Alquiler finalizado',
+        mensaje: `La reserva del auto ${reserva.auto.marca} ${reserva.auto.modelo} ha finalizado.`,
+        idEntidad: idReserva.toString(),
+        tipoEntidad: 'RESERVA',
+        tipo: 'ALQUILER_FINALIZADO',
+        prioridad: 'MEDIA'
+      }
+    });
+
+    // Crear notificación para el cliente
+    await tx.notificacion.create({
+      data: {
+        idUsuario: reserva.idCliente,
+        titulo: 'Alquiler finalizado',
+        mensaje: `Tu alquiler del auto ${reserva.auto.marca} ${reserva.auto.modelo} ha finalizado.`,
+        idEntidad: idReserva.toString(),
+        tipoEntidad: 'RESERVA',
+        tipo: 'ALQUILER_FINALIZADO',
+        prioridad: 'MEDIA'
+      }
+    });
+
+    return reservaActualizada;
+  });
+}
+
+// Controlador para manejar la solicitud de liberar un auto de una renta
+export const liberarAuto = async (req: Request, res: Response) => {
+  try {
+    const idReserva = parseInt(req.params.idReserva);
+    
+    // Validar id de la reserva
+    if (isNaN(idReserva)) {
+      return res.status(400).json({ error: 'ID de reserva inválido' });
+    }
+    
+    const reservaFinalizada = await liberarAutoDeRenta(idReserva);
+    
+    return res.status(200).json({
+      mensaje: 'Auto liberado de renta exitosamente',
+      reserva: reservaFinalizada
+    });
+    
+  } catch (error: any) {
+    console.error('Error al liberar auto de renta:', error);
+    
+    // Manejar y devolver errores específicos
+    if (error.message === 'Reserva no encontrada') {
+      return res.status(404).json({ error: 'Reserva no encontrada' });
+    }
+    
+    if (error.message.includes('No se puede liberar') || 
+        error.message.includes('No se puede finalizar')) {
+      return res.status(400).json({ error: error.message });
+    }
+    
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Registro no encontrado' });
+    }
+    
+    return res.status(500).json({ 
+      error: 'Error al procesar la solicitud',
+      detalle: error.message || error.toString()
     });
   }
 };

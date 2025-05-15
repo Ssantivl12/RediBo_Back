@@ -14,7 +14,7 @@ Define las rutas (URL's) de la API
 import { Request, Response } from 'express';
 
 //imports locales
-import { marcarActivo, marcarInactivo, ponerEnMantenimiento, finalizarMantenimiento, obtenerAutosDelPropietario } from '../controllers/autoController';
+import { marcarActivo, marcarInactivo, ponerEnMantenimiento, finalizarMantenimiento, obtenerAutosDelPropietario, liberarAuto } from '../controllers/autoController';
 import { obtenerDetallesReservaAuto, obtenerSolicitudesDeReserva, aceptarReserva, denegarReserva } from '../controllers/reservaController';
 
 const express = require('express');
@@ -30,6 +30,8 @@ router.get('/autos/arrendador/:idArrendador', obtenerAutosDelPropietario);
 router.put('/autos/:idAuto/activar', marcarActivo);
 // Marcar auto como inactivo (no disponible para renta)
 router.put('/autos/:idAuto/inactivar', marcarInactivo);
+// Liberar un auto de una renta
+router.put('/autos/:idAuto/liberar', liberarAuto);
 
 // *POSTERS
 // Poner un auto en mantenimiento
