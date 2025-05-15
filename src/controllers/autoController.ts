@@ -206,7 +206,6 @@ export const finalizarMantenimiento = async (req: Request, res: Response) => {
         include: {
           auto: true
         }
-
       });
 
       // Buscar el registro de disponibilidad relacionado
@@ -216,14 +215,17 @@ export const finalizarMantenimiento = async (req: Request, res: Response) => {
           motivo: 'MANTENIMIENTO' 
         }
       });
-
+      const fechaBolivia = new Date(Date.now() - (4 * 60 * 60 * 1000));
+      
       // Actualizar registro de disponibilidad
       if (disponibilidad) {
         await tx.disponibilidad.update({
           where: { idDisponibilidad: disponibilidad.idDisponibilidad },
-          data: { fechaFin: new Date() }
+          data: { fechaFin: fechaBolivia }
         });
       }
+      console.log(new Date());
+      console.log(new Date().toLocaleString('es-BO'));
 
       // Marcar el auto como activo nuevamente
       const autoActualizado = await tx.auto.update({
