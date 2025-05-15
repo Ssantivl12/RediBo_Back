@@ -30,8 +30,6 @@ router.get('/autos/arrendador/:idArrendador', obtenerAutosDelPropietario);
 router.put('/autos/:idAuto/activar', marcarActivo);
 // Marcar auto como inactivo (no disponible para renta)
 router.put('/autos/:idAuto/inactivar', marcarInactivo);
-// Liberar un auto de una renta
-router.put('/autos/:idAuto/liberar', liberarAuto);
 
 // *POSTERS
 // Poner un auto en mantenimiento
@@ -51,6 +49,8 @@ router.get('/reservas/propietario/:idPropietario', obtenerSolicitudesDeReserva);
 router.put('/reservas/:idReserva/aceptar', aceptarReserva);
 // Denegar una reserva de id idReserva
 router.put('/reservas/:idReserva/denegar', denegarReserva);
+// Liberar una reserva de un auto
+router.put('/reservas/:idReserva/liberar', liberarAuto);
 
 
 router.get('/test', (req: Request, res: Response) => {

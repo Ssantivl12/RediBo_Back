@@ -520,7 +520,7 @@ async function liberarAutoDeRenta(idReserva: number) {
         }
       }
     });
-
+    {/**
     // Crear notificación para el propietario del auto
     await tx.notificacion.create({
       data: {
@@ -545,7 +545,7 @@ async function liberarAutoDeRenta(idReserva: number) {
         tipo: 'ALQUILER_FINALIZADO',
         prioridad: 'MEDIA'
       }
-    });
+    }); */}
 
     return reservaActualizada;
   });
