@@ -282,3 +282,32 @@ export const getAutosDisponiblesPorFecha = async (req: Request, res: Response): 
       res.status(500).json({ error: 'Error interno del servidor' });
     }
   };
+  
+export const getUsuarios = async (req: Request, res: Response) => {
+  try {
+    // Consulta a la base de datos usando Prisma
+    const usuarios = await prisma.usuario.findMany({
+      select: {
+        idUsuario: true,
+        nombre: true,
+        apellido: true,
+        email: true,
+        telefono: true,
+        fechaRegistro: true,
+        esAdmin: true,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: usuarios,
+    });
+  } catch (error) {
+    console.error("Error en getUsuarios:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener los usuarios",
+      error: error instanceof Error ? error.message : "Error desconocido",
+    });
+  }
+};
