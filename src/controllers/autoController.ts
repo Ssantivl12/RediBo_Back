@@ -140,45 +140,93 @@ export const getComentarios = async (req: Request, res: Response): Promise<void>
     }
   };
 
-  export const getHost = async (req: Request, res: Response): Promise<void> => {
-    const id = parseInt(req.params.id, 10);
-  
-    if (isNaN(id)) {
+
+export const getHost = async (req: Request, res: Response): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  const { inicio, fin } = req.params;
+
+  const fechaInicio = parseISO(inicio);
+  const fechaFin = parseISO(fin);
+
+  if (!isValid(fechaInicio) || !isValid(fechaFin) || fechaInicio > fechaFin) {
+    res.status(400).json({
+      success: false,
+      message: "Fechas inválidas o fuera de rango.",
+    });
+    return;
+  }
+
+  try {
+    const fechaInicio = parseISO(inicio).toISOString().split("T")[0];
+    const fechaFin = parseISO(fin).toISOString().split("T")[0];
+    const host = await prisma.usuario.findUnique({
+      where: { idUsuario: id },
+      include: {
+        autos: {
+          select: {
+            idAuto: true,
+            modelo: true,
+            marca: true,
+            precioRentaDiario: true,
+            calificacionPromedio:true,
+            reservas: {
+              where: {
+                estado: "CONFIRMADA" ,
+                fechaInicio: { lte: new Date(`${fechaFin}T23:59:59.999Z`) } ,
+                fechaFin: { gte: new Date(`${fechaInicio}T00:00:00.000Z`) } ,
+              },
+            },
+            disponibilidad: {
+              where: {
+                fechaInicio: { lte: new Date(`${fechaFin}T23:59:59.999Z`) },
+                fechaFin: { gte: new Date(`${fechaInicio}T00:00:00.000Z`) },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!host || !host.esAdmin) {
       res.status(400).json({
         success: false,
-        message: "ID inválido proporcionado.",
+        message: "El usuario no es un host válido.",
       });
       return;
     }
-  
-    try {
-      const host = await prisma.usuario.findUnique({
-        where: {
-          idUsuario:id
-        },
-      });
-  
-      if (!host?.esAdmin) {
-        res.status(400).json({
-          success: false,
-          message: "El propietario no es un host válido.",
-        });
-        return;
-      }
-  
-      res.status(200).json({
-        success: true,
-        data: host
-      });
-  
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Error al obtener el HOST del auto.",
-        error: error instanceof Error ? error.message : "Error desconocido",
-      });
-    }
-  };
+
+      const autosConDisponibilidad = host.autos.map(auto => {
+      const tieneReserva = auto.reservas.length > 0;
+      const noDisponible = auto.disponibilidad.length > 0;
+      const disponible = !tieneReserva && !noDisponible;
+
+      return {
+        idAuto: auto.idAuto,
+        modelo: auto.modelo,
+        marca: auto.marca,
+        precio: auto.precioRentaDiario,
+        calificacionPromedio: auto.calificacionPromedio,
+        disponible,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      host: {
+        ...host,
+        autos: autosConDisponibilidad,
+      },
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener la información del host.",
+      error: error instanceof Error ? error.message : "Error desconocido",
+    });
+  }
+};
+
 
 export const getAutosDisponiblesPorFecha = async (req: Request, res: Response): Promise<void> => {
   const { inicio, fin } = req.params;
@@ -240,6 +288,7 @@ export const getAutosDisponiblesPorFecha = async (req: Request, res: Response): 
         success: true,
         data: autosDisponibles,
       });
+      
     } catch (error) {
       res.status(500).json({
         success: false,
