@@ -1,7 +1,7 @@
 import express from 'express';
-import { registrarHostCompletoController } from '@/controllers//authRegistroHost/registroHost.controller';
+import { registrarHostCompletoController } from '@/controllers/authRegistroHost/registroHost.controller';
 import { requireAuth } from '@/middlewares/authMiddleware';
-import upload from '@/middlewares/upload';
+import upload from '@/middlewares/multer'; // ✅ actualizado con tu multer real
 
 const router = express.Router();
 
@@ -16,3 +16,4 @@ router.post(
 );
 
 export default router;
+
