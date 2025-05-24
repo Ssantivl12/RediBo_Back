@@ -360,3 +360,70 @@ export const getUsuarios = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const getCalificacionesHost = async (req: Request, res: Response): Promise<void> => {
+  const hostId = parseInt(req.params.id, 10);
+
+  if (isNaN(hostId)) {
+    res.status(400).json({
+      success: false,
+      message: "ID del host inválido proporcionado.",
+    });
+    return;
+  }
+
+  try {
+    // Verificar que el usuario existe y es un host
+    const host = await prisma.usuario.findUnique({
+      where: { idUsuario: hostId },
+      select: { esAdmin: true },
+    });
+
+    if (!host || !host.esAdmin) {
+      res.status(404).json({
+        success: false,
+        message: "El usuario no es un host o no existe.",
+      });
+      return;
+    }
+
+    // Obtener las calificaciones dirigidas al host
+    const calificaciones = await prisma.calificacionUsuario.findMany({
+      where: { idCalificado: hostId },
+      select: {
+        idCalificador: true,
+        comentario: true,
+        puntuacion: true,
+        fechaCreacion: true,
+        calificador: {
+          select: {
+            idUsuario: true,
+            nombre: true,
+            apellido: true,
+          },
+        },
+      },
+      orderBy: {
+        fechaCreacion: "desc",
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: calificaciones.map((calificacion) => ({
+        idCalificador: calificacion.idCalificador,
+        nombre: calificacion.calificador.nombre,
+        apellido: calificacion.calificador.apellido,
+        comentario: calificacion.comentario,
+        puntuacion: calificacion.puntuacion,
+        fechaCreacion: calificacion.fechaCreacion,
+      })),
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener las calificaciones del host.",
+      error: error instanceof Error ? error.message : "Error desconocido",
+    });
+  }
+};
