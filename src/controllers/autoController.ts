@@ -69,6 +69,8 @@ export const getAutoId = async (req: Request, res: Response): Promise<void> => {
               nombre: true,
               apellido: true,
               telefono: true,
+              email: true, 
+              direccion: true,
             },
           },
           imagenes: true,
@@ -169,6 +171,7 @@ export const getHost = async (req: Request, res: Response): Promise<void> => {
             marca: true,
             precioRentaDiario: true,
             calificacionPromedio:true,
+            imagenes:true,
             reservas: {
               where: {
                 estado: "CONFIRMADA" ,
@@ -206,6 +209,7 @@ export const getHost = async (req: Request, res: Response): Promise<void> => {
         marca: auto.marca,
         precio: auto.precioRentaDiario,
         calificacionPromedio: auto.calificacionPromedio,
+        imagenes: auto.imagenes,
         disponible,
       };
     });
@@ -475,6 +479,69 @@ export const getCalificacionesHost = async (req: Request, res: Response): Promis
     res.status(500).json({
       success: false,
       message: "Error al obtener las calificaciones del host.",
+      error: error instanceof Error ? error.message : "Error desconocido",
+    });
+  }
+};
+
+export const getHostSinFiltroFechas = async (req: Request, res: Response): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+
+  if (isNaN(id)) {
+    res.status(400).json({
+      success: false,
+      message: "ID del host inválido proporcionado.",
+    });
+    return;
+  }
+
+  try {
+    const host = await prisma.usuario.findUnique({
+      where: { idUsuario: id },
+      include: {
+        autos: {
+          select: {
+            idAuto: true,
+            modelo: true,
+            marca: true,
+            precioRentaDiario: true,
+            calificacionPromedio: true,
+            imagenes: true,
+          },
+        },
+      },
+    });
+
+    if (!host || !host.esAdmin) {
+      res.status(404).json({
+        success: false,
+        message: "El usuario no es un host o no existe.",
+      });
+      return;
+    }
+
+    const autosConDatos = host.autos.map(auto => ({
+      idAuto: auto.idAuto,
+      modelo: auto.modelo,
+      marca: auto.marca,
+      precio: auto.precioRentaDiario,
+      calificacionPromedio: auto.calificacionPromedio,
+      imagenes: auto.imagenes,
+      disponible: true,
+    }));
+
+    res.status(200).json({
+      success: true,
+      host: {
+        ...host,
+        autos: autosConDatos,
+      },
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener los autos del host.",
       error: error instanceof Error ? error.message : "Error desconocido",
     });
   }

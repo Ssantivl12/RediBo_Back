@@ -3,7 +3,7 @@ import { getAutos, getAutoId, getComentarios, getHost, getDrivers,getUsuarioId} 
 import { getAutosDisponiblesPorFecha} from "../controllers/autoController";
 import { getUsuarios } from "../controllers/autoController";
 import { getCalificacionesHost } from  "../controllers/autoController";
-
+import { getHostSinFiltroFechas } from "../controllers/autoController";
 const router = Router();
 
 router.get('/autos', getAutos);
@@ -15,5 +15,5 @@ router.get('/drivers/:id', getDrivers);
 router.get('/usuarios', getUsuarios);
 router.get('/host/:id', getCalificacionesHost);
 router.get('/usuario/:id', getUsuarioId);
-
+router.get('/hosts/:id', getHostSinFiltroFechas)
 export default router;
