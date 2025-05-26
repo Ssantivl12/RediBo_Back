@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAutos, getAutoId, getComentarios, getHost, getDrivers} from "../controllers/autoController";
+import { getAutos, getAutoId, getComentarios, getHost, getDrivers,getUsuarioId} from "../controllers/autoController";
 import { getAutosDisponiblesPorFecha} from "../controllers/autoController";
 import { getUsuarios } from "../controllers/autoController";
 import { getCalificacionesHost } from  "../controllers/autoController";
@@ -14,5 +14,6 @@ router.get('/autosDisponibles/:inicio/:fin', getAutosDisponiblesPorFecha);
 router.get('/drivers/:id', getDrivers);
 router.get('/usuarios', getUsuarios);
 router.get('/host/:id', getCalificacionesHost);
+router.get('/usuario/:id', getUsuarioId);
 
 export default router;

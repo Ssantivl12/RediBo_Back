@@ -361,6 +361,45 @@ export const getUsuarios = async (req: Request, res: Response) => {
   }
 };
 
+export const getUsuarioId = async (req: Request, res: Response): Promise<void> => {
+    const id = parseInt(req.params.id, 10);
+  
+    if (isNaN(id)) {
+      res.status(400).json({
+        success: false,
+        message: "ID inválido proporcionado.",
+      });
+      return;
+    }
+  
+    try {
+      const usuario = await prisma.usuario.findUnique({
+        where: {
+          idUsuario: id,
+        }
+      });
+  
+      if (!usuario) {
+        res.status(404).json({
+          success: false,
+          message: "Usuario no encontrado.",
+        });
+        return;
+      }
+  
+      res.status(200).json({
+        success: true,
+        data: usuario,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error al obtener el usuario",
+        error: error instanceof Error ? error.message : "Error desconocido",
+      });
+    }
+  };
+
 export const getCalificacionesHost = async (req: Request, res: Response): Promise<void> => {
   const hostId = parseInt(req.params.id, 10);
 
@@ -379,10 +418,18 @@ export const getCalificacionesHost = async (req: Request, res: Response): Promis
       select: { esAdmin: true },
     });
 
-    if (!host || !host.esAdmin) {
+    if (!host) {
       res.status(404).json({
         success: false,
-        message: "El usuario no es un host o no existe.",
+        message: "El usuario no existe.",
+      });
+      return;
+    }
+
+    if (!host.esAdmin) {
+      res.status(403).json({
+        success: false,
+        message: "El usuario no tiene permisos de host.",
       });
       return;
     }
@@ -391,6 +438,7 @@ export const getCalificacionesHost = async (req: Request, res: Response): Promis
     const calificaciones = await prisma.calificacionUsuario.findMany({
       where: { idCalificado: hostId },
       select: {
+        idCalificacion: true, // 👈 Agrega esto
         idCalificador: true,
         comentario: true,
         puntuacion: true,
@@ -408,9 +456,11 @@ export const getCalificacionesHost = async (req: Request, res: Response): Promis
       },
     });
 
+
     res.status(200).json({
       success: true,
       data: calificaciones.map((calificacion) => ({
+        idCalificacion: calificacion.idCalificacion, // 👈 Correcto aquí
         idCalificador: calificacion.idCalificador,
         nombre: calificacion.calificador.nombre,
         apellido: calificacion.calificador.apellido,
@@ -419,6 +469,8 @@ export const getCalificacionesHost = async (req: Request, res: Response): Promis
         fechaCreacion: calificacion.fechaCreacion,
       })),
     });
+
+
   } catch (error) {
     res.status(500).json({
       success: false,
