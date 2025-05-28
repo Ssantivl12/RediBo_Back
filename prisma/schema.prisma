@@ -8,18 +8,34 @@ datasource db {
 }
 
 model Usuario {
-  idUsuario         Int                @id @default(autoincrement())
-  nombre            String
-  apellido          String
-  email             String             @unique
-  telefono          String?
-  direccion         String?
-  fechaRegistro     DateTime           @default(now())
-  contraseña        String
-  esAdmin           Boolean            @default(false)
-  notificaciones    Notificacion[]     
-  autos             Auto[]             
-  reservas          Reserva[]         
+  idUsuario           Int                @id @default(autoincrement())
+  nombreCompleto      String
+  email               String             @unique
+  contraseña          String?
+  fechaNacimiento     DateTime? 
+  telefono            String?
+  registradoCon       RegistradoCon
+  fechaRegistro       DateTime           @default(now())
+  verificado          Boolean            @default(false)
+  host                Boolean            @default(false)
+  driverBool          Boolean            @default(false)
+  fotoPerfil          String?
+  codigoVerificacion  String?
+  bloqueado           Boolean            @default(false)
+  fechaBloqueado      DateTime? 
+  intentosFallidos    Int                @default(0)
+  direccion           String?
+  esAdmin             Boolean            @default(false)
+
+  edicionesNombre     Int       @default(0)
+  edicionesFecha      Int       @default(0)
+  edicionesTelefono   Int       @default(0)
+
+  verificaciones      Verificaciones[]
+  terminosCondiciones TerminosCondiciones[]
+  notificaciones      Notificacion[]     
+  autos               Auto[]             
+  reservas            Reserva[]         
   comentariosEscritos Comentario[]
   calificacionesRecibidas CalificacionUsuario[] @relation("UsuarioCalificado")
   calificacionesRealizadas CalificacionUsuario[] @relation("UsuarioCalificador")
@@ -28,7 +44,14 @@ model Usuario {
   driver            Driver?
   
   // Relación muchos a muchos con drivers asignados
-  driversAsignados  UsuarioDriver[]
+  driversAsignados       UsuarioDriver[]
+
+  metodoPago             MetodoPago?
+  numeroTarjeta          String?       
+  fechaExpiracion        String?       
+  titular                String?        
+  imagenQr               String?        
+  detallesMetodoPago     String?        
   
   @@map("usuarios")
 }
@@ -37,11 +60,17 @@ model Driver {
   idDriver          Int                @id @default(autoincrement())
   idUsuario         Int                @unique
   usuario           Usuario            @relation(fields: [idUsuario], references: [idUsuario], onDelete: Cascade)
-  licencia          String             
+  sexo              String
+  telefono          String
+  licencia          String
+  fechaEmision      DateTime            
   fechaExpiracion   DateTime           
   tipoLicencia      String?            
   añosExperiencia   Int?               
   disponible        Boolean            @default(true)
+
+  anversoUrl        String
+  reversoUrl        String
   
   asignadoA         UsuarioDriver[]
   
@@ -67,6 +96,27 @@ model UsuarioDriver {
   @@index([idDriver])
 }
 
+model Verificaciones {
+  idCodigo    Int        @id @default(autoincrement())
+  idUsuario   Int
+  codigo      String   
+  tipo        TipoVerificacion
+  creadoEn    DateTime  @default(now())
+  expiracion  DateTime
+  usado       Boolean   @default(false)
+
+  usuario     Usuario   @relation(fields: [idUsuario], references: [idUsuario])
+}
+
+model TerminosCondiciones {
+  idAceptacion     Int      @id @default(autoincrement())
+  idUsuario        Int
+  versionTerminos  String @db.VarChar(10)
+  fechaAceptacion DateTime
+
+  usuario        Usuario @relation(fields: [idUsuario], references: [idUsuario])
+}
+
 model Notificacion {
   idNotificacion            Int                @id @default(autoincrement())
   idUsuario     Int
@@ -90,25 +140,14 @@ model Notificacion {
   @@index([idUsuario, haSidoBorrada])
 }
 
-model Ubicacion {
-  idUbicacion       Int                @id @default(autoincrement())
-  nombre            String             @unique
-  descripcion       String?
-  latitud           Float            
-  longitud          Float              
-  esActiva          Boolean            @default(true)
-  autos             Auto[]             
-  @@map("ubicaciones")
-}
-
 model Auto {
   idAuto            Int                @id @default(autoincrement())
   idPropietario     Int
   idUbicacion       Int
   ubicacion         Ubicacion          @relation(fields: [idUbicacion], references: [idUbicacion])
   propietario       Usuario            @relation(fields: [idPropietario], references: [idUsuario])
-  marca             String
-  modelo            String
+  marca             String?
+  modelo            String?
   descripcion       String?
   precioRentaDiario Decimal            @db.Decimal(10, 2)
   montoGarantia     Decimal            @db.Decimal(10, 2)
@@ -122,6 +161,7 @@ model Auto {
   tipo              String             
   año               Int
   placa             String             @unique
+  soat              String
   color             String
   estado            EstadoAuto         @default(ACTIVO) 
   fechaAdquisicion  DateTime           @default(now())
@@ -146,6 +186,16 @@ model Imagen {
   @@map("imagenes")
 }
 
+model Ubicacion {
+  idUbicacion       Int                @id @default(autoincrement())
+  nombre            String             @unique
+  descripcion       String?
+  latitud           Float            
+  longitud          Float              
+  esActiva          Boolean            @default(true)
+  autos             Auto[]             
+  @@map("ubicaciones")
+}
 
 model Disponibilidad {
   idDisponibilidad  Int                @id @default(autoincrement())
@@ -157,6 +207,35 @@ model Disponibilidad {
   descripcion       String?
   
   @@map("disponibilidad")
+}
+
+model HistorialMantenimiento {
+  idHistorial       Int                @id @default(autoincrement())
+  idAuto            Int
+  auto              Auto               @relation(fields: [idAuto], references: [idAuto])
+  fechaInicio       DateTime           @default(now())
+  fechaFin          DateTime?
+  descripcion       String
+  costo             Decimal?           @db.Decimal(10, 2)
+  tipoMantenimiento TipoMantenimiento
+  kilometraje       Int
+  
+  @@map("historial_mantenimiento")
+}
+
+model Comentario {
+  idComentario      Int                @id @default(autoincrement())
+  idAuto            Int
+  auto              Auto               @relation(fields: [idAuto], references: [idAuto])
+  idUsuario         Int                
+  usuario           Usuario            @relation(fields: [idUsuario], references: [idUsuario])
+  contenido         String?
+  calificacion      Int                @db.SmallInt
+  fechaCreacion     DateTime           @default(now())
+  idReserva         Int?               @unique
+  reserva           Reserva?           @relation(fields: [idReserva], references: [idReserva])
+  
+  @@map("comentarios")
 }
 
 model Reserva {
@@ -210,35 +289,6 @@ model Garantia {
   @@map("garantias")
 }
 
-model HistorialMantenimiento {
-  idHistorial       Int                @id @default(autoincrement())
-  idAuto            Int
-  auto              Auto               @relation(fields: [idAuto], references: [idAuto])
-  fechaInicio       DateTime           @default(now())
-  fechaFin          DateTime?
-  descripcion       String
-  costo             Decimal?           @db.Decimal(10, 2)
-  tipoMantenimiento TipoMantenimiento
-  kilometraje       Int
-  
-  @@map("historial_mantenimiento")
-}
-
-model Comentario {
-  idComentario      Int                @id @default(autoincrement())
-  idAuto            Int
-  auto              Auto               @relation(fields: [idAuto], references: [idAuto])
-  idUsuario         Int                
-  usuario           Usuario            @relation(fields: [idUsuario], references: [idUsuario])
-  contenido         String?
-  calificacion      Int                @db.SmallInt
-  fechaCreacion     DateTime           @default(now())
-  idReserva         Int?               @unique
-  reserva           Reserva?           @relation(fields: [idReserva], references: [idReserva])
-  
-  @@map("comentarios")
-}
-
 model CalificacionUsuario {
   idCalificacion    Int                @id @default(autoincrement())
   idCalificador     Int                
@@ -281,6 +331,7 @@ enum EstadoGarantia {
 enum MetodoPago {
   QR
   TARJETA_DEBITO
+  EFECTIVO
 }
 
 enum Transmision {
@@ -328,6 +379,17 @@ enum PrioridadNotificacion {
   BAJA
   MEDIA
   ALTA
+}
+// Enum para registrado_con
+enum RegistradoCon {
+  email
+  google
+}
+
+// Enum para tipo en verificaciones
+enum TipoVerificacion {
+  recuperacion
+  verificacion
 }
 
 enum TipoDeNotificacion {

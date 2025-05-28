@@ -66,8 +66,7 @@ export const getAutoId = async (req: Request, res: Response): Promise<void> => {
           propietario: {
             select: {
               idUsuario: true,
-              nombre: true,
-              apellido: true,
+              nombreCompleto: true,
               telefono: true,
               email: true, 
               direccion: true,
@@ -118,8 +117,7 @@ export const getComentarios = async (req: Request, res: Response): Promise<void>
           usuario: {
             select: {
               idUsuario: true,
-              nombre: true,
-              apellido: true, 
+              nombreCompleto: true,
             },
           },
         },
@@ -342,8 +340,7 @@ export const getUsuarios = async (req: Request, res: Response) => {
     const usuarios = await prisma.usuario.findMany({
       select: {
         idUsuario: true,
-        nombre: true,
-        apellido: true,
+        nombreCompleto: true,
         email: true,
         telefono: true,
         fechaRegistro: true,
@@ -419,7 +416,7 @@ export const getCalificacionesHost = async (req: Request, res: Response): Promis
     // Verificar que el usuario existe y es un host
     const host = await prisma.usuario.findUnique({
       where: { idUsuario: hostId },
-      select: { esAdmin: true },
+      select: { host: true },
     });
 
     if (!host) {
@@ -430,7 +427,7 @@ export const getCalificacionesHost = async (req: Request, res: Response): Promis
       return;
     }
 
-    if (!host.esAdmin) {
+    if (!host.host) {
       res.status(403).json({
         success: false,
         message: "El usuario no tiene permisos de host.",
@@ -450,8 +447,7 @@ export const getCalificacionesHost = async (req: Request, res: Response): Promis
         calificador: {
           select: {
             idUsuario: true,
-            nombre: true,
-            apellido: true,
+            nombreCompleto: true
           },
         },
       },
@@ -466,8 +462,7 @@ export const getCalificacionesHost = async (req: Request, res: Response): Promis
       data: calificaciones.map((calificacion) => ({
         idCalificacion: calificacion.idCalificacion, // 👈 Correcto aquí
         idCalificador: calificacion.idCalificador,
-        nombre: calificacion.calificador.nombre,
-        apellido: calificacion.calificador.apellido,
+        nombre: calificacion.calificador.nombreCompleto,
         comentario: calificacion.comentario,
         puntuacion: calificacion.puntuacion,
         fechaCreacion: calificacion.fechaCreacion,
@@ -512,7 +507,7 @@ export const getHostSinFiltroFechas = async (req: Request, res: Response): Promi
       },
     });
 
-    if (!host || !host.esAdmin) {
+    if (!host || !host.host) {
       res.status(404).json({
         success: false,
         message: "El usuario no es un host o no existe.",
