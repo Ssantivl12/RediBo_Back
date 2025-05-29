@@ -6,11 +6,12 @@ const prisma = new PrismaClient();
 
 export const getDriversByRenter = async (req: Request, res: Response) => {
   try {
-    const userId = (req.user as JwtPayload)?.idUsuario;
+    const user = req.user as JwtPayload | undefined;
+if (!user?.idUsuario) {
+  return res.status(401).json({ message: 'No autenticado' });
+}
+const userId = user.idUsuario;
 
-    if (!userId) {
-      return res.status(401).json({ message: 'No autenticado' });
-    }
 // Obtenemos los drivers asociados al usuario
     const drivers = await prisma.usuarioDriver.findMany({
       where: {
