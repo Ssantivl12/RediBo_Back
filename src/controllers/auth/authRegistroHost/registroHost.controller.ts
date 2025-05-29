@@ -4,7 +4,7 @@ import { uploadToCloudinary } from "../../../services/auth/upload.service";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
-
+/// Controlador para registrar un host completo
 export const registrarHostCompletoController = async (
   req: Request,
   res: Response
@@ -25,7 +25,7 @@ export const registrarHostCompletoController = async (
       imagenes?: Express.Multer.File[];
       qrImage?: Express.Multer.File[];
     };
-
+// Validar que el usuario esté autenticado
     const imagenes = files?.imagenes || [];
     const qrFile = files?.qrImage?.[0];
 
@@ -33,7 +33,7 @@ export const registrarHostCompletoController = async (
       res.status(400).json({ message: "Faltan datos del vehículo" });
       return;
     }
-
+// Validar que el tipo de método de pago sea válido
     const tipoFinal =
       tipo === "card"
         ? "TARJETA_DEBITO"
@@ -47,7 +47,6 @@ export const registrarHostCompletoController = async (
       res.status(400).json({ message: "Tipo de método de pago inválido" });
       return;
     }
-
     // Validar que exista ubicación por defecto (idUbicacion = 1)
     const ubicacion = await prisma.ubicacion.findUnique({
       where: { idUbicacion: 1 },
