@@ -34,13 +34,18 @@ const userId = user.idUsuario;
     });
 
     // Adaptamos al formato que espera el frontend
-    const result = drivers.map((relacion) => ({
-  nombreCompleto: relacion.driver.usuario.nombreCompleto,
-  telefono: relacion.driver.usuario.telefono,
-  email: relacion.driver.usuario.email,
-  fotoPerfil: relacion.driver.usuario.fotoPerfil,
-  fechaAsignacion: relacion.fechaAsignacion
-}));
+    const mapDriversResponse = (drivers: any[]) => {
+  return drivers.map((relacion) => ({
+    nombreCompleto: relacion.driver.usuario.nombreCompleto,
+    telefono: relacion.driver.usuario.telefono,
+    email: relacion.driver.usuario.email,
+    fotoPerfil: relacion.driver.usuario.fotoPerfil,
+    fechaAsignacion: relacion.fechaAsignacion
+  }));
+};
+
+const result = mapDriversResponse(drivers);
+
 
 
     res.status(200).json({ drivers: result });
