@@ -44,8 +44,16 @@ const userId = user.idUsuario;
     fechaAsignacion: relacion.fechaAsignacion
   }));
 };
+interface DriverResponse {
+  nombreCompleto: string;
+  telefono: string;
+  email: string;
+  fotoPerfil?: string;
+  fechaAsignacion: Date;
+}
 
-const result = mapDriversResponse(drivers);
+const result: DriverResponse[] = mapDriversResponse(drivers);
+
 
 if (process.env.NODE_ENV !== 'production') {
   console.log(`[DEBUG] Drivers obtenidos para usuario ${userId}:`, drivers.length);
