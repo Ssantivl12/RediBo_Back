@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 export const getDriversByRenter = async (req: Request, res: Response) => {
   try {
     const user = req.user as JwtPayload | undefined;
+    
 if (!user?.idUsuario) {
   return res.status(401).json({ message: 'No autenticado' });
 }
@@ -46,6 +47,9 @@ const userId = user.idUsuario;
 
 const result = mapDriversResponse(drivers);
 
+if (process.env.NODE_ENV !== 'production') {
+  console.log(`[DEBUG] Drivers obtenidos para usuario ${userId}:`, drivers.length);
+}
 
 
     res.status(200).json({ drivers: result });
