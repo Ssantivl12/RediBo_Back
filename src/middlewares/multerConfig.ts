@@ -5,9 +5,9 @@ import fs from "fs";
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const usuario = req.user as { idUsuario: number };
-    const tipo = req.body.tipo; // 'qr' o 'vehiculo'
+    const tipo = req.body.tipo; // 'QR' o 'vehiculo'
 
-    const folder = tipo === "qr" ? "qr" : "vehiculo";
+    const folder = tipo === "QR" ? "QR" : "vehiculo";
     const dir = path.join("uploads", `usuario_${usuario.idUsuario}`, folder);
 
     // Crear la carpeta si no existe

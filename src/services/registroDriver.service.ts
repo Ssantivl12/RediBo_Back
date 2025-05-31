@@ -53,14 +53,18 @@ export const registrarDriverCompleto = async (data: {
       }
     });
 
-    if (!usuario?.telefono) {
-      await tx.usuario.update({
-        where: { idUsuario },
-        data: { telefono }
-      });
-    }
+    // 2. Si no tenía teléfono, actualizarlo ahora
+    ...(usuario?.telefono
+      ? [] // ya tiene, no actualizamos
+      : [
+          prisma.usuario.update({
+            where: { idUsuario },
+            data: { telefono: String(telefono) }
+          })
+        ]),
 
-    await tx.usuario.update({
+    // 3. Marcar al usuario como driver (driverBool = true)
+    prisma.usuario.update({
       where: { idUsuario },
       data: { driverBool: true }
     });
@@ -76,11 +80,16 @@ export const registrarDriverCompleto = async (data: {
       )
     );
 
-    return {
-      driver: nuevoDriver,
-      relaciones: relacionesDriver
-    };
-  });
+    // 4. Asignar renters
+    ...rentersIds.map((renterId) =>
+      prisma.usuario.update({
+        where: { idUsuario: renterId },
+        data: {
+          assignedToDriver: idUsuario
+        }
+      })
+    )
+  ]);
 };
  
 

@@ -8,12 +8,11 @@ const prisma = new PrismaClient();
 const storage = multer.memoryStorage();
 export const upload = multer({ storage });
 
-export const uploadProfilePhoto = async (req: Request, res: Response) => {
+export const uploadProfilePhoto = async (req: Request, res: Response): Promise<void> => {
   const { idUsuario } = req.user as { idUsuario: number };
 
   if (!req.file) {
-    res.status(400).json({ message: 'No se subió ninguna imagen.' });
-    return;
+     res.status(400).json({ message: 'No se subió ninguna imagen.' });
   }
 
   try {
@@ -36,14 +35,14 @@ export const uploadProfilePhoto = async (req: Request, res: Response) => {
       data: { fotoPerfil: result.secure_url },
     });
 
-    res.json({ message: 'Foto actualizada exitosamente.', fotoPerfil: result.secure_url });
+     res.json({ message: 'Foto actualizada exitosamente.', fotoPerfil: result.secure_url });
   } catch (error) {
     console.error('Error al subir a Cloudinary:', error);
-    res.status(500).json({ message: 'Error al subir la imagen' });
+     res.status(500).json({ message: 'Error al subir la imagen' });
   }
 };
 
-export const deleteProfilePhoto = async (req: Request, res: Response) => {
+export const deleteProfilePhoto = async (req: Request, res: Response): Promise<void> => {
   const { idUsuario } = req.user as { idUsuario: number };
 
   try {
@@ -53,8 +52,8 @@ export const deleteProfilePhoto = async (req: Request, res: Response) => {
     });
 
     if (!user?.fotoPerfil) {
-      res.status(400).json({ message: 'No hay foto para eliminar.' });
-      return;
+       res.status(400).json({ message: 'No hay foto para eliminar.' });
+       return;
     }
 
     const segments = user.fotoPerfil.split('/');
@@ -67,9 +66,9 @@ export const deleteProfilePhoto = async (req: Request, res: Response) => {
       data: { fotoPerfil: null },
     });
 
-    res.json({ message: 'Foto eliminada exitosamente.' });
+     res.json({ message: 'Foto eliminada exitosamente.' });
   } catch (error) {
     console.error('Error al eliminar la foto:', error);
-    res.status(500).json({ message: 'Error al eliminar la foto.' });
+     res.status(500).json({ message: 'Error al eliminar la foto.' });
   }
 };

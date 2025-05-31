@@ -1,16 +1,15 @@
-import { PrismaClient, Usuario } from "@prisma/client"
-import type { Request, Response } from "express"
-import * as authService from "../services/auth.service"
-import { generateToken } from "../utils/generateToken"
-
-import multer from "multer"
-import path from "path"
-import fs from "fs"
+import { PrismaClient, Usuario } from "@prisma/client";
+import { Request, Response } from "express";
+import * as authService from "../services/auth.service";
+import { generateToken } from "../utils/generateToken";
 
 const prisma = new PrismaClient()
 
-export const register = async (req: Request, res: Response) => {
-  const { nombreCompleto, email, contraseña, fechaNacimiento, telefono } = req.body
+const prisma = new PrismaClient();
+
+export const register = async (req: Request, res: Response): Promise<void> => {
+  const { nombreCompleto, email, contraseña, fechaNacimiento, telefono } =
+    req.body;
 
   try {
     const existingUser = await authService.findUserByEmail(email)
@@ -35,11 +34,15 @@ export const register = async (req: Request, res: Response) => {
     console.error(error)
     res.status(500).json({ message: "Error en el servidor" })
   }
-}
-
-export const updateGoogleProfile = async (req: Request, res: Response) => {
-  const { nombreCompleto, fechaNacimiento, telefono } = req.body
-  const email = req.body.email // Obtener email del body, no del user
+};
+  
+export const updateGoogleProfile = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  console.log("📍 REQ.USER:", req.user);
+  const { nombreCompleto, fechaNacimiento, telefono } = req.body;
+  const email = (req.user as { email: string }).email;
 
   if (!email) {
     res.status(401).json({ message: "Email no proporcionado" })
@@ -49,15 +52,12 @@ export const updateGoogleProfile = async (req: Request, res: Response) => {
   console.log(`📝 Actualizando perfil de Google para: ${email}`)
 
   try {
-    const updatedUser = await authService.updateGoogleProfile(email, nombreCompleto, fechaNacimiento, telefono)
-
-    // Generar token para el usuario actualizado
-    const token = generateToken({
-      idUsuario: updatedUser.idUsuario,
-      email: updatedUser.email,
-      nombreCompleto: updatedUser.nombreCompleto
-    })
-
+    const updatedUser = await authService.updateGoogleProfile(
+      email,
+      nombreCompleto,
+      fechaNacimiento,
+      telefono
+    );
     res.json({
       message: "Perfil actualizado correctamente",
       token,
@@ -104,7 +104,7 @@ export const login = async (req: Request, res: Response) => {
     const token = generateToken({
       idUsuario: user.idUsuario,
       email: user.email,
-      nombreCompleto: user.nombreCompleto
+      nombreCompleto: user.nombreCompleto,
     });
 
     console.info("Login exitoso para usuario:", email);
@@ -123,8 +123,8 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-export const me = async (req: Request, res: Response) => {
-  const { idUsuario } = req.user as { idUsuario: number }
+export const me = async (req: Request, res: Response): Promise<void> => {
+  const { idUsuario } = req.user as { idUsuario: number };
 
   try {
     const user = await prisma.usuario.findUnique({
@@ -151,8 +151,8 @@ export const me = async (req: Request, res: Response) => {
 
     res.json({ user })
   } catch (error) {
-    console.error("Error en /me:", error)
-    res.status(500).json({ message: "Error en el servidor" })
+    console.error('Error en /me:', error);
+     res.status(500).json({ message: 'Error en el servidor' });
   }
 }
 
@@ -241,8 +241,8 @@ export const deleteProfilePhoto = async (req: Request, res: Response) => {
 }
 
 export const updateUserField = async (req: Request, res: Response) => {
-  const camposPermitidos = ['nombreCompleto', 'telefono', 'fechaNacimiento'] as const;
-  type CampoEditable = typeof camposPermitidos[number];
+  const { campo, valor }: { campo: CampoEditable; valor: string } = req.body;
+  const { idUsuario } = req.user as { idUsuario: number };
 
   const { campo, valor }: { campo: CampoEditable; valor: string } = req.body;
   const { idUsuario } = req.user as { idUsuario: number };
@@ -252,22 +252,32 @@ export const updateUserField = async (req: Request, res: Response) => {
     return;
   }
 
+  const camposPermitidos = [
+    "nombreCompleto",
+    "telefono",
+    "fechaNacimiento",
+  ] as const;
+  type CampoEditable = (typeof camposPermitidos)[number];
   if (!camposPermitidos.includes(campo)) {
     res.status(400).json({ message: 'Campo no permitido.' });
     return;
   }
 
   const campoContadorMap: Record<CampoEditable, keyof Usuario> = {
-    nombreCompleto: 'edicionesNombre',
-    telefono: 'edicionesTelefono',
-    fechaNacimiento: 'edicionesFecha',
+    nombreCompleto: "edicionesNombre",
+    telefono: "edicionesTelefono",
+    fechaNacimiento: "edicionesFecha",
   };
   const campoContador = campoContadorMap[campo];
 
   try {
-    const user = await prisma.usuario.findUnique({
+    const user = (await prisma.usuario.findUnique({
       where: { idUsuario },
-    });
+      select: {
+        [campo]: true,
+        [campoContador]: true,
+      },
+    })) as any;
 
     if (!user) {
       res.status(404).json({ message: 'Usuario no encontrado' });
@@ -282,10 +292,27 @@ export const updateUserField = async (req: Request, res: Response) => {
       return;
     }
 
-    if (campo === 'nombreCompleto') {
-      if (typeof valor !== 'string' || valor.length < 3 || valor.length > 50) {
-        res.status(400).json({ message: 'El nombre debe tener entre 3 y 50 caracteres.' });
-        return;
+    const valorActual = user[campo];
+    const nuevoValor =
+      campo === "telefono"
+        ? valor.trim()
+        : campo === "fechaNacimiento"
+        ? new Date(valor)
+        : valor;
+
+    if (valorActual?.toString() === nuevoValor?.toString()) {
+      res.status(200).json({
+        message: "No hubo cambios en el valor.",
+        edicionesRestantes: 3 - user[campoContador],
+      });
+    }
+
+    // Validaciones personalizadas
+    if (campo === "nombreCompleto") {
+      if (typeof valor !== "string" || valor.length < 3 || valor.length > 50) {
+        res
+          .status(400)
+          .json({ message: "El nombre debe tener entre 3 y 50 caracteres." });
       }
       const soloLetrasRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/;
       if (!soloLetrasRegex.test(valor)) {
@@ -317,8 +344,7 @@ export const updateUserField = async (req: Request, res: Response) => {
         return;
       }
     }
-
-    if (campo === 'fechaNacimiento') {
+    if (campo === "fechaNacimiento") {
       const fechaValida = Date.parse(valor);
       if (isNaN(fechaValida)) {
         res.status(400).json({ message: 'Fecha inválida.' });
@@ -382,10 +408,12 @@ export const updateUserField = async (req: Request, res: Response) => {
     }
 
     res.json({
-      message: `${
-        campo === 'nombreCompleto' ? 'Nombre' :
-        campo === 'telefono' ? 'Teléfono' :
-        'Fecha de nacimiento'
+      message: `$${
+        campo === "nombreCompleto"
+          ? "Nombre"
+          : campo === "telefono"
+          ? "Teléfono"
+          : "Fecha de nacimiento"
       } actualizado correctamente`,
       edicionesRestantes,
       infoExtra,
@@ -402,16 +430,19 @@ export const updateUserField = async (req: Request, res: Response) => {
   }
 };
 
-export const getUserProfile = async (req: Request, res: Response) => {
-  const idUsuario = Number(req.params.idUsuario)
+export const getUserProfile = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const idUsuario = Number(req.params.idUsuario); // Aseguramos que sea número
 
   if (isNaN(idUsuario)) {
-    res.status(400).json({ message: "ID de usuario inválido" })
-    return
+    res.status(400).json({ message: "ID de usuario inválido" });
+    return;
   }
 
   try {
-    const user = await authService.getUserById(idUsuario)
+    const user = await authService.getUserById(idUsuario); // Usamos el servicio
 
     if (!user) {
       res.status(404).json({ message: "Usuario no encontrado" })
@@ -424,7 +455,7 @@ export const getUserProfile = async (req: Request, res: Response) => {
       email: user.email,
       telefono: user.telefono,
       fechaNacimiento: user.fechaNacimiento,
-    })
+    });
   } catch (error) {
     console.error("Error al obtener el perfil:", error)
     res.status(500).json({ message: "Error en el servidor" })

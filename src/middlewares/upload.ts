@@ -15,7 +15,7 @@ const storage = multer.diskStorage({
     const nombreSanitizado = sanitize(user.nombreCompleto);
     
     // Usa el campo del archivo para determinar la carpeta
-    const tipo = file.fieldname === 'qrImage' ? 'qr' : 'vehiculo';
+    const tipo = file.fieldname === 'qrImage' ? 'QR' : 'vehiculo';
 
     const dir = path.join('uploads', `usuario_${user.idUsuario}_${nombreSanitizado}`, tipo);
     fs.mkdirSync(dir, { recursive: true });

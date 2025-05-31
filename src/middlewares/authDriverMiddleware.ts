@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
   user?: { idUsuario: number };
 }
 
@@ -21,9 +21,7 @@ const authDriverMiddleware: RequestHandler = (req, res, next) => {
       process.env.JWT_SECRET || "clave_secreta"
     ) as { idUsuario: number };
 
-    // TypeScript no sabe que `req` es `AuthenticatedRequest`, así que lo forzamos aquí
-    (req as AuthenticatedRequest).user = { idUsuario: decoded.idUsuario };
-
+    req.user = { idUsuario: decoded.idUsuario };
     next();
   } catch (error) {
     res.status(403).json({ message: "Token inválido" });
@@ -31,4 +29,3 @@ const authDriverMiddleware: RequestHandler = (req, res, next) => {
 };
 
 export default authDriverMiddleware;
-export type { AuthenticatedRequest };

@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-export interface JwtPayload {
+interface JwtPayload {
   idUsuario: number;
   email: string;
   nombreCompleto: string;

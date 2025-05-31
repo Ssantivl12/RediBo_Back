@@ -4,8 +4,12 @@ import { AuthenticatedRequest } from "../../middlewares/authDriverMiddleware";
 
 const prisma = new PrismaClient();
 
-const getDriverProfile: RequestHandler = async (req, res) => {
-  const { idUsuario } = (req as AuthenticatedRequest).user ?? {};
+export const getDriverProfile = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const idUsuario = req.user?.idUsuario;
 
   if (!idUsuario) {
     res.status(401).json({ message: "No autorizado: token inválido o ausente" });

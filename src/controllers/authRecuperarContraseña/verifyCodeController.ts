@@ -60,9 +60,11 @@ export const verifyCode = async (req: Request, res: Response) => {
           },
         });
         console.log(`Intentos fallidos: ${updatedUser.intentosFallidos}`);
+        //res.status(400).json({ message: 'Código incorrecto. Por favor intenta nuevamente' });
+        //Enviar al usuario al login
 
         if (updatedUser.intentosFallidos === 5) {
-          const fechaBloqueado = new Date(Date.now() + 15 * 60 * 1000);
+          const fechaBloqueado = new Date(Date.now() + 15 * 60 * 1000); // Bloquear al usuario durante 15 minutos
           await prisma.usuario.update({
             where: { email: user?.email },
             data: {
@@ -72,7 +74,7 @@ export const verifyCode = async (req: Request, res: Response) => {
             },
           });
           console.log(`Usuario bloqueado hasta: ${fechaBloqueado.toISOString()}`);
-          res.status(400).json({ message: 'Código incorrecto. Usuario bloqueado temporalmente.' });
+           res.status(400).json({ message: 'Código incorrecto. Usuario bloqueado temporalmente.' });
         }
         res.status(400).json({ message: 'Código incorrecto. Por favor intenta nuevamente' });
       }

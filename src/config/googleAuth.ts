@@ -22,17 +22,31 @@ passport.use(
         // Buscar usuario sin crear
         const user = await prisma.usuario.findUnique({ where: { email } });
 
-        // Devolver el usuario si existe, si no, devolver solo el email
-        if (user) {
-          return done(null, user);
-        } else {
-          const newUser = await prisma.usuario.create({
-            data: {
-              email,
-              nombreCompleto: "",
-              registradoCon: "google",
-              verificado: false,
-            },
+        console.log("📧 Email obtenido de Google:", email); // 👈 Log 2
+        if (!email)
+          return done(
+            new Error("No se pudo obtener el email de Google"),
+            false
+          );
+        console.log("🔄 Buscando/creando usuario en DB...");
+        const { user, isNew } = await findOrCreateGoogleUser(email, name);
+
+        const token = generateToken({
+          idUsuario: user.idUsuario,
+          email: user.email,
+          nombreCompleto: user.nombreCompleto,
+        });
+
+        if (user.registradoCon === "email") {
+          console.warn("⚠️ Correo ya registrado manualmente:", email);
+
+          console.log("✅ Usuario autenticado y token generado");
+
+          // ✅ Devolver token junto con usuario
+          return done(null, false, {
+            message: "alreadyExists",
+            token,
+            email,
           });
           return done(null, newUser);  // devuelve el email nomás
         }

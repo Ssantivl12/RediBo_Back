@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 import { registrarHostCompleto } from "../../services/pago.service";
-import { uploadToCloudinary } from "../../services/upload.service"; // ⬅ nuevo import
+import { uploadToCloudinary } from "../../services/upload.service";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 export const registrarHostCompletoController = async (
   req: Request,
@@ -11,25 +14,9 @@ export const registrarHostCompletoController = async (
     const {
       placa,
       soat,
-      // Datos adicionales del auto que faltan
-      marca,
-      modelo,
-      descripcion,
-      precioRentaDiario,
-      montoGarantia,
-      tipo: tipoAuto,
-      año,
-      color,
-      asientos,
-      capacidadMaletero,
-      transmision,
-      combustible,
-      idUbicacion,
-      // Datos de pago
-      tipo: tipoPago,
-      numero_tarjeta: numeroTarjeta,
-      fecha_expiracion: fechaExpiracion,
-      cvv,
+      tipo,
+      numeroTarjeta,
+      fechaExpiracion,
       titular,
       detalles_metodo: detallesMetodo,
     } = req.body;
@@ -47,69 +34,54 @@ export const registrarHostCompletoController = async (
       return;
     }
 
-    if (imagenes.length < 1) {
-      res.status(400).json({ message: "Se requiere al menos una imagen del vehículo" });
-      return;
-    }
-
-    let ubicacionId = parseInt(idUbicacion) || 1; // Usar ubicación por defecto
-
-    // Mapear el tipo de pago
-    const tipoFinal = 
-      tipoPago === "TARJETA_DEBITO" ? "TARJETA_DEBITO" : 
-      tipoPago === "QR" ? "QR" : 
-      tipoPago === "EFECTIVO" ? "EFECTIVO" : null;
+    const tipoFinal =
+      tipo === "card"
+        ? "TARJETA_DEBITO"
+        : tipo === "QR"
+        ? "QR"
+        : tipo === "cash"
+        ? "EFECTIVO"
+        : null;
 
     if (!tipoFinal) {
       res.status(400).json({ message: "Tipo de método de pago inválido" });
       return;
     }
-    // ⬇ Subida de imágenes del vehículo a Cloudinary
+
+    // Validar que exista ubicación por defecto (idUbicacion = 1)
+    const ubicacion = await prisma.ubicacion.findUnique({
+      where: { idUbicacion: 1 },
+    });
+    if (!ubicacion) {
+      res.status(400).json({ message: "Ubicación por defecto no encontrada" });
+      return;
+    }
+
+    // Subir imágenes del vehículo
     const imagenesSubidas = await Promise.all(
       imagenes.map((file: any) => uploadToCloudinary(file))
     );
 
-    // Llamar al servicio
-    const resultado = await registrarHostCompleto({
-      idUsuario: usuario.idUsuario,
-      // Datos del auto
+    // Subir imagen QR si se proporciona
+    let imagenQr: string | undefined = undefined;
+    if (qrFile) {
+      imagenQr = await uploadToCloudinary(qrFile);
+    }
+
+    await registrarHostCompleto({
+      idPropietario: usuario.idUsuario,
       placa,
       soat,
-      marca: marca || "No especificada",
-      modelo: modelo || "No especificado", 
-      descripcion: descripcion || "Auto disponible para renta",
-      precioRentaDiario: parseFloat(precioRentaDiario) || 50.00,
-      montoGarantia: parseFloat(montoGarantia) || 200.00,
-      tipoAuto: tipoAuto || "SEDAN",
-      año: parseInt(año) || new Date().getFullYear(),
-      color: color || "No especificado",
-      asientos: parseInt(asientos) || 5,
-      capacidadMaletero: parseInt(capacidadMaletero) || 400,
-      transmision: transmision || "MANUAL",
-      combustible: combustible || "GASOLINA",
-      idUbicacion: ubicacionId,
-      imagenes: imagenes.map((f: any) => f.filename),
-      // Datos de pago
-      tipoPago: tipoFinal,
+      imagenes: imagenesSubidas,
+      tipo: tipoFinal,
       numeroTarjeta,
       fechaExpiracion,
-      cvv,
       titular,
-      imagenQr: qrImage?.filename,
-      detallesMetodoPago: detallesMetodo,
+      imagenQr,
+      detallesMetodoPago: detalles_metodo,
     });
 
-    console.log('✅ Registro completado:', resultado);
-
-    res.status(201).json({ 
-      success: true, 
-      message: "Host registrado exitosamente",
-      data: {
-        autoId: resultado.auto?.idAuto || null,
-        usuario: resultado.usuario.host
-      }
-    });
-
+    res.status(201).json({ success: true, message: "Registro host completo" });
   } catch (error) {
     console.error("❌ Error al registrar host:", error);
     
@@ -131,3 +103,4 @@ export const registrarHostCompletoController = async (
     });
   }
 };
+

@@ -3,34 +3,53 @@ import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
 dotenv.config();
-import passwordRoutes from "../src/routes/password.routes";
-import authRoutes from "../src/routes/auth.routes";
 import session from "express-session";
 import passport from "passport";
-import "../src/config/googleAuth";
+import path from "path";
+import { PrismaClient } from "@prisma/client";
+
+// Rutas
+import passwordRoutes from "../src/routes/password.routes";
+import authRoutes from "../src/routes/auth.routes";
 import authRegistroHostRoutes from "../src/routes/registroHost.routes";
-import authRegistroDriverRoutes from './routes/registroDriver.routes'; // Import the driver routes
-import "./config/googleAuth"; // <--- importante
-import usuarioRoutes from './routes/usuario.routes';
+import authRegistroDriverRoutes from "./routes/registroDriver.routes";
+import usuarioRoutes from "./routes/usuario.routes";
 import visualizarDriverRoutes from "./routes/visualizarDriver.routes";
 import autoRoutes from "./routes/auto.routes";
 
-import path from 'path';
-// Cargar variables de entorno
+// Google Auth
+import "../src/config/googleAuth";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const FRONT_URL =  process.env.CLIENT_URL
+const prisma = new PrismaClient();
 
+// ✅ Crear ubicación por defecto al iniciar el servidor
+async function ensureDefaultUbicacion() {
+  const existing = await prisma.ubicacion.findUnique({ where: { idUbicacion: 1 } });
 
-// ✅ CORS robusto – que responde incluso si hay error
-app.use((req: express.Request, res: express.Response, next: express.NextFunction): void => {
+  if (!existing) {
+    await prisma.ubicacion.create({
+      data: {
+        idUbicacion: 1,
+        nombre: "Ubicación por defecto",
+        descripcion: "Generada automáticamente",
+        latitud: -17.3935,
+        longitud: -66.1570,
+        esActiva: true,
+      },
+    });
+    console.log("✅ Ubicación por defecto creada");
+  } else {
+    console.log("ℹ️ Ubicación por defecto ya existe");
+  }
+}
+
+// ✅ CORS robusto
+app.use((req: Request, res: Response, next: NextFunction): void => {
   res.header("Access-Control-Allow-Origin", "http://localhost:3000");
   res.header("Access-Control-Allow-Credentials", "true");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-  );
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
 
   if (req.method === "OPTIONS") {
@@ -58,41 +77,47 @@ app.use(
 
 app.use(
   session({
-    secret: "mi_clave_secreta_segura", // cámbiala por algo más seguro
+    secret: "mi_clave_secreta_segura",
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // ⚠️ en producción debe ser true con HTTPS
+      secure: false, // en producción: true si usas HTTPS
       maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
+
 app.use(passport.initialize());
 app.use(passport.session());
-app.use('/uploads', express.static('uploads')); // Servir imágenes desde el servidor
+app.use('/uploads', express.static('uploads'));
 
+// Rutas
 app.use("/api", authRoutes);
 app.use("/api", passwordRoutes);
 app.use("/api", authRegistroHostRoutes);
-app.use('/api', authRegistroDriverRoutes); // Añadir la ruta de registro de driver aquí
-app.use('/api', usuarioRoutes); // Añadir la ruta de usuario aquí
-app.use('/api', visualizarDriverRoutes);// Añadir la ruta de visualizar driver aquí
-app.use('/api', autoRoutes);
+app.use("/api", authRegistroDriverRoutes);
+app.use("/api", usuarioRoutes);
+app.use("/api", visualizarDriverRoutes);
 
+// Endpoint principal
 app.get("/", (req, res) => {
   res.send("¡Hola desde la página principal!");
 });
 
-// End point para verificar la salud de la conexión de la API
+// Health check
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-app.get("/puta", (req, res) => {
-  res.send("que gei");
-});
-//guardadito
+// Inicializar servidor solo después de crear la ubicación por defecto
+ensureDefaultUbicacion()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ Error al crear ubicación por defecto:", err);
+  });
+
 export default app;
