@@ -50,5 +50,5 @@ export const validateLogin = (req: Request, res: Response, next: NextFunction): 
     return;
   }
 
-  next(); // ✅ si todo es válido, pasa al siguiente middleware
+  next();
 };

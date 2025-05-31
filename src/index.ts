@@ -13,12 +13,14 @@ import authRegistroDriverRoutes from './routes/registroDriver.routes'; // Import
 import "./config/googleAuth"; // <--- importante
 import usuarioRoutes from './routes/usuario.routes';
 import visualizarDriverRoutes from "./routes/visualizarDriver.routes";
+import autoRoutes from "./routes/auto.routes";
 
 import path from 'path';
 // Cargar variables de entorno
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const FRONT_URL =  process.env.CLIENT_URL
 
 
 // ✅ CORS robusto – que responde incluso si hay error
@@ -75,6 +77,7 @@ app.use("/api", authRegistroHostRoutes);
 app.use('/api', authRegistroDriverRoutes); // Añadir la ruta de registro de driver aquí
 app.use('/api', usuarioRoutes); // Añadir la ruta de usuario aquí
 app.use('/api', visualizarDriverRoutes);// Añadir la ruta de visualizar driver aquí
+app.use('/api', autoRoutes);
 
 app.get("/", (req, res) => {
   res.send("¡Hola desde la página principal!");

@@ -1,24 +1,20 @@
-import { Response, NextFunction } from "express";
+import { RequestHandler } from "express";
 import { PrismaClient } from "@prisma/client";
-import { AuthenticatedRequest } from "../../middlewares/authDriverMiddleware"; // 👈 Asegúrate de usar la ruta correcta
+import { AuthenticatedRequest } from "../../middlewares/authDriverMiddleware";
 
 const prisma = new PrismaClient();
 
-export const getDriverProfile = async (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const id_usuario = req.user?.id_usuario;
+const getDriverProfile: RequestHandler = async (req, res) => {
+  const { idUsuario } = (req as AuthenticatedRequest).user ?? {};
 
-  if (!id_usuario) {
+  if (!idUsuario) {
     res.status(401).json({ message: "No autorizado: token inválido o ausente" });
     return;
   }
 
   try {
     const driver = await prisma.driver.findUnique({
-      where: { id_usuario },
+      where: { idUsuario },
       include: { usuario: true },
     });
 
@@ -33,3 +29,5 @@ export const getDriverProfile = async (
     res.status(500).json({ message: "Error del servidor" });
   }
 };
+
+export default getDriverProfile;

@@ -1,74 +1,80 @@
-import { PrismaClient, Usuario } from "@prisma/client";
-import { Request, Response } from "express";
-import * as authService from "../services/auth.service";
-import { generateToken } from "../utils/generateToken";
+import { PrismaClient, Usuario } from "@prisma/client"
+import type { Request, Response } from "express"
+import * as authService from "../services/auth.service"
+import { generateToken } from "../utils/generateToken"
 
-import { updateGoogleProfile as updateGoogleProfileService } from "../services/auth.service";
+import multer from "multer"
+import path from "path"
+import fs from "fs"
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient()
 
-export const register = async (req: Request, res: Response): Promise<void> => {
-  const { nombre_completo, email, contraseña, fecha_nacimiento, telefono } =
-    req.body;
+export const register = async (req: Request, res: Response) => {
+  const { nombreCompleto, email, contraseña, fechaNacimiento, telefono } = req.body
 
   try {
-    const existingUser = await authService.findUserByEmail(email);
+    const existingUser = await authService.findUserByEmail(email)
     if (existingUser) {
-      res
-        .status(400)
-        .json({ message: "El correo electrónico ya está registrado." });
+      res.status(400).json({ message: "El correo electrónico ya está registrado." })
+      return
     }
 
     const newUser = await authService.createUser({
-      nombre_completo,
+      nombreCompleto,
       email,
       contraseña,
-      fecha_nacimiento,
+      fechaNacimiento,
       telefono,
-    });
+    })
 
     res.status(201).json({
       message: "Usuario registrado exitosamente",
       user: { email: newUser.email },
-    });
+    })
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error en el servidor" });
+    console.error(error)
+    res.status(500).json({ message: "Error en el servidor" })
   }
-};
-  
-export const updateGoogleProfile = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  console.log("📍 REQ.USER:", req.user);
-  const { nombre_completo, fecha_nacimiento, telefono } = req.body;
-  const email = (req.user as { email: string }).email;
+}
+
+export const updateGoogleProfile = async (req: Request, res: Response) => {
+  const { nombreCompleto, fechaNacimiento, telefono } = req.body
+  const email = req.body.email // Obtener email del body, no del user
 
   if (!email) {
-    res.status(401).json({ message: "Usuario no autenticado" });
+    res.status(401).json({ message: "Email no proporcionado" })
+    return
   }
+
+  console.log(`📝 Actualizando perfil de Google para: ${email}`)
 
   try {
-    const updatedUser = await authService.updateGoogleProfile(
-      email,
-      nombre_completo,
-      fecha_nacimiento,
-      telefono
-    );
+    const updatedUser = await authService.updateGoogleProfile(email, nombreCompleto, fechaNacimiento, telefono)
+
+    // Generar token para el usuario actualizado
+    const token = generateToken({
+      idUsuario: updatedUser.idUsuario,
+      email: updatedUser.email,
+      nombreCompleto: updatedUser.nombreCompleto
+    })
+
     res.json({
       message: "Perfil actualizado correctamente",
-      user: updatedUser,
-    });
+      token,
+      user: {
+        email: updatedUser.email,
+        nombreCompleto: updatedUser.nombreCompleto
+      },
+    })
   } catch (error: any) {
-    console.error("Error al actualizar perfil:", error);
+    console.error("Error al actualizar perfil:", error)
     res.status(400).json({
       message: error.message || "No se pudo actualizar el perfil con Google",
-    });
+    })
   }
-};
+}
 
-export const login = async (req: Request, res: Response): Promise<void> => {
+export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   try {
@@ -81,100 +87,186 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const isValid = await authService.validatePassword(
-      password,
-      user.contraseña ?? ""
-    );
+    if (user.registradoCon === "google") {
+      res.status(401).json({
+        message: "Esta cuenta fue registrada con Google. Por favor, inicia sesión con Google.",
+      });
+    }
+
+    const isValid = await authService.validatePassword(password, user.contraseña ?? "");
 
     if (!isValid) {
-      res.status(401).json({ message: "Los datos no son válidos" });
+      res.status(401).json({ message: "Datos invalidos" });
       return;
     }
 
-    //Token
+    // Token
     const token = generateToken({
-      id_usuario: user.id_usuario,
+      idUsuario: user.idUsuario,
       email: user.email,
-      nombre_completo: user.nombre_completo,
+      nombreCompleto: user.nombreCompleto
     });
 
+    console.info("Login exitoso para usuario:", email);
     res.json({
       message: "Login exitoso",
       token,
       user: {
         email: user.email,
-        nombre_completo: user.nombre_completo,
+        nombreCompleto: user.nombreCompleto,
       },
     });
-    //Cambios por si no funciona lo que implemente
-    //return res.json({ message: "Login exitoso", user: { email: user.email } });
   } catch (error) {
-    console.error(error);
+    console.error("Error inesperado en login:", error);
     res.status(500).json({ message: "Error en el servidor" });
+    return;
   }
 };
 
-export const me = async (req: Request, res: Response): Promise<void> => {
-  const { id_usuario } = req.user as { id_usuario: number };
+export const me = async (req: Request, res: Response) => {
+  const { idUsuario } = req.user as { idUsuario: number }
 
   try {
     const user = await prisma.usuario.findUnique({
-      where: { id_usuario },
+      where: { idUsuario },
       select: {
-        id_usuario: true,
-        nombre_completo: true,
+        idUsuario: true,
+        nombreCompleto: true,
         email: true,
         telefono: true,
-        fecha_nacimiento: true,
-        foto_perfil: true,
-
-        ediciones_nombre: true,
-        ediciones_telefono: true,
-        ediciones_fecha: true,
+        fechaNacimiento: true,
+        fotoPerfil: true,
+        edicionesNombre: true,
+        edicionesTelefono: true,
+        edicionesFecha: true,
         driverBool: true,
         host: true,
       },
-    });
+    })
 
     if (!user) {
-      res.status(404).json({ message: "Usuario no encontrado" });
+      res.status(404).json({ message: "Usuario no encontrado" })
+      return
     }
 
-    res.json({ user }); // 🔥 Ahora manda todos los datos al frontend
+    res.json({ user })
   } catch (error) {
-    console.error("Error en /me:", error);
-    res.status(500).json({ message: "Error en el servidor" });
+    console.error("Error en /me:", error)
+    res.status(500).json({ message: "Error en el servidor" })
   }
-};
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/")
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname)
+    cb(null, `${Date.now()}-${file.fieldname}${ext}`)
+  },
+})
+
+export const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ["image/png"]
+    if (!allowedTypes.includes(file.mimetype)) {
+      return cb(new Error("Formato de imagen no válido. Usa PNG."))
+    }
+    cb(null, true)
+  },
+})
+
+export const uploadProfilePhoto = async (req: Request, res: Response) => {
+  const { idUsuario } = req.user as { idUsuario: number }
+
+  if (!req.file) {
+    res.status(400).json({ message: "No se subió ninguna imagen." })
+    return
+  }
+
+  const imagePath = `/uploads/${req.file.filename}`
+
+  try {
+    await prisma.usuario.update({
+      where: { idUsuario },
+      data: { fotoPerfil: imagePath },
+    })
+
+    res.json({
+      message: "Foto de perfil actualizada exitosamente.",
+      foto_perfil: imagePath,
+    })
+  } catch (error) {
+    console.error("Error al guardar la foto de perfil:", error)
+    res.status(500).json({ message: "Error al actualizar la foto de perfil." })
+  }
+}
+
+export const deleteProfilePhoto = async (req: Request, res: Response) => {
+  const { idUsuario } = req.user as { idUsuario: number }
+
+  try {
+    const user = await prisma.usuario.findUnique({
+      where: { idUsuario },
+      select: { fotoPerfil: true },
+    })
+
+    if (!user || !user.fotoPerfil) {
+      res.status(400).json({ message: "No hay foto para eliminar." })
+      return
+    }
+
+    const filePath = path.join(__dirname, "../../", user.fotoPerfil)
+
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        console.error("Error eliminando el archivo:", err)
+      } else {
+        console.log("Foto eliminada del servidor:", filePath)
+      }
+    })
+
+    await prisma.usuario.update({
+      where: { idUsuario },
+      data: { fotoPerfil: null },
+    })
+
+    res.json({ message: "Foto de perfil eliminada exitosamente." })
+  } catch (error) {
+    console.error("Error al eliminar la foto de perfil:", error)
+    res.status(500).json({ message: "Error al eliminar la foto." })
+  }
+}
 
 export const updateUserField = async (req: Request, res: Response) => {
-  const { campo, valor }: { campo: CampoEditable; valor: string } = req.body;
-  const { id_usuario } = req.user as { id_usuario: number };
+  const camposPermitidos = ['nombreCompleto', 'telefono', 'fechaNacimiento'] as const;
+  type CampoEditable = typeof camposPermitidos[number];
 
-  if (!campo || !valor) {
-    res.status(400).json({ message: "Campo y valor son obligatorios." });
+  const { campo, valor }: { campo: CampoEditable; valor: string } = req.body;
+  const { idUsuario } = req.user as { idUsuario: number };
+
+  if (!campo || valor === undefined || valor === null) {
+    res.status(400).json({ message: 'Campo y valor son obligatorios.' });
+    return;
   }
 
-  const camposPermitidos = [
-    "nombre_completo",
-    "telefono",
-    "fecha_nacimiento",
-  ] as const;
-  type CampoEditable = (typeof camposPermitidos)[number];
   if (!camposPermitidos.includes(campo)) {
-    res.status(400).json({ message: "Campo no permitido." });
+    res.status(400).json({ message: 'Campo no permitido.' });
+    return;
   }
 
   const campoContadorMap: Record<CampoEditable, keyof Usuario> = {
-    nombre_completo: "ediciones_nombre",
-    telefono: "ediciones_telefono",
-    fecha_nacimiento: "ediciones_fecha",
+    nombreCompleto: 'edicionesNombre',
+    telefono: 'edicionesTelefono',
+    fechaNacimiento: 'edicionesFecha',
   };
   const campoContador = campoContadorMap[campo];
 
   try {
-    const user = (await prisma.usuario.findUnique({
-      where: { id_usuario },
+    const user = await prisma.usuario.findUnique({
+      where: { idUsuario },
       select: {
         [campo]: true,
         [campoContador]: true,
@@ -182,83 +274,93 @@ export const updateUserField = async (req: Request, res: Response) => {
     })) as any;
 
     if (!user) {
-      res.status(404).json({ message: "Usuario no encontrado" });
+      res.status(404).json({ message: 'Usuario no encontrado' });
+      return;
     }
 
     if (user[campoContador] >= 3) {
       res.status(403).json({
-        message:
-          "Has alcanzado el límite de 3 ediciones para este campo. Para más cambios, contacta al soporte.",
+        message: 'Has alcanzado el límite de 3 ediciones para este campo. Para más cambios, contacta al soporte.'
       });
+      return;
     }
 
-    const valorActual = user[campo];
-    const nuevoValor =
-      campo === "telefono"
-        ? valor.trim()
-        : campo === "fecha_nacimiento"
-        ? new Date(valor)
-        : valor;
-
-    if (valorActual?.toString() === nuevoValor?.toString()) {
-      res.status(200).json({
-        message: "No hubo cambios en el valor.",
-        edicionesRestantes: 3 - user[campoContador],
-      });
-    }
-
-    // Validaciones personalizadas
-    if (campo === "nombre_completo") {
-      if (typeof valor !== "string" || valor.length < 3 || valor.length > 50) {
-        res
-          .status(400)
-          .json({ message: "El nombre debe tener entre 3 y 50 caracteres." });
+    if (campo === 'nombreCompleto') {
+      if (typeof valor !== 'string' || valor.length < 3 || valor.length > 50) {
+        res.status(400).json({ message: 'El nombre debe tener entre 3 y 50 caracteres.' });
+        return;
       }
       const soloLetrasRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/;
       if (!soloLetrasRegex.test(valor)) {
-        res.status(400).json({
-          message: "El nombre solo puede contener letras y espacios.",
-        });
+        res.status(400).json({ message: 'El nombre solo puede contener letras y espacios.' });
+        return;
       }
       if (/\s{2,}/.test(valor)) {
-        res.status(400).json({
-          message: "El nombre no debe tener más de un espacio consecutivo.",
-        });
+        res.status(400).json({ message: 'El nombre no debe tener más de un espacio consecutivo.' });
+        return;
       }
       if (/^\s|\s$/.test(valor)) {
-        res.status(400).json({
-          message: "El nombre no debe comenzar ni terminar con espacios.",
-        });
+        res.status(400).json({ message: 'El nombre no debe comenzar ni terminar con espacios.' });
+        return;
       }
     }
 
-    if (campo === "telefono") {
-      const telefonoStr = valor.toString();
+    if (campo === 'telefono') {
+      const telefonoStr = valor.toString().trim();
       if (!/^[0-9]*$/.test(telefonoStr)) {
-        res
-          .status(400)
-          .json({ message: "Formato inválido, ingrese solo números." });
+        res.status(400).json({ message: 'Formato inválido, ingrese solo números.' });
+        return;
       }
       if (!/^[0-9]{8}$/.test(telefonoStr)) {
-        res
-          .status(400)
-          .json({ message: "El teléfono debe ser un número de 8 dígitos." });
+        res.status(400).json({ message: 'El teléfono debe ser un número de 8 dígitos.' });
+        return;
       }
       if (!/^[67]/.test(telefonoStr)) {
-        res
-          .status(400)
-          .json({ message: "El teléfono debe comenzar con 6 o 7." });
+        res.status(400).json({ message: 'El teléfono debe comenzar con 6 o 7.' });
+        return;
       }
     }
-    if (campo === "fecha_nacimiento") {
+
+    if (campo === 'fechaNacimiento') {
       const fechaValida = Date.parse(valor);
       if (isNaN(fechaValida)) {
-        res.status(400).json({ message: "Fecha inválida." });
+        res.status(400).json({ message: 'Fecha inválida.' });
+        return;
       }
+    }
+
+    // Conversión de valores
+    let nuevoValor: any;
+    if (campo === 'telefono') {
+      nuevoValor = valor.toString().trim();
+    } else if (campo === 'fechaNacimiento') {
+      nuevoValor = new Date(valor);
+    } else {
+      nuevoValor = valor;
+    }
+
+    const valorActual = user[campo];
+
+    // Comparación
+    let valoresIguales = false;
+    if (campo === 'telefono') {
+      valoresIguales = valorActual === nuevoValor;
+    } else if (campo === 'fechaNacimiento') {
+      valoresIguales = valorActual?.getTime() === nuevoValor?.getTime();
+    } else {
+      valoresIguales = valorActual === nuevoValor;
+    }
+
+    if (valoresIguales) {
+      res.status(200).json({
+        message: 'No hubo cambios en el valor.',
+        edicionesRestantes: 3 - user[campoContador]
+      });
+      return;
     }
 
     const updatedUser = await prisma.usuario.update({
-      where: { id_usuario },
+      where: { idUsuario },
       data: {
         [campo]: nuevoValor,
         [campoContador]: { increment: 1 },
@@ -276,110 +378,320 @@ export const updateUserField = async (req: Request, res: Response) => {
     }
 
     res.json({
-      message: `$${
-        campo === "nombre_completo"
-          ? "Nombre"
-          : campo === "telefono"
-          ? "Teléfono"
-          : "Fecha de nacimiento"
+      message: `${
+        campo === 'nombreCompleto' ? 'Nombre' :
+        campo === 'telefono' ? 'Teléfono' :
+        'Fecha de nacimiento'
       } actualizado correctamente`,
       edicionesRestantes,
       infoExtra,
       user: {
-        id_usuario: updatedUser.id_usuario,
+        idUsuario: updatedUser.idUsuario,
         [campo]: updatedUser[campo],
-        [campoContador]: updatedUser[campoContador],
+        [campoContador]: updatedUser[campoContador as keyof typeof updatedUser],
       },
     });
   } catch (error) {
-    console.error("Error al actualizar campo:", error);
-    res.status(500).json({ message: "Error al actualizar el campo." });
+    console.error('Error al actualizar campo:', error);
+    res.status(500).json({ message: 'Error al actualizar el campo.' });
+    return;
   }
 };
 
-export const getUserProfile = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const id_usuario = Number(req.params.id_usuario); // Aseguramos que sea número
+export const getUserProfile = async (req: Request, res: Response) => {
+  const idUsuario = Number(req.params.idUsuario)
 
-  if (isNaN(id_usuario)) {
-    res.status(400).json({ message: "ID de usuario inválido" });
-    return;
+  if (isNaN(idUsuario)) {
+    res.status(400).json({ message: "ID de usuario inválido" })
+    return
   }
 
   try {
-    const user = await authService.getUserById(id_usuario); // Usamos el servicio
+    const user = await authService.getUserById(idUsuario)
 
     if (!user) {
-      res.status(404).json({ message: "Usuario no encontrado" });
-      return;
+      res.status(404).json({ message: "Usuario no encontrado" })
+      return
     }
 
     res.status(200).json({
-      id_usuario: user.id_usuario,
-      nombre_completo: user.nombre_completo,
+      idUsuario: user.idUsuario,
+      nombreCompleto: user.nombreCompleto,
       email: user.email,
       telefono: user.telefono,
-      fecha_nacimiento: user.fecha_nacimiento,
-    });
+      fechaNacimiento: user.fechaNacimiento,
+    })
   } catch (error) {
-    console.error("Error al obtener el perfil:", error);
-    res.status(500).json({ message: "Error en el servidor" });
+    console.error("Error al obtener el perfil:", error)
+    res.status(500).json({ message: "Error en el servidor" })
   }
-};
+}
 
-export const deleteIncompleteUserController = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const { email } = req.body;
+export const checkPhoneExists = async (req: Request, res: Response) => {
+  const { telefono } = req.body
 
-  if (!email) {
-    res.status(400).json({ message: "Falta el email" });
+  if (!telefono) {
+    res.status(400).json({ message: "Teléfono no proporcionado" })
+    return
   }
 
   try {
-    const user = await prisma.usuario.findUnique({ where: { email } });
+    const user = await authService.findUserByPhone(telefono.toString())
+    res.json({ exists: !!user })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: "Error en el servidor" })
+  }
+}
+
+export const deleteIncompleteUser = async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  if (!email) {
+    res.status(400).json({ message: "Email no proporcionado" });
+    return;
+  }
+
+  console.log(`🗑️ Intentando eliminar usuario incompleto: ${email}`);
+
+  try {
+    const user = await authService.findUserByEmail(email);
 
     if (!user) {
       res.status(404).json({ message: "Usuario no encontrado" });
       return;
     }
 
-    if (user.verificado) {
-      res.status(400).json({
-        message: "El usuario ya fue verificado, no se puede eliminar",
+    if (user.registradoCon !== "google") {
+      res.status(400).json({ 
+        message: "Solo se pueden eliminar usuarios registrados con Google" 
       });
-    }
-
-    await prisma.usuario.delete({ where: { email } });
-
-    res.status(200).json({ message: "Usuario eliminado con éxito" });
-  } catch (error) {
-    console.error("Error al eliminar usuario incompleto:", error);
-    res.status(500).json({ message: "Error interno del servidor" });
-  }
-};
-export const checkPhoneExists = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const { telefono } = req.body;
-
-  if (!telefono) {
-    res.status(400).json({ message: "Teléfono no proporcionado" });
-  }
-
-  try {
-    const user = await authService.findUserByPhone(telefono);
-    if (user) {
-      res.json({ exists: true });
       return;
     }
-    res.json({ exists: false });
+
+    if (user.nombreCompleto && user.fechaNacimiento) {
+      res.status(400).json({ 
+        message: "No se puede eliminar un usuario con perfil completo" 
+      });
+      return;
+    }
+
+    await prisma.usuario.delete({
+      where: { email }
+    });
+
+    console.log(`✅ Usuario incompleto eliminado exitosamente: ${email}`);
+    
+    res.json({
+      message: "Usuario incompleto eliminado exitosamente",
+      email
+    });
+
+  } catch (error: any) {
+    console.error("Error al eliminar usuario incompleto:", error);
+    
+    if (error.code === 'P2025') {
+      res.status(404).json({ message: "Usuario no encontrado" });
+      return;
+    }
+
+    res.status(500).json({ 
+      message: "Error al eliminar el usuario incompleto" 
+    });
+  }
+};
+
+export const registroDriver = async (req: Request, res: Response) => {
+  try {
+    const { idUsuario } = req.user as { idUsuario: number };
+
+    const {
+      sexo,
+      telefono,
+      nro_licencia,
+      categoria,
+      fecha_emision,
+      fecha_vencimiento,
+      anversoUrl,
+      reversoUrl,
+      rentersIds = []
+    } = req.body;
+
+    if (!sexo || !telefono || !nro_licencia || !categoria || !fecha_emision || !fecha_vencimiento || !anversoUrl || !reversoUrl) {
+      res.status(400).json({ 
+        message: 'Faltan datos requeridos para el registro del driver' 
+      });
+      return;
+    }
+
+    const usuarioExistente = await prisma.usuario.findUnique({
+      where: { idUsuario },
+      include: { driver: true }
+    });
+
+    if (!usuarioExistente) {
+      res.status(404).json({ message: 'Usuario no encontrado' });
+      return;
+    }
+
+    if (usuarioExistente.driver) {
+      res.status(400).json({ 
+        message: 'El usuario ya está registrado como driver' 
+      });
+      return;
+    }
+
+    if (rentersIds.length > 0) {
+      const rentersExistentes = await prisma.usuario.findMany({
+        where: {
+          idUsuario: { in: rentersIds },
+        },
+        select: { idUsuario: true }
+      });
+
+      if (rentersExistentes.length !== rentersIds.length) {
+        res.status(400).json({ 
+          message: 'Algunos renters seleccionados no existen' 
+        });
+        return;
+      }
+    }
+
+    const fechaEmision = new Date(fecha_emision);
+    const fechaExpiracion = new Date(fecha_vencimiento);
+
+    if (isNaN(fechaEmision.getTime()) || isNaN(fechaExpiracion.getTime())) {
+      res.status(400).json({ message: 'Fechas de licencia inválidas' });
+      return;
+    }
+
+    const resultado = await prisma.$transaction(async (tx) => {
+      await tx.usuario.update({
+        where: { idUsuario },
+        data: { driverBool: true }
+      });
+
+      const nuevoDriver = await tx.driver.create({
+        data: {
+          idUsuario,
+          sexo,
+          telefono,
+          licencia: nro_licencia,
+          fechaEmision,
+          fechaExpiracion,
+          tipoLicencia: categoria,
+          anversoUrl,
+          reversoUrl,
+          disponible: true
+        }
+      });
+
+      if (rentersIds.length > 0) {
+        const relacionesData = rentersIds.map((renterId: number) => ({
+          idUsuario: renterId,
+          idDriver: nuevoDriver.idDriver
+        }));
+
+        await tx.usuarioDriver.createMany({
+          data: relacionesData,
+          skipDuplicates: true
+        });
+      }
+
+      return {
+        driver: nuevoDriver,
+        relacionesCreadas: rentersIds.length
+      };
+    });
+
+    console.log('✅ Driver registrado exitosamente:', {
+      driverId: resultado.driver.idDriver,
+      usuario: usuarioExistente.nombreCompleto,
+      relacionesCreadas: resultado.relacionesCreadas
+    });
+
+    res.status(201).json({
+      message: 'Driver registrado exitosamente',
+      data: {
+        driverId: resultado.driver.idDriver,
+        relacionesCreadas: resultado.relacionesCreadas,
+        rentersAsignados: rentersIds
+      }
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error en registro-driver:', error);
+    
+    if (error.code === 'P2002') {
+      res.status(409).json({ 
+        message: 'Ya existe un driver con estos datos',
+        details: error.meta 
+      });
+      return;
+    }
+
+    if (error.code === 'P2003') {
+      res.status(400).json({ 
+        message: 'Error de referencia en base de datos',
+        details: error.meta 
+      });
+      return;
+    }
+
+    res.status(500).json({ 
+      message: 'Error interno del servidor',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
+    });
+  } finally {
+    await prisma.$disconnect();
+  }
+};
+
+export const obtenerDriver = async (req: Request, res: Response) => {
+  try {
+    const { idUsuario } = req.user as { idUsuario: number };
+
+    const driver = await prisma.driver.findUnique({
+      where: { idUsuario },
+      include: {
+        usuario: {
+          select: {
+            idUsuario: true,
+            nombreCompleto: true,
+            email: true,
+            fotoPerfil: true
+          }
+        },
+        asignadoA: {
+          include: {
+            usuario: {
+              select: {
+                idUsuario: true,
+                nombreCompleto: true,
+                email: true,
+                telefono: true,
+                fotoPerfil: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!driver) {
+      res.status(404).json({ message: 'Driver no encontrado' });
+      return;
+    }
+
+    res.json({
+      message: 'Driver encontrado',
+      data: driver
+    });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error en el servidor" });
+    console.error('❌ Error al obtener driver:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  } finally {
+    await prisma.$disconnect();
   }
 };
