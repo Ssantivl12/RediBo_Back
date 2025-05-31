@@ -267,18 +267,15 @@ export const updateUserField = async (req: Request, res: Response) => {
   try {
     const user = await prisma.usuario.findUnique({
       where: { idUsuario },
-      select: {
-        [campo]: true,
-        [campoContador]: true,
-      },
-    })) as any;
+    });
 
     if (!user) {
       res.status(404).json({ message: 'Usuario no encontrado' });
       return;
     }
 
-    if (user[campoContador] >= 3) {
+    const contadorValor = user[campoContador];
+    if (typeof contadorValor === 'number' && contadorValor >= 3) {
       res.status(403).json({
         message: 'Has alcanzado el límite de 3 ediciones para este campo. Para más cambios, contacta al soporte.'
       });
@@ -346,7 +343,13 @@ export const updateUserField = async (req: Request, res: Response) => {
     if (campo === 'telefono') {
       valoresIguales = valorActual === nuevoValor;
     } else if (campo === 'fechaNacimiento') {
-      valoresIguales = valorActual?.getTime() === nuevoValor?.getTime();
+      const valorActualDate = valorActual instanceof Date
+        ? valorActual
+        : valorActual !== null
+          ? new Date(valorActual)
+          : null;
+      const nuevoValorDate = nuevoValor instanceof Date ? nuevoValor : new Date(nuevoValor);
+      valoresIguales = valorActualDate !== null && valorActualDate.getTime() === nuevoValorDate.getTime();
     } else {
       valoresIguales = valorActual === nuevoValor;
     }
@@ -354,7 +357,7 @@ export const updateUserField = async (req: Request, res: Response) => {
     if (valoresIguales) {
       res.status(200).json({
         message: 'No hubo cambios en el valor.',
-        edicionesRestantes: 3 - user[campoContador]
+        edicionesRestantes: typeof user?.[campoContador] === 'number' ? 3 - (user[campoContador] as number) : 3
       });
       return;
     }
@@ -367,7 +370,8 @@ export const updateUserField = async (req: Request, res: Response) => {
       },
     });
 
-    const edicionesRestantes = 2 - user[campoContador];
+    const edicionesRealizadas = typeof user?.[campoContador] === 'number' ? (user[campoContador] as number) : 0;
+    const edicionesRestantes = 2 - edicionesRealizadas;
     let infoExtra = "";
     if (edicionesRestantes === 1) {
       infoExtra =

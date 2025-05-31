@@ -66,7 +66,7 @@ export const registrarHostCompletoController = async (
     }
     // ⬇ Subida de imágenes del vehículo a Cloudinary
     const imagenesSubidas = await Promise.all(
-      imagenes.map((file) => uploadToCloudinary(file))
+      imagenes.map((file: any) => uploadToCloudinary(file))
     );
 
     // Llamar al servicio
