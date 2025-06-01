@@ -119,6 +119,7 @@ app.get("/health", (req, res) => {
 });
 
 // Inicializar servidor solo después de crear la ubicación por defecto
+console.log("🧩 Modelos disponibles:", Object.keys(prisma));
 ensureDefaultUbicacion()
   .then(() => {
     app.listen(PORT, () => {

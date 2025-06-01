@@ -37,47 +37,56 @@ export const registrarDriverCompleto = async (data: {
 
   const telefonoFinal = usuario?.telefono ? String(usuario.telefono) : telefono;
 
-  return await prisma.$transaction(async (tx) => {
-    // 1. Crear al driver
-    await tx.driver.create({
-      data: {
-        idUsuario,
-        sexo,
-        telefono: telefonoFinal,
-        licencia,
-        tipoLicencia,
-        fechaEmision,
-        fechaExpiracion,
-        anversoUrl,
-        reversoUrl
-      }
-    });
-
-    // 2. Actualizar teléfono si no tenía
-    if (!usuario?.telefono) {
-      await tx.usuario.update({
-        where: { idUsuario },
-        data: { telefono: String(telefono) }
-      });
-    }
-
-    // 3. Marcar al usuario como driver
-    await tx.usuario.update({
-      where: { idUsuario },
-      data: { driverBool: true }
-    });
-
-    // 4. Registrar relaciones en UsuarioDriver con fecha
-    for (const renterId of rentersIds) {
-      await tx.usuarioDriver.create({
-        data: {
-          idUsuario: renterId,
-          idDriver: idUsuario, // porque el driver usa su mismo idUsuario
-          fechaAsignacion: new Date()
-        }
-      });
+ return await prisma.$transaction(async (tx) => {
+  // 1. Crear al driver y obtener su ID
+  const driver = await tx.driver.create({
+    data: {
+      idUsuario,
+      sexo,
+      telefono: telefonoFinal,
+      licencia,
+      tipoLicencia,
+      fechaEmision,
+      fechaExpiracion,
+      anversoUrl,
+      reversoUrl
     }
   });
-};
 
+  // 2. Actualizar teléfono si no tenía
+  if (!usuario?.telefono) {
+    await tx.usuario.update({
+      where: { idUsuario },
+      data: { telefono: String(telefono) }
+    });
+  }
+
+  // 3. Marcar al usuario como driver
+  await tx.usuario.update({
+    where: { idUsuario },
+    data: { driverBool: true }
+  });
+
+  // 4. Validar que todos los renterIds existen
+  const renters = await tx.usuario.findMany({
+    where: {
+      idUsuario: { in: rentersIds },
+    }
+  });
+
+  if (renters.length !== rentersIds.length) {
+    throw new Error("Uno o más renters no existen en la base de datos.");
+  }
+
+  // 5. Registrar relaciones en UsuarioDriver con fecha
+  await tx.usuarioDriver.createMany({
+    data: rentersIds.map(renterId => ({
+      idUsuario: renterId,
+      idDriver: driver.idDriver,
+      fechaAsignacion: new Date()
+    })),
+    skipDuplicates: true
+  });
+});
+};
 
