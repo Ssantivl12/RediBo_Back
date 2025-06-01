@@ -3,10 +3,9 @@ import { isAuthenticated } from '../../middlewares/auth/isAuthenticated';
 import { registrarDriverController } from '../../controllers/auth/authRegistroDriver/registroDriver.controller';
 
 
-const router = Router();
+export const registroDriverRouter = () => {
+  const router = Router();
+  router.post('/registro-driver', isAuthenticated, registrarDriverController);
+  return router;
+};
 
-router.get('/drivers-by-renter', requireAuth, (req, res, next) => {
-  Promise.resolve(getDriversByRenter(req, res)).catch(next);
-});
-
-export default router;
