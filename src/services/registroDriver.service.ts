@@ -53,43 +53,53 @@ export const registrarDriverCompleto = async (data: {
       }
     });
 
+    const operations = [];
+
     // 2. Si no tenía teléfono, actualizarlo ahora
-    ...(usuario?.telefono
-      ? [] // ya tiene, no actualizamos
-      : [
-          prisma.usuario.update({
-            where: { idUsuario },
-            data: { telefono: String(telefono) }
-          })
-        ]),
+    if (!usuario?.telefono) {
+      operations.push(
+        tx.usuario.update({
+          where: { idUsuario },
+          data: { telefono: String(telefono) }
+        })
+      );
+    }
 
     // 3. Marcar al usuario como driver (driverBool = true)
-    prisma.usuario.update({
-      where: { idUsuario },
-      data: { driverBool: true }
-    });
-    
-    const relacionesDriver = await Promise.all(
-      rentersIds.map((renterId) =>
+    operations.push(
+      tx.usuario.update({
+        where: { idUsuario },
+        data: { driverBool: true }
+      })
+    );
+
+    // 4. Crear relaciones driver-renter
+    for (const renterId of rentersIds) {
+      operations.push(
         tx.usuarioDriver.create({
           data: {
             idUsuario: renterId,
             idDriver: nuevoDriver.idDriver
           }
         })
-      )
-    );
+      );
+    }
 
-    // 4. Asignar renters
-    ...rentersIds.map((renterId) =>
-      prisma.usuario.update({
-        where: { idUsuario: renterId },
-        data: {
-          assignedToDriver: idUsuario
-        }
-      })
-    )
-  ]);
+    // 5. Asignar renters
+    for (const renterId of rentersIds) {
+      operations.push(
+        tx.usuario.update({
+          where: { idUsuario: renterId },
+          data: {
+            assignedToDriver: idUsuario
+          }
+        })
+      );
+    }
+
+    await Promise.all(operations);
+    return nuevoDriver;
+  });
 };
  
 
