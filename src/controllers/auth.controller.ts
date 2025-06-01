@@ -2,8 +2,9 @@ import { PrismaClient, Usuario } from "@prisma/client";
 import { Request, Response } from "express";
 import * as authService from "../services/auth.service";
 import { generateToken } from "../utils/generateToken";
-
-const prisma = new PrismaClient()
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
 const prisma = new PrismaClient();
 
@@ -58,6 +59,12 @@ export const updateGoogleProfile = async (
       fechaNacimiento,
       telefono
     );
+    // Generar token después de actualizar el perfil
+    const token = generateToken({
+      idUsuario: updatedUser.idUsuario,
+      email: updatedUser.email,
+      nombreCompleto: updatedUser.nombreCompleto,
+    });
     res.json({
       message: "Perfil actualizado correctamente",
       token,
@@ -244,9 +251,6 @@ export const updateUserField = async (req: Request, res: Response) => {
   const { campo, valor }: { campo: CampoEditable; valor: string } = req.body;
   const { idUsuario } = req.user as { idUsuario: number };
 
-  const { campo, valor }: { campo: CampoEditable; valor: string } = req.body;
-  const { idUsuario } = req.user as { idUsuario: number };
-
   if (!campo || valor === undefined || valor === null) {
     res.status(400).json({ message: 'Campo y valor son obligatorios.' });
     return;
@@ -293,14 +297,8 @@ export const updateUserField = async (req: Request, res: Response) => {
     }
 
     const valorActual = user[campo];
-    const nuevoValor =
-      campo === "telefono"
-        ? valor.trim()
-        : campo === "fechaNacimiento"
-        ? new Date(valor)
-        : valor;
 
-    if (valorActual?.toString() === nuevoValor?.toString()) {
+    if (valorActual?.toString() === valor?.toString()) {
       res.status(200).json({
         message: "No hubo cambios en el valor.",
         edicionesRestantes: 3 - user[campoContador],
@@ -361,8 +359,6 @@ export const updateUserField = async (req: Request, res: Response) => {
     } else {
       nuevoValor = valor;
     }
-
-    const valorActual = user[campo];
 
     // Comparación
     let valoresIguales = false;

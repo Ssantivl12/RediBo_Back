@@ -8,7 +8,8 @@ import { updateGoogleProfile } from "../controllers/auth.controller";
 import { checkPhoneExists } from "../controllers/auth.controller";
 import { me } from "../controllers/auth.controller";
 import { isAuthenticated } from "../middlewares/isAuthenticated";
-import { deleteIncompleteUserController } from "../controllers/auth.controller";
+import { deleteIncompleteUser } from '../../src/controllers/auth.controller';
+import { registroDriver, obtenerDriver } from "../../src/controllers/auth.controller";
 
 //foto de perfil eliminar/actualizar
 import {deleteProfilePhoto,uploadProfilePhoto,upload,} from "../controllers/authPerfilUsuarioRenter/fotoPerfil.controller";
@@ -98,14 +99,6 @@ router.patch('/update-profile', isAuthenticated, updateGoogleProfile);
 router.get("/auth/failure", (req, res) => {
   res.send("Fallo al iniciar sesión con Google.");
 });
-router.get(
-  "/auth/google/callback",
-  passport.authenticate("google", {
-    failureRedirect: `${FRONT_URL}?error=google`,
-    session: true,
-  }),
-  (req, res) => {
-    const user = req.user as any;
 
 router.post("/register", validateRegister, register);
 router.post("/login", validateLogin, login);
