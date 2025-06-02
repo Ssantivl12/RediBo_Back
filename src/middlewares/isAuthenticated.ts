@@ -15,6 +15,7 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);
     console.log("✅ Usuario decodificado del token:", decoded); // ✅ Log del usuario
 
+    console.log("✅ Decoded:", decoded);
     req.user = decoded; // 👈 Aquí queda el usuario
       next();
     } catch (error) {
