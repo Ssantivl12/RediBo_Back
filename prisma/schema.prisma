@@ -37,6 +37,7 @@ model Usuario {
   autos                    Auto[]
   reservas                 Reserva[]
   comentariosEscritos      Comentario[]
+  calificacionPromedio     Float?
   calificacionesRecibidas  CalificacionUsuario[] @relation("UsuarioCalificado")
   calificacionesRealizadas CalificacionUsuario[] @relation("UsuarioCalificador")
 
@@ -221,7 +222,7 @@ model Reserva {
   auto                Auto                 @relation(fields: [idAuto], references: [idAuto])
   idCliente           Int
   cliente             Usuario              @relation(fields: [idCliente], references: [idUsuario])
-  idRegistroPagos     Int                  @unique
+  idRegistroPagos     Int?                  @unique
   registroPagos       RegistroPagos?
   estado              EstadoReserva        @default(SOLICITADA)
   fechaSolicitud      DateTime             @default(now())
