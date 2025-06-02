@@ -1,7 +1,7 @@
 import { prisma } from '../config/database';
 
 // Configuración para la distancia máxima en km
-const MAX_DISTANCE_KM = 3;
+const MAX_DISTANCE_KM = 5;
 
 export async function autocompletarAeropuertoService(q: string) {
   const resultados = await prisma.aeropuerto.findMany({
@@ -11,7 +11,7 @@ export async function autocompletarAeropuertoService(q: string) {
         mode: 'insensitive',  // Ignorar mayúsculas y minúsculas
       },
     },
-    take: 5,  // Limitar a los primeros 5 resultados
+    take: 15,  // Limitar a los primeros 15 resultados
     orderBy: {
       nombre: 'asc',  // Ordenar por nombre ascendentemente
     },
@@ -20,7 +20,14 @@ export async function autocompletarAeropuertoService(q: string) {
     },
   });
 
-  return resultados;  // Devolver los resultados encontrados
+  console.log('Aeropuertos devueltos:', resultados.length);
+   return resultados.map((aeropuerto) => ({
+    idaeropuerto: aeropuerto.idaeropuerto,
+    nombre: aeropuerto.nombre,
+    codigo: aeropuerto.codigo,
+    latitud: aeropuerto.ubicacion?.latitud ?? null,
+    longitud: aeropuerto.ubicacion?.longitud ?? null,
+  }));
 }
 
 export async function obtenerVehiculosCercanosService(idAeropuerto: number) {
@@ -64,6 +71,8 @@ export async function obtenerVehiculosCercanosService(idAeropuerto: number) {
     imagen: vehiculo.imagen,
     precio: vehiculo.tarifa,
     distancia: `${vehiculo.distancia.toFixed(2)} km`,
+    latitud: vehiculo.ubicacion.latitud,
+    longitud: vehiculo.ubicacion.longitud,
   }));
 }
 

@@ -1,3 +1,11 @@
+//C:\Users\H P\Documents\IS 2025\PROYECTO IS 1_2025\RediBo_Back\prismaschema.prisma
+/*
+Vista rápida del funcionamiento y contenido de esta carpeta
+
+    Archivos de configuración del proyecto
+        - Conexión a la base de datos
+        - Configuración de variables de entorno, servicios externos y/o opciones del servidor
+*/
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,132 +15,123 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// Vista rápida del funcionamiento y contenido de esta carpeta
-///
-/// Archivos de configuración del proyecto
-/// - Conexión a la base de datos
-/// - Configuración de variables de entorno, servicios externos y/o opciones del servidor
 model Usuario {
-  idusuario           Int                 @id @default(autoincrement())
-  nombre_completo     String              @db.VarChar(100)
-  correo              String              @unique @db.VarChar(100)
-  contrasena          String              @db.VarChar(100)
-  telefono            String?             @db.VarChar(15)
-  genero              String?             @db.VarChar(10)
-  foto_perfil         String?             @db.VarChar(255)
-  estado              String              @default("activo") @db.VarChar(20)
-  fecha_registro      DateTime            @default(now())
-  ultima_modificacion DateTime            @updatedAt
+  idusuario           Int                  @id @default(autoincrement())
+  nombre_completo     String               @db.VarChar(100)
+  correo              String               @unique @db.VarChar(100)
+  contrasena          String               @db.VarChar(100)
+  telefono            String?              @db.VarChar(15)
+  genero              String?              @db.VarChar(10)
+  foto_perfil         String?              @db.VarChar(255)
+  estado              String               @default("activo") @db.VarChar(20)
+  fecha_registro      DateTime             @default(now())
+  ultima_modificacion DateTime             @updatedAt
   historialBusqueda   HistorialBusqueda[]
 }
 
 model Renter {
-  idrenter            Int            @id @default(autoincrement())
-  nombre_completo     String         @db.VarChar(100)
-  correo              String         @unique @db.VarChar(100)
-  contrasena          String         @db.VarChar(100)
-  telefono            String?        @db.VarChar(15)
-  genero              String?        @db.VarChar(10)
-  foto_perfil         String?        @db.VarChar(255)
-  estado              String         @default("activo") @db.VarChar(20)
-  fecha_registro      DateTime       @default(now())
-  ultima_modificacion DateTime       @updatedAt
-  calificaciones      Calificacion[]
+  idrenter            Int                  @id @default(autoincrement())
+  nombre_completo     String               @db.VarChar(100)
+  correo              String               @unique @db.VarChar(100)
+  contrasena          String               @db.VarChar(100)
+  telefono            String?              @db.VarChar(15)
+  genero              String?              @db.VarChar(10)
+  foto_perfil         String?              @db.VarChar(255)
+  estado              String               @default("activo") @db.VarChar(20)
+  fecha_registro      DateTime             @default(now())
+  ultima_modificacion DateTime             @updatedAt
   reservas            Reserva[]
-  vehiculos           Vehiculo[]     @relation("RenterVehiculos")
+  calificaciones      Calificacion[]
+  vehiculos           Vehiculo[]           @relation("RenterVehiculos")
 }
 
 model Ubicacion {
-  idubicacion Int          @id @default(autoincrement())
-  pais        String       @db.VarChar(45)
-  ciudad      String       @db.VarChar(45)
+  idubicacion Int        @id @default(autoincrement())
+  pais        String     @db.VarChar(45)
+  ciudad      String     @db.VarChar(45)
   latitud     Float?
   longitud    Float?
-  Aeropuerto  Aeropuerto[]
   vehiculos   Vehiculo[]
+  aeropuertos Aeropuerto[] 
 }
-
 model Aeropuerto {
-  idaeropuerto Int       @id @default(autoincrement())
-  nombre       String    @db.VarChar(100)
-  codigo       String    @unique @db.VarChar(10)
-  latitud      Float
-  longitud     Float
-  ubicacion_id Int
-  ubicacion    Ubicacion @relation(fields: [ubicacion_id], references: [idubicacion])
+  idaeropuerto       Int        @id @default(autoincrement())
+  nombre             String     @db.VarChar(100)
+  codigo             String     @unique @db.VarChar(10)        
+  ubicacion_idubicacion  Int
+  ubicacion            Ubicacion            @relation(fields: [ubicacion_idubicacion], references: [idubicacion])
 }
-
 model Vehiculo {
-  idvehiculo            Int            @id @default(autoincrement())
-  imagen                String         @db.VarChar(1024)
-  marca                 String         @db.VarChar(25)
-  modelo                String         @db.VarChar(45)
-  tarifa                Float
-  transmision           String         @db.VarChar(15)
-  consumo               String         @db.VarChar(10)
-  tipo_auto             String         @db.VarChar(25)
-  color                 String         @db.VarChar(10)
-  anio                  Int
-  kilometraje           Int
-  placa                 String         @db.VarChar(10)
-  descripcion           String?
-  disponible            String         @default("sí") @db.VarChar(10)
-  estado                String         @default("activo") @db.VarChar(20)
-  fecha_creacion        DateTime       @default(now())
-  ultima_modificacion   DateTime       @updatedAt
-  host_idanfitrion      Int
+  idvehiculo           Int                  @id @default(autoincrement())
+  imagen               String               @db.VarChar(1024)
+  marca                String               @db.VarChar(25)
+  modelo               String               @db.VarChar(45)
+  tarifa               Float
+  transmision          String               @db.VarChar(15)
+  consumo              String               @db.VarChar(10)
+  tipo_auto            String               @db.VarChar(25)
+  color                String               @db.VarChar(10)
+  anio                 Int
+  kilometraje          Int
+  placa                String               @db.VarChar(10)
+  descripcion          String?
+  disponible           String               @default("sí") @db.VarChar(10)
+  estado               String               @default("activo") @db.VarChar(20)
+  fecha_creacion       DateTime             @default(now())
+  ultima_modificacion  DateTime             @updatedAt
+  host_idanfitrion     Int
   ubicacion_idubicacion Int
-  calificaciones        Calificacion[]
-  reservas              Reserva[]
-  renter                Renter         @relation("RenterVehiculos", fields: [host_idanfitrion], references: [idrenter])
-  ubicacion             Ubicacion      @relation(fields: [ubicacion_idubicacion], references: [idubicacion])
+  renter               Renter?              @relation("RenterVehiculos", fields: [host_idanfitrion], references: [idrenter])
+  ubicacion            Ubicacion            @relation(fields: [ubicacion_idubicacion], references: [idubicacion])
+  reservas             Reserva[]
+  calificaciones       Calificacion[]
 }
 
 model Reserva {
-  idreserva           Int      @id @default(autoincrement())
+  idreserva           Int                  @id @default(autoincrement())
   fecha_inicio        DateTime
   fecha_fin           DateTime
-  pagado              Boolean  @default(false)
-  estado              String   @default("pendiente") @db.VarChar(20)
+  pagado              Boolean              @default(false)
+  estado              String               @default("pendiente") @db.VarChar(20)
   expiracion          DateTime
-  fecha_creacion      DateTime @default(now())
-  ultima_modificacion DateTime @updatedAt
+  fecha_creacion      DateTime             @default(now())
+  ultima_modificacion DateTime             @updatedAt
   renter_idrenter     Int
   vehiculo_idvehiculo Int
+  renter              Renter               @relation(fields: [renter_idrenter], references: [idrenter])
+  vehiculo            Vehiculo             @relation(fields: [vehiculo_idvehiculo], references: [idvehiculo])
   pagos               Pago[]
-  renter              Renter   @relation(fields: [renter_idrenter], references: [idrenter])
-  vehiculo            Vehiculo @relation(fields: [vehiculo_idvehiculo], references: [idvehiculo])
 }
 
 model Calificacion {
-  idcalificacion      Int      @id @default(autoincrement())
+  idcalificacion      Int       @id @default(autoincrement())
   puntuacion          Float
   comentario          String?
   fecha               DateTime
   renter_idrenter     Int
   vehiculo_idvehiculo Int
-  renter              Renter   @relation(fields: [renter_idrenter], references: [idrenter])
-  vehiculo            Vehiculo @relation(fields: [vehiculo_idvehiculo], references: [idvehiculo])
+  renter              Renter    @relation(fields: [renter_idrenter], references: [idrenter])
+  vehiculo            Vehiculo  @relation(fields: [vehiculo_idvehiculo], references: [idvehiculo])
 }
 
 model HistorialBusqueda {
-  id                Int      @id @default(autoincrement())
+  id              Int       @id @default(autoincrement())
   usuario_idusuario Int
-  termino_busqueda  String   @db.VarChar(255)
-  filtros           Json?
-  creado_en         DateTime @default(now())
-  usuario           Usuario  @relation(fields: [usuario_idusuario], references: [idusuario])
+  termino_busqueda String   @db.VarChar(255)
+  filtros         Json?
+  creado_en       DateTime  @default(now())
+  usuario         Usuario   @relation(fields: [usuario_idusuario], references: [idusuario])
 }
 
 model Pago {
-  id                Int           @id @default(autoincrement())
+  id               Int              @id @default(autoincrement())
   reserva_idreserva Int
-  monto             Decimal       @db.Decimal(10, 2)
-  fecha_pago        DateTime      @default(now())
-  metodo_pago       MetodoPago
-  referencia        String        @db.VarChar(100)
-  detalles          DetallePago[]
-  reserva           Reserva       @relation(fields: [reserva_idreserva], references: [idreserva])
+  monto            Decimal          @db.Decimal(10, 2)
+  fecha_pago       DateTime         @default(now())
+  metodo_pago      MetodoPago
+  referencia       String           @db.VarChar(100)
+  reserva          Reserva          @relation(fields: [reserva_idreserva], references: [idreserva])
+  detalles         DetallePago[]
 }
 
 model DetallePago {
