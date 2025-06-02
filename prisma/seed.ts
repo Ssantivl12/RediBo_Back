@@ -1,823 +1,903 @@
-import { PrismaClient, EstadoAuto, MotivoNoDisponibilidad, TipoMantenimiento, Transmision, Combustible, MetodoPago, EstadoReserva, EstadoGarantia, TipoPago, TipoCalificacionUsuario, PrioridadNotificacion, TipoDeNotificacion } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const ubicaciones = await prisma.ubicacion.createMany({
-    data: [
-      {
-        nombre: 'Centro de la Ciudad',
-        descripcion: 'Ubicación céntrica con acceso rápido a principales avenidas',
-        latitud: -17.783817,
-        longitud: -63.180173,
+  console.log('🌱 Iniciando seed de la base de datos...');
+
+  // Limpiar datos existentes
+  await prisma.calificacionUsuario.deleteMany();
+  await prisma.comentario.deleteMany();
+  await prisma.historialMantenimiento.deleteMany();
+  await prisma.garantia.deleteMany();
+  await prisma.pago.deleteMany();
+  await prisma.reserva.deleteMany();
+  await prisma.disponibilidad.deleteMany();
+  await prisma.imagen.deleteMany();
+  await prisma.auto.deleteMany();
+  await prisma.usuarioDriver.deleteMany();
+  await prisma.driver.deleteMany();
+  await prisma.notificacion.deleteMany();
+  await prisma.terminosCondiciones.deleteMany();
+  await prisma.verificaciones.deleteMany();
+  await prisma.usuario.deleteMany();
+  await prisma.ubicacion.deleteMany();
+
+  // 1. Crear ubicaciones
+  console.log('📍 Creando ubicaciones...');
+  const ubicaciones = await Promise.all([
+    prisma.ubicacion.create({
+      data: {
+        nombre: 'Centro de Cochabamba',
+        descripcion: 'Zona céntrica de la ciudad',
+        latitud: -17.3935,
+        longitud: -66.1570,
         esActiva: true
-      },
-      {
+      }
+    }),
+    prisma.ubicacion.create({
+      data: {
+        nombre: 'Aeropuerto Jorge Wilstermann',
+        descripcion: 'Terminal aéreo de Cochabamba',
+        latitud: -17.4211,
+        longitud: -66.1711,
+        esActiva: true
+      }
+    }),
+    prisma.ubicacion.create({
+      data: {
         nombre: 'Zona Norte',
-        descripcion: 'Área residencial en el norte de la ciudad',
-        latitud: -17.765432,
-        longitud: -63.175678,
-        esActiva: true
-      },
-      {
-        nombre: 'Terminal de Buses',
-        descripcion: 'Cerca de la terminal para llegadas y salidas de viajes',
-        latitud: -17.798765,
-        longitud: -63.190123,
-        esActiva: true
-      },
-      {
-        nombre: 'Zona Sur',
-        descripcion: 'Área comercial y residencial en el sur',
-        latitud: -17.810234,
-        longitud: -63.185678,
+        descripcion: 'Barrios residenciales del norte',
+        latitud: -17.3500,
+        longitud: -66.1600,
         esActiva: true
       }
-    ]
-  });
-
-  const usuarios = await prisma.usuario.createMany({
-    data: [
-      {
-        nombre: 'Dieter',
-        apellido: 'Olmos Alvarado',
-        email: 'carlos@example.com',
-        telefono: '65373977',
-        direccion: 'Av. Central #123',
-        contraseña: 'pass123',
-        esAdmin: false,
-      },
-      {
-        nombre: 'Lucía',
-        apellido: 'Martínez',
-        email: 'lucia@example.com',
-        telefono: '63925990',
-        direccion: 'Calle Sur #456',
-        contraseña: 'pass456',
-        esAdmin: true,
-      },
-      {
-        nombre: 'Camila',
-        apellido: 'Root',
-        email: 'admin@example.com',
-        telefono: '61600005',
-        direccion: 'sin direccion',
-        contraseña: 'adminpass',
-        esAdmin: true,
-      },
-      {
-        nombre: 'Juan',
-        apellido: 'Pérez',
-        email: 'juan@example.com',
-        telefono: '75953581',
-        direccion: 'Av. Norte #789',
-        contraseña: 'juanpass',
-        esAdmin: false,
-      },
-      {
-        nombre: 'María',
-        apellido: 'González',
-        email: 'maria@example.com',
-        telefono: '77452771',
-        direccion: 'Calle Este #101',
-        contraseña: 'mariapass',
-        esAdmin: false,
-      },
-      {
-        nombre: 'Roberto',
-        apellido: 'Sánchez',
-        email: 'roberto@example.com',
-        telefono: '63952028',
-        direccion: 'Av. Oeste #202',
-        contraseña: 'robpass',
-        esAdmin: false,
+    }),
+    prisma.ubicacion.create({
+      data: {
+        nombre: 'Quillacollo',
+        descripcion: 'Municipio cercano a Cochabamba',
+        latitud: -17.3925,
+        longitud: -66.2781,
+        esActiva: true
       }
-    ]
-  });
+    }),
+    prisma.ubicacion.create({
+      data: {
+        nombre: 'Sacaba',
+        descripcion: 'Municipio del área metropolitana',
+        latitud: -17.3978,
+        longitud: -66.0389,
+        esActiva: true
+      }
+    })
+  ]);
 
-  const todosUsuarios = await prisma.usuario.findMany({
-    select: {
-      idUsuario: true,
-      nombre: true,
-      email: true
-    }
-  });
+  // 2. Crear usuarios
+  console.log('👥 Creando usuarios...');
+  const hashedPassword = await bcrypt.hash('123456', 10);
   
-  const drivers = await prisma.driver.createMany({
-    data: [
-      {
-        idUsuario: todosUsuarios[0].idUsuario,
-        licencia: "DRV-12345",
-        fechaExpiracion: new Date("2026-05-15"),
-        tipoLicencia: "B",
-        añosExperiencia: 5,
-        disponible: true
-      },
-      {
-        idUsuario: todosUsuarios[3].idUsuario,
-        licencia: "DRV-67890",
-        fechaExpiracion: new Date("2025-08-22"),
-        tipoLicencia: "A",
-        añosExperiencia: 3,
-        disponible: true
-      },
-      {
-        idUsuario: todosUsuarios[4].idUsuario,
-        licencia: "DRV-54321",
-        fechaExpiracion: new Date("2027-03-10"),
-        tipoLicencia: "B",
+  const usuarios = await Promise.all([
+    // Admin
+    prisma.usuario.create({
+      data: {
+        nombreCompleto: 'Administrador Sistema',
+        email: 'admin@rentacar.bo',
+        contraseña: hashedPassword,
+        fechaNacimiento: new Date('1985-05-15'),
+        telefono: '70123456',
+        registradoCon: 'email',
+        verificado: true,
+        esAdmin: true,
+        fotoPerfil: 'ruta1',
+        direccion: 'Av. América #123',
+        metodoPago: 'TARJETA_DEBITO',
+        numeroTarjeta: '4532123456789012',
+        fechaExpiracion: '12/26',
+        titular: 'Administrador Sistema'
+      }
+    }),
+    // Propietarios/Hosts
+    prisma.usuario.create({
+      data: {
+        nombreCompleto: 'Carlos Mendoza',
+        email: 'carlos.mendoza@email.com',
+        contraseña: hashedPassword,
+        fechaNacimiento: new Date('1980-03-20'),
+        telefono: '70234567',
+        registradoCon: 'email',
+        verificado: true,
+        host: true,
+        fotoPerfil: 'ruta2',
+        direccion: 'Calle Bolívar #456',
+        metodoPago: 'QR',
+        imagenQr: 'ruta3'
+      }
+    }),
+    prisma.usuario.create({
+      data: {
+        nombreCompleto: 'Ana García',
+        email: 'ana.garcia@email.com',
+        contraseña: hashedPassword,
+        fechaNacimiento: new Date('1988-07-12'),
+        telefono: '70345678',
+        registradoCon: 'email',
+        verificado: true,
+        host: true,
+        fotoPerfil: 'ruta4',
+        direccion: 'Av. Heroínas #789',
+        metodoPago: 'TARJETA_DEBITO',
+        numeroTarjeta: '5555444433332222',
+        fechaExpiracion: '08/27',
+        titular: 'Ana García'
+      }
+    }),
+    prisma.usuario.create({
+      data: {
+        nombreCompleto: 'Roberto Silva',
+        email: 'roberto.silva@email.com',
+        contraseña: hashedPassword,
+        fechaNacimiento: new Date('1975-11-08'),
+        telefono: '70456789',
+        registradoCon: 'email',
+        verificado: true,
+        host: true,
+        fotoPerfil: 'ruta5',
+        direccion: 'Calle Sucre #321',
+        metodoPago: 'EFECTIVO'
+      }
+    }),
+    // Clientes
+    prisma.usuario.create({
+      data: {
+        nombreCompleto: 'María López',
+        email: 'maria.lopez@email.com',
+        contraseña: hashedPassword,
+        fechaNacimiento: new Date('1992-01-25'),
+        telefono: '70567890',
+        registradoCon: 'google',
+        verificado: true,
+        fotoPerfil: 'ruta6',
+        direccion: 'Av. Ayacucho #654',
+        metodoPago: 'QR',
+        imagenQr: 'ruta7'
+      }
+    }),
+    prisma.usuario.create({
+      data: {
+        nombreCompleto: 'Pedro Chávez',
+        email: 'pedro.chavez@email.com',
+        contraseña: hashedPassword,
+        fechaNacimiento: new Date('1987-09-14'),
+        telefono: '70678901',
+        registradoCon: 'email',
+        verificado: true,
+        fotoPerfil: 'ruta8',
+        direccion: 'Calle España #987',
+        metodoPago: 'TARJETA_DEBITO',
+        numeroTarjeta: '4111111111111111',
+        fechaExpiracion: '03/28',
+        titular: 'Pedro Chávez'
+      }
+    }),
+    prisma.usuario.create({
+      data: {
+        nombreCompleto: 'Laura Morales',
+        email: 'laura.morales@email.com',
+        contraseña: hashedPassword,
+        fechaNacimiento: new Date('1990-12-03'),
+        telefono: '70789012',
+        registradoCon: 'email',
+        verificado: true,
+        fotoPerfil: 'ruta9',
+        direccion: 'Av. Ballivián #147',
+        metodoPago: 'QR',
+        imagenQr: 'ruta10'
+      }
+    }),
+    // Drivers
+    prisma.usuario.create({
+      data: {
+        nombreCompleto: 'Luis Vargas',
+        email: 'luis.vargas@email.com',
+        contraseña: hashedPassword,
+        fechaNacimiento: new Date('1983-06-18'),
+        telefono: '70890123',
+        registradoCon: 'email',
+        verificado: true,
+        driverBool: true,
+        fotoPerfil: 'ruta11',
+        direccion: 'Calle Antezana #258',
+        metodoPago: 'EFECTIVO'
+      }
+    }),
+    prisma.usuario.create({
+      data: {
+        nombreCompleto: 'Diego Rojas',
+        email: 'diego.rojas@email.com',
+        contraseña: hashedPassword,
+        fechaNacimiento: new Date('1986-04-22'),
+        telefono: '70901234',
+        registradoCon: 'email',
+        verificado: true,
+        driverBool: true,
+        fotoPerfil: 'ruta12',
+        direccion: 'Av. Oquendo #369',
+        metodoPago: 'QR',
+        imagenQr: 'ruta13'
+      }
+    })
+  ]);
+
+  // 3. Crear drivers
+  console.log('🚗 Creando drivers...');
+  const drivers = await Promise.all([
+    prisma.driver.create({
+      data: {
+        idUsuario: usuarios[7].idUsuario, // Luis Vargas
+        sexo: 'M',
+        telefono: '70890123',
+        licencia: 'CB123456789',
+        fechaEmision: new Date('2015-03-15'),
+        fechaExpiracion: new Date('2030-03-15'),
+        tipoLicencia: 'Profesional',
+        añosExperiencia: 10,
+        disponible: true,
+        anversoUrl: 'ruta14',
+        reversoUrl: 'ruta15'
+      }
+    }),
+    prisma.driver.create({
+      data: {
+        idUsuario: usuarios[8].idUsuario, // Diego Rojas
+        sexo: 'M',
+        telefono: '70901234',
+        licencia: 'CB987654321',
+        fechaEmision: new Date('2018-07-20'),
+        fechaExpiracion: new Date('2033-07-20'),
+        tipoLicencia: 'Particular',
         añosExperiencia: 7,
-        disponible: false
+        disponible: true,
+        anversoUrl: 'ruta16',
+        reversoUrl: 'ruta17'
       }
-    ]
-  });
-  
-  const todosDrivers = await prisma.driver.findMany({
-    select: {
-      idDriver: true,
-      idUsuario: true
-    }
-  });
-  
-  const findDriverIdSafely = (userIndex: number) => {
-    const userId = todosUsuarios[userIndex].idUsuario;
-    const driver = todosDrivers.find(d => d.idUsuario === userId);
-    
-    if (!driver) {
-      console.warn(`Warning: No driver found for user ${userId} (index ${userIndex})`);
-      return null;
-    }
-    
-    return driver.idDriver;
-  };
-  
-  const usuarioDriverData = [];
-  
-  const driverForUser0 = findDriverIdSafely(0);
-  if (driverForUser0) {
-    usuarioDriverData.push({
-      idUsuario: todosUsuarios[1].idUsuario,
-      idDriver: driverForUser0,
-      fechaAsignacion: new Date()
-    });
-    
-    usuarioDriverData.push({
-      idUsuario: todosUsuarios[5].idUsuario,
-      idDriver: driverForUser0,
-      fechaAsignacion: new Date()
-    });
-  }
-  
-  const driverForUser3 = findDriverIdSafely(3);
-  if (driverForUser3) {
-    usuarioDriverData.push({
-      idUsuario: todosUsuarios[1].idUsuario,
-      idDriver: driverForUser3,
-      fechaAsignacion: new Date()
-    });
-    
-    usuarioDriverData.push({
-      idUsuario: todosUsuarios[3].idUsuario,
-      idDriver: driverForUser3,
-      fechaAsignacion: new Date()
-    });
-  }
-  
-  const driverForUser4 = findDriverIdSafely(4);
-  if (driverForUser4) {
-    usuarioDriverData.push({
-      idUsuario: todosUsuarios[2].idUsuario,
-      idDriver: driverForUser4,
-      fechaAsignacion: new Date()
-    });
-    
-    usuarioDriverData.push({
-      idUsuario: todosUsuarios[5].idUsuario,
-      idDriver: driverForUser4,
-      fechaAsignacion: new Date()
-    });
-  }
-  
-  if (usuarioDriverData.length > 0) {
-    const usuariosDrivers = await prisma.usuarioDriver.createMany({
-      data: usuarioDriverData
-    });
-    console.log(`Created ${usuarioDriverData.length} usuarioDriver relationships`);
-  } else {
-    console.log('No valid usuarioDriver relationships to create');
-  }
+    })
+  ]);
 
-  const autos = await prisma.auto.createMany({
-    data: [
-      {
-        idPropietario: 3,
-        idUbicacion: 1,
+  // 4. Asignar drivers a usuarios
+  console.log('🔗 Asignando drivers a usuarios...');
+  await Promise.all([
+    prisma.usuarioDriver.create({
+      data: {
+        idUsuario: usuarios[4].idUsuario, // María López
+        idDriver: drivers[0].idDriver
+      }
+    }),
+    prisma.usuarioDriver.create({
+      data: {
+        idUsuario: usuarios[5].idUsuario, // Pedro Chávez
+        idDriver: drivers[1].idDriver
+      }
+    })
+  ]);
+
+  // 5. Crear autos
+  console.log('🚙 Creando autos...');
+  const autos = await Promise.all([
+    prisma.auto.create({
+      data: {
+        idPropietario: usuarios[1].idUsuario, // Carlos Mendoza
+        idUbicacion: ubicaciones[0].idUbicacion,
         marca: 'Toyota',
         modelo: 'Corolla',
-        descripcion: 'Auto cómodo y económico.',
-        precioRentaDiario: 55.50,
-        montoGarantia: 200.00,
-        kilometraje: 15000,
-        calificacionPromedio: 4.5,
-        totalComentarios: 2,
-        tipo: 'Familiar',
+        descripcion: 'Sedán cómodo y económico, ideal para la ciudad',
+        precioRentaDiario: 250.00,
+        montoGarantia: 1000.00,
+        kilometraje: 45000,
+        tipo: 'Sedán',
         año: 2020,
-        placa: 'ABC-1234',
-        color: 'Negro',
-        estado: EstadoAuto.ACTIVO,
-        asientos: 5,
-        capacidadMaletero: 3,
-        transmision: Transmision.AUTOMATICO,
-        combustible: Combustible.GASOLINA,
-        diasTotalRenta: 0,
-        vecesAlquilado: 0
-      },
-      {
-        idPropietario: 2,
-        idUbicacion: 2,
-        marca: 'Honda',
-        modelo: 'Civic',
-        descripcion: 'Con buen rendimiento.',
-        precioRentaDiario: 60.00,
-        montoGarantia: 250.00,
-        kilometraje: 18000,
-        calificacionPromedio: 2.5,
-        totalComentarios: 2,
-        tipo: 'Pequeño',
-        año: 2019,
-        placa: 'XYZ-5678',
-        color: 'Rojo',
-        estado: EstadoAuto.INACTIVO,
-        asientos: 4,
-        capacidadMaletero: 4,
-        transmision: Transmision.MANUAL,
-        combustible: Combustible.GASOLINA,
-        diasTotalRenta: 0,
-        vecesAlquilado: 0
-      },
-      {
-        idPropietario: 2,
-        idUbicacion: 1,
-        marca: 'Ford',
-        modelo: 'Focus',
-        descripcion: 'Ideal para viajes largos.',
-        precioRentaDiario: 70.00,
-        montoGarantia: 300.00,
-        kilometraje: 10000,
-        calificacionPromedio: 4.5,
-        totalComentarios: 2,
-        tipo: 'Mediano',
-        año: 2021,
-        placa: 'QWE-9876',
+        placa: 'CBB-1234',
+        soat: 'SOAT123456',
         color: 'Blanco',
-        estado: EstadoAuto.ACTIVO,
         asientos: 5,
-        capacidadMaletero: 2,
-        transmision: Transmision.AUTOMATICO,
-        combustible: Combustible.DIESEL,
-        diasTotalRenta: 0,
-        vecesAlquilado: 0
-      },
-      {
-        idPropietario: 3,
-        idUbicacion: 3,
-        marca: 'Chevrolet',
-        modelo: 'Onix',
-        descripcion: 'Compacto pero eficiente.',
-        precioRentaDiario: 65.00,
-        montoGarantia: 220.00,
-        kilometraje: 12000,
-        calificacionPromedio: 4.0,
-        totalComentarios: 1,
-        tipo: 'Familiar',
-        año: 2022,
-        placa: 'DEF-4567',
-        color: 'Azul',
-        estado: EstadoAuto.ACTIVO,
-        asientos: 5,
-        capacidadMaletero: 5,
-        transmision: Transmision.MANUAL,
-        combustible: Combustible.GASOLINA,
-        diasTotalRenta: 0,
-        vecesAlquilado: 0
-      },
-      {
-        idPropietario: 4,
-        idUbicacion: 2,
-        marca: 'Volkswagen',
-        modelo: 'Golf',
-        descripcion: 'Deportivo y ágil.',
-        precioRentaDiario: 75.00,
-        montoGarantia: 350.00,
-        kilometraje: 8000,
-        calificacionPromedio: 5.0,
-        totalComentarios: 1,
-        tipo: 'Familiar',
-        año: 2021,
-        placa: 'GHI-8910',
-        color: 'Gris',
-        estado: EstadoAuto.ACTIVO,
-        asientos: 5,
-        capacidadMaletero: 5,
-        transmision: Transmision.AUTOMATICO,
-        combustible: Combustible.GASOLINA,
-        diasTotalRenta: 0,
-        vecesAlquilado: 0
-      },
-      {
-        idPropietario: 5,
-        idUbicacion: 4,
-        marca: 'Nissan',
-        modelo: 'Sentra',
-        descripcion: 'Confortable y espacioso.',
-        precioRentaDiario: 62.50,
-        montoGarantia: 275.00,
-        kilometraje: 22000,
-        calificacionPromedio: 3.0,
-        totalComentarios: 1,
-        tipo: 'Familiar',
-        año: 2020,
-        placa: 'JKL-1112',
-        color: 'Plateado',
-        estado: EstadoAuto.INACTIVO,
-        asientos: 5,
-        capacidadMaletero: 5,
-        transmision: Transmision.AUTOMATICO,
-        combustible: Combustible.GASOLINA,
-        diasTotalRenta: 0,
-        vecesAlquilado: 0
-      },
-      {
-        idPropietario: 6,
-        idUbicacion: 3,
+        capacidadMaletero: 470,
+        transmision: 'AUTOMATICO',
+        combustible: 'GASOLINA',
+        calificacionPromedio: 4.2,
+        totalComentarios: 8,
+        diasTotalRenta: 45,
+        vecesAlquilado: 12
+      }
+    }),
+    prisma.auto.create({
+      data: {
+        idPropietario: usuarios[1].idUsuario, // Carlos Mendoza
+        idUbicacion: ubicaciones[1].idUbicacion,
         marca: 'Hyundai',
         modelo: 'Tucson',
-        descripcion: 'SUV familiar con gran espacio.',
-        precioRentaDiario: 85.00,
-        montoGarantia: 400.00,
-        kilometraje: 5000,
-        calificacionPromedio: 4.5,
-        totalComentarios: 2,
-        tipo: 'Familiar',
-        año: 2022,
-        placa: 'MNO-1314',
-        color: 'Verde',
-        estado: EstadoAuto.ACTIVO,
+        descripcion: 'SUV espaciosa perfecta para viajes familiares',
+        precioRentaDiario: 400.00,
+        montoGarantia: 1500.00,
+        kilometraje: 32000,
+        tipo: 'SUV',
+        año: 2021,
+        placa: 'CBB-5678',
+        soat: 'SOAT789012',
+        color: 'Negro',
         asientos: 7,
-        capacidadMaletero: 5,
-        transmision: Transmision.AUTOMATICO,
-        combustible: Combustible.HIBRIDO,
-        diasTotalRenta: 0,
-        vecesAlquilado: 0
+        capacidadMaletero: 620,
+        transmision: 'AUTOMATICO',
+        combustible: 'GASOLINA',
+        calificacionPromedio: 4.7,
+        totalComentarios: 15,
+        diasTotalRenta: 78,
+        vecesAlquilado: 18
       }
-    ]
-  });
-
-  await prisma.comentario.createMany({
-    data: [
-      {
-        idAuto: 1,
-        idUsuario: 2,
-        contenido: 'Muy buen auto, limpio y eficiente.',
-        calificacion: 5,
-        fechaCreacion: new Date()
-      },
-      {
-        idAuto: 1,
-        idUsuario: 4,
-        contenido: 'Excelente rendimiento de combustible.',
-        calificacion: 4,
-        fechaCreacion: new Date()
-      },
-      {
-        idAuto: 2,
-        idUsuario: 1,
-        contenido: 'El auto estaba algo sucio, pero funcionaba bien.',
-        calificacion: 3,
-        fechaCreacion: new Date()
-      },
-      {
-        idAuto: 2,
-        idUsuario: 5,
-        contenido: 'Problemas con el aire acondicionado.',
-        calificacion: 2,
-        fechaCreacion: new Date()
-      },
-      {
-        idAuto: 3,
-        idUsuario: 2,
-        contenido: 'Excelente experiencia, lo recomiendo.',
-        calificacion: 4,
-        fechaCreacion: new Date()
-      },
-      {
-        idAuto: 3,
-        idUsuario: 6,
-        contenido: 'Muy cómodo para viajes largos.',
-        calificacion: 5,
-        fechaCreacion: new Date()
-      },
-      {
-        idAuto: 4,
-        idUsuario: 3,
-        contenido: 'Buen auto para ciudad.',
-        calificacion: 4,
-        fechaCreacion: new Date()
-      },
-      {
-        idAuto: 5,
-        idUsuario: 4,
-        contenido: 'Divertido de manejar, muy deportivo.',
-        calificacion: 5,
-        fechaCreacion: new Date()
-      },
-      {
-        idAuto: 6,
-        idUsuario: 5,
-        contenido: 'Espacioso pero con alto consumo.',
-        calificacion: 3,
-        fechaCreacion: new Date()
-      },
-      {
-        idAuto: 7,
-        idUsuario: 6,
-        contenido: 'Perfecto para familia grande.',
-        calificacion: 5,
-        fechaCreacion: new Date()
-      },
-      {
-        idAuto: 7,
-        idUsuario: 1,
-        contenido: 'Tecnología avanzada a bordo.',
-        calificacion: 4,
-        fechaCreacion: new Date()
+    }),
+    prisma.auto.create({
+      data: {
+        idPropietario: usuarios[2].idUsuario, // Ana García
+        idUbicacion: ubicaciones[2].idUbicacion,
+        marca: 'Chevrolet',
+        modelo: 'Spark',
+        descripcion: 'Auto compacto y eficiente para uso urbano',
+        precioRentaDiario: 180.00,
+        montoGarantia: 800.00,
+        kilometraje: 28000,
+        tipo: 'Hatchback',
+        año: 2019,
+        placa: 'CBB-9012',
+        soat: 'SOAT345678',
+        color: 'Rojo',
+        asientos: 4,
+        capacidadMaletero: 267,
+        transmision: 'MANUAL',
+        combustible: 'GASOLINA',
+        calificacionPromedio: 4.0,
+        totalComentarios: 6,
+        diasTotalRenta: 32,
+        vecesAlquilado: 8
       }
-    ]
-  });
-
-  await prisma.historialMantenimiento.createMany({
-    data: [
-      {
-        idAuto: 1,
-        fechaInicio: new Date('2024-12-10'),
-        fechaFin: new Date('2024-12-10'),
-        descripcion: 'Cambio de aceite y filtros.',
-        costo: 45.00,
-        tipoMantenimiento: TipoMantenimiento.PREVENTIVO,
-        kilometraje: 14000
-      },
-      {
-        idAuto: 1,
-        fechaInicio: new Date('2025-03-15'),
-        fechaFin: new Date('2025-03-15'),
-        descripcion: 'Rotación de llantas.',
-        costo: 25.00,
-        tipoMantenimiento: TipoMantenimiento.PREVENTIVO,
-        kilometraje: 14800
-      },
-      {
-        idAuto: 2,
-        fechaInicio: new Date('2024-11-01'),
-        fechaFin: new Date('2024-11-03'),
-        descripcion: 'Reparación del sistema eléctrico.',
-        costo: 150.00,
-        tipoMantenimiento: TipoMantenimiento.CORRECTIVO,
-        kilometraje: 17000
-      },
-      {
-        idAuto: 2,
-        fechaInicio: new Date('2025-02-20'),
-        fechaFin: new Date('2025-02-21'),
-        descripcion: 'Reparación de aire acondicionado.',
-        costo: 120.00,
-        tipoMantenimiento: TipoMantenimiento.CORRECTIVO,
-        kilometraje: 17500
-      },
-      {
-        idAuto: 3,
-        fechaInicio: new Date('2025-01-15'),
-        fechaFin: new Date('2025-01-15'),
-        descripcion: 'Revisión general anual.',
-        costo: 70.00,
-        tipoMantenimiento: TipoMantenimiento.REVISION,
-        kilometraje: 9500
-      },
-      {
-        idAuto: 4,
-        fechaInicio: new Date('2025-03-01'),
-        fechaFin: new Date('2025-03-01'),
-        descripcion: 'Cambio de bujías.',
-        costo: 60.00,
-        tipoMantenimiento: TipoMantenimiento.PREVENTIVO,
-        kilometraje: 11500
-      },
-      {
-        idAuto: 5,
-        fechaInicio: new Date('2025-04-10'),
-        fechaFin: new Date('2025-04-10'),
-        descripcion: 'Alineación y balanceo.',
-        costo: 55.00,
-        tipoMantenimiento: TipoMantenimiento.PREVENTIVO,
-        kilometraje: 7500
-      },
-      {
-        idAuto: 6,
-        fechaInicio: new Date('2025-02-05'),
-        fechaFin: new Date('2025-02-07'),
-        descripcion: 'Cambio de transmisión.',
-        costo: 800.00,
-        tipoMantenimiento: TipoMantenimiento.CORRECTIVO,
-        kilometraje: 21000
-      },
-      {
-        idAuto: 7,
-        fechaInicio: new Date('2025-01-20'),
-        fechaFin: new Date('2025-01-20'),
-        descripcion: 'Primer mantenimiento.',
-        costo: 90.00,
-        tipoMantenimiento: TipoMantenimiento.PREVENTIVO,
-        kilometraje: 4500
+    }),
+    prisma.auto.create({
+      data: {
+        idPropietario: usuarios[2].idUsuario, // Ana García
+        idUbicacion: ubicaciones[3].idUbicacion,
+        marca: 'Ford',
+        modelo: 'EcoSport',
+        descripcion: 'SUV compacta ideal para aventuras',
+        precioRentaDiario: 320.00,
+        montoGarantia: 1200.00,
+        kilometraje: 41000,
+        tipo: 'SUV Compacta',
+        año: 2020,
+        placa: 'CBB-3456',
+        soat: 'SOAT901234',
+        color: 'Azul',
+        asientos: 5,
+        capacidadMaletero: 334,
+        transmision: 'MANUAL',
+        combustible: 'GASOLINA',
+        calificacionPromedio: 4.3,
+        totalComentarios: 11,
+        diasTotalRenta: 56,
+        vecesAlquilado: 14
       }
-    ]
-  });
+    }),
+    prisma.auto.create({
+      data: {
+        idPropietario: usuarios[3].idUsuario, // Roberto Silva
+        idUbicacion: ubicaciones[4].idUbicacion,
+        marca: 'Nissan',
+        modelo: 'Sentra',
+        descripcion: 'Sedán moderno con excelente rendimiento',
+        precioRentaDiario: 280.00,
+        montoGarantia: 1100.00,
+        kilometraje: 35000,
+        tipo: 'Sedán',
+        año: 2021,
+        placa: 'CBB-7890',
+        soat: 'SOAT567890',
+        color: 'Gris',
+        asientos: 5,
+        capacidadMaletero: 508,
+        transmision: 'AUTOMATICO',
+        combustible: 'GASOLINA',
+        calificacionPromedio: 4.5,
+        totalComentarios: 13,
+        diasTotalRenta: 67,
+        vecesAlquilado: 16
+      }
+    }),
+    prisma.auto.create({
+      data: {
+        idPropietario: usuarios[3].idUsuario, // Roberto Silva
+        idUbicacion: ubicaciones[0].idUbicacion,
+        marca: 'Volkswagen',
+        modelo: 'Gol',
+        descripcion: 'Auto confiable y económico',
+        precioRentaDiario: 200.00,
+        montoGarantia: 900.00,
+        kilometraje: 52000,
+        tipo: 'Hatchback',
+        año: 2018,
+        placa: 'CBB-2468',
+        soat: 'SOAT135792',
+        color: 'Blanco',
+        asientos: 5,
+        capacidadMaletero: 285,
+        transmision: 'MANUAL',
+        combustible: 'GASOLINA',
+        calificacionPromedio: 3.8,
+        totalComentarios: 9,
+        diasTotalRenta: 41,
+        vecesAlquilado: 11
+      }
+    })
+  ]);
 
-  await prisma.disponibilidad.createMany({
-    data: [
-      {
-        idAuto: 1,
-        fechaInicio: new Date('2025-04-20'),
-        fechaFin: new Date('2025-04-22'),
-        motivo: MotivoNoDisponibilidad.USO_PERSONAL,
-        descripcion: 'Viaje del dueño.'
-      },
-      {
-        idAuto: 1,
-        fechaInicio: new Date('2025-05-15'),
-        fechaFin: new Date('2025-05-20'),
-        motivo: MotivoNoDisponibilidad.OTRO,
-        descripcion: 'Rentado por cliente.'
-      },
-      {
-        idAuto: 2,
+  // 6. Crear imágenes de autos
+  console.log('📸 Creando imágenes de autos...');
+  for (let i = 0; i < autos.length; i++) {
+    await Promise.all([
+      prisma.imagen.create({
+        data: {
+          idAuto: autos[i].idAuto,
+          direccionImagen: `ruta${18 + i * 4}`
+        }
+      }),
+      prisma.imagen.create({
+        data: {
+          idAuto: autos[i].idAuto,
+          direccionImagen: `ruta${19 + i * 4}`
+        }
+      }),
+      prisma.imagen.create({
+        data: {
+          idAuto: autos[i].idAuto,
+          direccionImagen: `ruta${20 + i * 4}`
+        }
+      }),
+      prisma.imagen.create({
+        data: {
+          idAuto: autos[i].idAuto,
+          direccionImagen: `ruta${21 + i * 4}`
+        }
+      })
+    ]);
+  }
+
+  // 7. Crear disponibilidades (períodos no disponibles)
+  console.log('📅 Creando disponibilidades...');
+  await Promise.all([
+    prisma.disponibilidad.create({
+      data: {
+        idAuto: autos[0].idAuto,
+        fechaInicio: new Date('2025-06-15'),
+        fechaFin: new Date('2025-06-18'),
+        motivo: 'MANTENIMIENTO',
+        descripcion: 'Mantenimiento preventivo programado'
+      }
+    }),
+    prisma.disponibilidad.create({
+      data: {
+        idAuto: autos[2].idAuto,
+        fechaInicio: new Date('2025-07-01'),
+        fechaFin: new Date('2025-07-05'),
+        motivo: 'USO_PERSONAL',
+        descripcion: 'Viaje familiar del propietario'
+      }
+    })
+  ]);
+
+  // 8. Crear reservas
+  console.log('📋 Creando reservas...');
+  const reservas = await Promise.all([
+    // Reserva finalizada
+    prisma.reserva.create({
+      data: {
         fechaInicio: new Date('2025-05-01'),
-        fechaFin: new Date('2025-05-03'),
-        motivo: MotivoNoDisponibilidad.MANTENIMIENTO,
-        descripcion: 'Revisión de frenos.'
-      },
-      {
-        idAuto: 3,
-        fechaInicio: new Date('2025-04-25'),
-        fechaFin: new Date('2025-04-28'),
-        motivo: MotivoNoDisponibilidad.OTRO,
-        descripcion: 'Reservado para evento de empresa.'
-      },
-      {
-        idAuto: 4,
-        fechaInicio: new Date('2025-05-10'),
-        fechaFin: new Date('2025-05-15'),
-        motivo: MotivoNoDisponibilidad.USO_PERSONAL,
-        descripcion: 'Rentado para vacaciones.'
-      },
-      {
-        idAuto: 5,
-        fechaInicio: new Date('2025-04-30'),
         fechaFin: new Date('2025-05-05'),
-        motivo: MotivoNoDisponibilidad.USO_PERSONAL,
-        descripcion: 'Viaje familiar del propietario.'
-      },
-      {
-        idAuto: 6,
-        fechaInicio: new Date('2025-04-15'),
-        fechaFin: new Date('2025-05-15'),
-        motivo: MotivoNoDisponibilidad.MANTENIMIENTO,
-        descripcion: 'Reparación mayor de motor.'
-      },
-      {
-        idAuto: 7,
-        fechaInicio: new Date('2025-05-01'),
-        fechaFin: new Date('2025-05-10'),
-        motivo: MotivoNoDisponibilidad.OTRO,
-        descripcion: 'Rentado por familia numerosa.'
+        idAuto: autos[0].idAuto,
+        idCliente: usuarios[4].idUsuario, // María López
+        estado: 'FINALIZADA',
+        fechaSolicitud: new Date('2025-04-25'),
+        fechaAprobacion: new Date('2025-04-26'),
+        fechaLimitePago: new Date('2025-04-28'),
+        montoTotal: 1000.00,
+        kilometrajeInicial: 45000,
+        kilometrajeFinal: 45320,
+        estaPagada: true
       }
-    ]
-  });
-
-  await prisma.imagen.createMany({
-    data: [
-      // Toyota Corolla
-      { idAuto: 1, direccionImagen: '/imagenesAutos/Toyota/Lado.png' },
-      { idAuto: 1, direccionImagen: '/imagenesAutos/Toyota/Lateral.png' },
-      { idAuto: 1, direccionImagen: '/imagenesAutos/Toyota/Parte_posterior.png' },
-
-
-      // Honda Civic
-      { idAuto: 2, direccionImagen: '/imagenesAutos/Honda/Lateral.jpg' },
-      { idAuto: 2, direccionImagen: '/imagenesAutos/Honda/Interior.png' },
-      { idAuto: 2, direccionImagen: '/imagenesAutos/Honda/Interior_sillas.png' },
-
-      // Ford Focus
-      { idAuto: 3, direccionImagen: '/imagenesAutos/Ford/Lateral.jpeg' },
-      { idAuto: 3, direccionImagen: '/imagenesAutos/Ford/Interior.jpeg' },
-      { idAuto: 3, direccionImagen: '/imagenesAutos/Ford/Lateral_Trasera.jpeg' },
-      { idAuto: 3, direccionImagen: '/imagenesAutos/Ford/Vista_Lateral.jpeg' },
-
-      // Chevrolet Onix
-      { idAuto: 4, direccionImagen: '/imagenesAutos/Chevrolet/frontal.png' },
-      { idAuto: 4, direccionImagen: '/imagenesAutos/Chevrolet/Interior.png' },
-      { idAuto: 4, direccionImagen: '/imagenesAutos/Chevrolet/Lateral.png' },
-
-      // Volkswagen Golf
-      { idAuto: 5, direccionImagen: '/imagenesAutos/Volkswagen/Frontal.jpg' },
-      { idAuto: 5, direccionImagen: '/imagenesAutos/Volkswagen/Perfil.jpg' },
-      { idAuto: 5, direccionImagen: '/imagenesAutos/Volkswagen/Interior_techos.jpg' },
-      { idAuto: 5, direccionImagen: '/imagenesAutos/Volkswagen/Asientos.jpg' },
-
-      // Nissan Sentra
-      { idAuto: 6, direccionImagen: '/imagenesAutos/Nissan/Frontal.jpg' },
-      { idAuto: 6, direccionImagen: '/imagenesAutos/Nissan/Lateral.jpg' },
-      { idAuto: 6, direccionImagen: '/imagenesAutos/Nissan/Panel.jpg' },
-
-      // Hyundai Tucson
-      { idAuto: 7, direccionImagen: '/imagenesAutos/Hyundai/Frontal.jpg' },
-      { idAuto: 7, direccionImagen: '/imagenesAutos/Hyundai/Interior_espacioso.jpg' },
-      { idAuto: 7, direccionImagen: '/imagenesAutos/Hyundai/Tercera_fila.jpg' },
-      { idAuto: 7, direccionImagen: '/imagenesAutos/Hyundai/Maletero.jpg' }
-    ]
-  });
-
-  // Crear algunas reservas de ejemplo
-  const reservas = await prisma.reserva.createMany({
-    data: [
-      {
-        fechaInicio: new Date('2025-05-15'),
-        fechaFin: new Date('2025-05-20'),
-        idAuto: 1,
-        idCliente: 4,
-        estado: EstadoReserva.CONFIRMADA,
-        fechaSolicitud: new Date('2025-05-01'),
-        fechaAprobacion: new Date('2025-05-02'),
-        fechaLimitePago: new Date('2025-05-10'),
-        montoTotal: 277.50, // 5 días * 55.50
-        kilometrajeInicial: 15000,
+    }),
+    // Reserva en curso
+    prisma.reserva.create({
+      data: {
+        fechaInicio: new Date('2025-05-28'),
+        fechaFin: new Date('2025-06-02'),
+        idAuto: autos[1].idAuto,
+        idCliente: usuarios[5].idUsuario, // Pedro Chávez
+        estado: 'EN_CURSO',
+        fechaSolicitud: new Date('2025-05-20'),
+        fechaAprobacion: new Date('2025-05-21'),
+        fechaLimitePago: new Date('2025-05-23'),
+        montoTotal: 2000.00,
+        kilometrajeInicial: 32000,
         estaPagada: true
-      },
-      {
-        fechaInicio: new Date('2025-05-01'),
-        fechaFin: new Date('2025-05-10'),
-        idAuto: 7,
-        idCliente: 1,
-        estado: EstadoReserva.CONFIRMADA,
-        fechaSolicitud: new Date('2025-04-15'),
-        fechaAprobacion: new Date('2025-04-16'),
-        fechaLimitePago: new Date('2025-04-25'),
-        montoTotal: 850.00, // 10 días * 85.00
-        kilometrajeInicial: 5000,
+      }
+    }),
+    // Reserva confirmada
+    prisma.reserva.create({
+      data: {
+        fechaInicio: new Date('2025-06-10'),
+        fechaFin: new Date('2025-06-12'),
+        idAuto: autos[2].idAuto,
+        idCliente: usuarios[6].idUsuario, // Laura Morales
+        estado: 'CONFIRMADA',
+        fechaSolicitud: new Date('2025-05-25'),
+        fechaAprobacion: new Date('2025-05-26'),
+        fechaLimitePago: new Date('2025-05-28'),
+        montoTotal: 540.00,
         estaPagada: true
-      },
-      {
-        fechaInicio: new Date('2025-06-01'),
-        fechaFin: new Date('2025-06-07'),
-        idAuto: 3,
-        idCliente: 5,
-        estado: EstadoReserva.SOLICITADA,
-        fechaSolicitud: new Date('2025-05-15'),
-        fechaLimitePago: new Date('2025-05-25'),
-        montoTotal: 490.00, // 7 días * 70.00
+      }
+    }),
+    // Reserva solicitada
+    prisma.reserva.create({
+      data: {
+        fechaInicio: new Date('2025-06-20'),
+        fechaFin: new Date('2025-06-25'),
+        idAuto: autos[3].idAuto,
+        idCliente: usuarios[4].idUsuario, // María López
+        estado: 'SOLICITADA',
+        fechaSolicitud: new Date('2025-05-29'),
+        fechaLimitePago: new Date('2025-06-02'),
+        montoTotal: 1600.00,
         estaPagada: false
       }
-    ]
-  });
+    })
+  ]);
 
-  await prisma.pago.createMany({
-    data: [
-      {
-        idReserva: 1,
-        monto: 277.50,
-        fechaPago: new Date('2025-05-05'),
-        metodoPago: MetodoPago.QR,
-        referencia: 'PAG-00001',
-        tipo: TipoPago.RENTA
-      },
-      {
-        idReserva: 1,
-        monto: 200.00,
-        fechaPago: new Date('2025-05-05'),
-        metodoPago: MetodoPago.TARJETA_DEBITO,
-        referencia: 'PAG-00002',
-        tipo: TipoPago.GARANTIA
-      },
-      {
-        idReserva: 2,
-        monto: 850.00,
-        fechaPago: new Date('2025-04-20'),
-        metodoPago: MetodoPago.QR,
-        referencia: 'PAG-00003',
-        tipo: TipoPago.RENTA
-      },
-      {
-        idReserva: 2,
-        monto: 400.00,
-        fechaPago: new Date('2025-04-20'),
-        metodoPago: MetodoPago.QR,
-        referencia: 'PAG-00004',
-        tipo: TipoPago.GARANTIA
+  // 9. Crear pagos
+  console.log('💳 Creando pagos...');
+  await Promise.all([
+    // Pagos para la primera reserva
+    prisma.pago.create({
+      data: {
+        idReserva: reservas[0].idReserva,
+        monto: 1000.00,
+        metodoPago: 'QR',
+        referencia: 'QR123456789',
+        tipo: 'RENTA'
       }
-    ]
-  });
-
-  // Crear garantías para reservas confirmadas
-  await prisma.garantia.createMany({
-    data: [
-      {
-        idReserva: 1,
-        monto: 200.00,
-        fechaDeposito: new Date('2025-05-05'),
-        estado: EstadoGarantia.DEPOSITADA,
-        comprobante: 'comp_garantia_001.pdf'
-      },
-      {
-        idReserva: 2,
-        monto: 400.00,
-        fechaDeposito: new Date('2025-04-20'),
-        estado: EstadoGarantia.DEPOSITADA,
-        comprobante: 'comp_garantia_002.pdf'
+    }),
+    prisma.pago.create({
+      data: {
+        idReserva: reservas[0].idReserva,
+        monto: 1000.00,
+        metodoPago: 'QR',
+        referencia: 'QR987654321',
+        tipo: 'GARANTIA'
       }
-    ]
-  });
-
-  // Crear algunas notificaciones de ejemplo
-  await prisma.notificacion.createMany({
-    data: [
-      {
-        idUsuario: 1,
-        titulo: 'Reserva confirmada',
-        mensaje: 'Tu reserva para el Hyundai Tucson ha sido confirmada',
-        idEntidad: '2',
-        tipoEntidad: 'reserva',
-        tipo: TipoDeNotificacion.RESERVA_APROBADA,
-        prioridad: PrioridadNotificacion.ALTA
-      },
-      {
-        idUsuario: 3,
-        titulo: 'Nueva solicitud de reserva',
-        mensaje: 'Has recibido una nueva solicitud de reserva para tu Toyota Corolla',
-        idEntidad: '1',
-        tipoEntidad: 'reserva',
-        tipo: TipoDeNotificacion.RESERVA_SOLICITADA,
-        prioridad: PrioridadNotificacion.MEDIA
-      },
-      {
-        idUsuario: 6,
-        titulo: 'Reserva recibida',
-        mensaje: 'Has recibido una nueva solicitud de reserva para tu Hyundai Tucson',
-        idEntidad: '2',
-        tipoEntidad: 'reserva',
-        tipo: TipoDeNotificacion.RESERVA_SOLICITADA,
-        prioridad: PrioridadNotificacion.MEDIA
-      },
-      {
-        idUsuario: 2,
-        titulo: 'Nueva solicitud de reserva',
-        mensaje: 'Has recibido una nueva solicitud de reserva para tu Ford Focus',
-        idEntidad: '3',
-        tipoEntidad: 'reserva',
-        tipo: TipoDeNotificacion.RESERVA_SOLICITADA,
-        prioridad: PrioridadNotificacion.MEDIA
+    }),
+    // Pagos para la segunda reserva
+    prisma.pago.create({
+      data: {
+        idReserva: reservas[1].idReserva,
+        monto: 2000.00,
+        metodoPago: 'TARJETA_DEBITO',
+        referencia: 'TDB456789123',
+        tipo: 'RENTA'
       }
-    ]
-  });
+    }),
+    prisma.pago.create({
+      data: {
+        idReserva: reservas[1].idReserva,
+        monto: 1500.00,
+        metodoPago: 'TARJETA_DEBITO',
+        referencia: 'TDB789123456',
+        tipo: 'GARANTIA'
+      }
+    }),
+    // Pago para la tercera reserva
+    prisma.pago.create({
+      data: {
+        idReserva: reservas[2].idReserva,
+        monto: 540.00,
+        metodoPago: 'QR',
+        referencia: 'QR147258369',
+        tipo: 'RENTA'
+      }
+    }),
+    prisma.pago.create({
+      data: {
+        idReserva: reservas[2].idReserva,
+        monto: 800.00,
+        metodoPago: 'QR',
+        referencia: 'QR963852741',
+        tipo: 'GARANTIA'
+      }
+    })
+  ]);
 
-  // Crear algunas calificaciones de usuarios
-  await prisma.calificacionUsuario.createMany({
-    data: [
-      {
-        idCalificador: 3,
-        idCalificado: 4,
+  // 10. Crear garantías
+  console.log('🛡️ Creando garantías...');
+  await Promise.all([
+    prisma.garantia.create({
+      data: {
+        idReserva: reservas[0].idReserva,
+        monto: 1000.00,
+        fechaLiberacion: new Date('2025-05-06'),
+        estado: 'LIBERADA',
+        comprobante: 'COMP001'
+      }
+    }),
+    prisma.garantia.create({
+      data: {
+        idReserva: reservas[1].idReserva,
+        monto: 1500.00,
+        estado: 'DEPOSITADA',
+        comprobante: 'COMP002'
+      }
+    }),
+    prisma.garantia.create({
+      data: {
+        idReserva: reservas[2].idReserva,
+        monto: 800.00,
+        estado: 'DEPOSITADA',
+        comprobante: 'COMP003'
+      }
+    })
+  ]);
+
+  // 11. Crear comentarios
+  console.log('💬 Creando comentarios...');
+  await Promise.all([
+    prisma.comentario.create({
+      data: {
+        idAuto: autos[0].idAuto,
+        idUsuario: usuarios[4].idUsuario, // María López
+        contenido: 'Excelente auto, muy cómodo y limpio. El propietario fue muy amable.',
+        calificacion: 5,
+        idReserva: reservas[0].idReserva
+      }
+    }),
+    prisma.comentario.create({
+      data: {
+        idAuto: autos[1].idAuto,
+        idUsuario: usuarios[5].idUsuario, // Pedro Chávez
+        contenido: 'Muy buena SUV, perfecta para el viaje familiar. Recomendada.',
+        calificacion: 4
+      }
+    }),
+    prisma.comentario.create({
+      data: {
+        idAuto: autos[2].idAuto,
+        idUsuario: usuarios[6].idUsuario, // Laura Morales
+        contenido: 'Auto económico y eficiente, ideal para la ciudad.',
+        calificacion: 4
+      }
+    }),
+    prisma.comentario.create({
+      data: {
+        idAuto: autos[3].idAuto,
+        idUsuario: usuarios[4].idUsuario, // María López
+        contenido: 'Buena experiencia, auto en buen estado.',
+        calificacion: 4
+      }
+    })
+  ]);
+
+  // 12. Crear calificaciones de usuarios
+  console.log('⭐ Creando calificaciones de usuarios...');
+  await Promise.all([
+    prisma.calificacionUsuario.create({
+      data: {
+        idCalificador: usuarios[4].idUsuario, // María López califica
+        idCalificado: usuarios[1].idUsuario,   // a Carlos Mendoza
         puntuacion: 5,
-        comentario: 'Excelente cliente, muy puntual',
-        fechaCreacion: new Date('2025-05-21'),
-        idReserva: 1,
-        tipoCalificacion: TipoCalificacionUsuario.ARRENDATARIO
-      },
-      {
-        idCalificador: 4,
-        idCalificado: 3,
-        puntuacion: 4,
-        comentario: 'Vehículo en excelentes condiciones',
-        fechaCreacion: new Date('2025-05-21'),
-        idReserva: 2,  
-        tipoCalificacion: TipoCalificacionUsuario.ARRENDADOR
+        comentario: 'Excelente anfitrión, muy profesional y responsable.',
+        idReserva: reservas[0].idReserva,
+        tipoCalificacion: 'ARRENDADOR'
       }
-    ]
-  });
+    }),
+    prisma.calificacionUsuario.create({
+      data: {
+        idCalificador: usuarios[1].idUsuario, // Carlos Mendoza califica
+        idCalificado: usuarios[4].idUsuario,   // a María López
+        puntuacion: 5,
+        comentario: 'Cliente muy responsable, cuidó muy bien el vehículo.',
+        idReserva: reservas[1].idReserva,
+        tipoCalificacion: 'ARRENDATARIO'
+      }
+    })
+  ]);
+
+  // 13. Crear historial de mantenimiento
+  console.log('🔧 Creando historial de mantenimiento...');
+  await Promise.all([
+    prisma.historialMantenimiento.create({
+      data: {
+        idAuto: autos[0].idAuto,
+        fechaInicio: new Date('2025-03-15'),
+        fechaFin: new Date('2025-03-16'),
+        descripcion: 'Cambio de aceite y filtros',
+        costo: 250.00,
+        tipoMantenimiento: 'PREVENTIVO',
+        kilometraje: 44500
+      }
+    }),
+    prisma.historialMantenimiento.create({
+      data: {
+        idAuto: autos[1].idAuto,
+        fechaInicio: new Date('2025-04-20'),
+        fechaFin: new Date('2025-04-21'),
+        descripcion: 'Revisión general y cambio de llantas',
+        costo: 800.00,
+        tipoMantenimiento: 'PREVENTIVO',
+        kilometraje: 31500
+      }
+    }),
+    prisma.historialMantenimiento.create({
+      data: {
+        idAuto: autos[2].idAuto,
+        fechaInicio: new Date('2025-02-10'),
+        fechaFin: new Date('2025-02-12'),
+        descripcion: 'Reparación del sistema de frenos',
+        costo: 450.00,
+        tipoMantenimiento: 'CORRECTIVO',
+        kilometraje: 27200
+      }
+    })
+  ]);
+
+  // 14. Crear notificaciones
+  console.log('🔔 Creando notificaciones...');
+  await Promise.all([
+    prisma.notificacion.create({
+      data: {
+        idUsuario: usuarios[1].idUsuario, // Carlos Mendoza
+        titulo: 'Nueva reserva solicitada',
+        mensaje: 'María López ha solicitado reservar tu Toyota Corolla',
+        idEntidad: reservas[0].idReserva.toString(),
+        tipoEntidad: 'reserva',
+        tipo: 'RESERVA_SOLICITADA',
+        prioridad: 'ALTA'
+      }
+    }),
+    prisma.notificacion.create({
+      data: {
+        idUsuario: usuarios[4].idUsuario, // María López
+        titulo: 'Reserva aprobada',
+        mensaje: 'Tu reserva del Toyota Corolla ha sido aprobada',
+        idEntidad: reservas[0].idReserva.toString(),
+        tipoEntidad: 'reserva',
+        leido: true,
+        leidoEn: new Date('2025-04-26T10:30:00'),
+        tipo: 'RESERVA_APROBADA',
+        prioridad: 'ALTA'
+      }
+    }),
+    prisma.notificacion.create({
+      data: {
+        idUsuario: usuarios[2].idUsuario, // Ana García
+        titulo: 'Nueva reserva solicitada',
+        mensaje: 'Pedro Chávez ha solicitado reservar tu Hyundai Tucson',
+        idEntidad: reservas[1].idReserva.toString(),
+        tipoEntidad: 'reserva',
+        tipo: 'RESERVA_SOLICITADA',
+        prioridad: 'ALTA'
+      }
+    }),
+    prisma.notificacion.create({
+      data: {
+        idUsuario: usuarios[5].idUsuario, // Pedro Chávez
+        titulo: 'Depósito confirmado',
+        mensaje: 'Tu depósito de garantía ha sido confirmado',
+        idEntidad: reservas[1].idReserva.toString(),
+        tipoEntidad: 'pago',
+        leido: true,
+        leidoEn: new Date('2025-05-21T14:15:00'),
+        tipo: 'DEPOSITO_CONFIRMADO',
+        prioridad: 'MEDIA'
+      }
+    }),
+    prisma.notificacion.create({
+      data: {
+        idUsuario: usuarios[1].idUsuario, // Carlos Mendoza
+        titulo: 'Alquiler finalizado',
+        mensaje: 'El alquiler de tu Toyota Corolla ha finalizado',
+        idEntidad: reservas[0].idReserva.toString(),
+        tipoEntidad: 'reserva',
+        tipo: 'ALQUILER_FINALIZADO',
+        prioridad: 'MEDIA'
+      }
+    }),
+    prisma.notificacion.create({
+      data: {
+        idUsuario: usuarios[6].idUsuario, // Laura Morales
+        titulo: 'Reserva confirmada',
+        mensaje: 'Tu reserva del Chevrolet Spark ha sido confirmada',
+        idEntidad: reservas[2].idReserva.toString(),
+        tipoEntidad: 'reserva',
+        tipo: 'RESERVA_APROBADA',
+        prioridad: 'ALTA'
+      }
+    })
+  ]);
+
+  // 15. Crear verificaciones
+  console.log('✅ Creando verificaciones...');
+  await Promise.all([
+    prisma.verificaciones.create({
+      data: {
+        idUsuario: usuarios[4].idUsuario, // María López
+        codigo: '123456',
+        tipo: 'verificacion',
+        expiracion: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 horas
+        usado: true
+      }
+    }),
+    prisma.verificaciones.create({
+      data: {
+        idUsuario: usuarios[5].idUsuario, // Pedro Chávez
+        codigo: '789012',
+        tipo: 'recuperacion',
+        expiracion: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        usado: false
+      }
+    }),
+    prisma.verificaciones.create({
+      data: {
+        idUsuario: usuarios[6].idUsuario, // Laura Morales
+        codigo: '345678',
+        tipo: 'verificacion',
+        expiracion: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        usado: true
+      }
+    })
+  ]);
+
+  // 16. Crear términos y condiciones
+  console.log('📄 Creando términos y condiciones...');
+  const fechaAceptacion = new Date('2025-01-15');
+  await Promise.all(
+    usuarios.map(usuario => 
+      prisma.terminosCondiciones.create({
+        data: {
+          idUsuario: usuario.idUsuario,
+          versionTerminos: 'v2.1',
+          fechaAceptacion: fechaAceptacion
+        }
+      })
+    )
+  );
+
+  console.log('✅ Seed completado exitosamente!');
+  console.log(`
+  📊 Resumen de datos creados:
+  - 👥 Usuarios: ${usuarios.length}
+  - 🚗 Drivers: ${drivers.length}
+  - 📍 Ubicaciones: ${ubicaciones.length}
+  - 🚙 Autos: ${autos.length}
+  - 📸 Imágenes: ${autos.length * 4}
+  - 📋 Reservas: ${reservas.length}
+  - 💳 Pagos: 6
+  - 🛡️ Garantías: 3
+  - 💬 Comentarios: 4
+  - ⭐ Calificaciones: 2
+  - 🔧 Mantenimientos: 3
+  - 🔔 Notificaciones: 7
+  - ✅ Verificaciones: 3
+  - 📄 Términos: ${usuarios.length}
+  `);
 }
 
 main()
-  .then(() => {
-    console.log('Datos insertados con éxito 🚀');
-    return prisma.$disconnect();
-  })
   .catch((e) => {
-    console.error(e);
-    return prisma.$disconnect();
+    console.error('❌ Error durante el seed:', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });
