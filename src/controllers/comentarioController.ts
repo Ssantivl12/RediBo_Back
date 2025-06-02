@@ -4,6 +4,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+// En tu controlador de comentarios (comentarioController.ts)
 export const obtenerComentariosPorAuto = async (req: Request, res: Response) => {
   const idAuto = parseInt(req.params.idAuto);
 
@@ -28,6 +29,11 @@ export const obtenerComentariosPorAuto = async (req: Request, res: Response) => 
       },
     });
 
+    const totalComentarios = comentarios.length;
+    const promedioCalificacion = totalComentarios > 0 
+      ? comentarios.reduce((sum, c) => sum + c.calificacion, 0) / totalComentarios
+      : 0;
+
     const comentariosFormateados = comentarios.map((c) => ({
       autor: `${c.usuario.nombre} ${c.usuario.apellido}`,
       contenido: c.contenido,
@@ -35,7 +41,11 @@ export const obtenerComentariosPorAuto = async (req: Request, res: Response) => 
       fecha: c.fechaCreacion,
     }));
 
-    res.json(comentariosFormateados);
+    res.json({
+      comentarios: comentariosFormateados,
+      promedioCalificacion: parseFloat(promedioCalificacion.toFixed(1)),
+      totalComentarios
+    });
   } catch (error) {
     console.error("Error al obtener comentarios:", error);
     res.status(500).json({ error: "Error interno del servidor" });
