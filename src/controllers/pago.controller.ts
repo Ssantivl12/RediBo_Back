@@ -6,7 +6,7 @@ import { generarImagenPago } from '../utils/generarImagen';
 import { MetodoPago } from '@prisma/client';
 import { validarTarjeta } from '../middlewares/validarTarjeta'
 import { validarQR } from '../middlewares/validarQR'
-import { verificarPagoGarantiaService } from '../services/pago.service';
+import { verificarPagoGarantiaService, verificarPagoRentaService } from '../services/pago.service';
 export const realizarPagoQR = async (req: Request, res: Response): Promise<any> => {
   try {
     const { reserva_idreserva } = req.params;
@@ -219,5 +219,20 @@ export const verificarPagoGarantiaController = async (req: Request, res: Respons
   } catch (error) {
     console.error(error);
     res.status(500).json({ mensaje: 'Error al verificar la garantía' });
+  }
+};
+export const verificarPagoRentaController = async (req: Request, res: Response): Promise<any> => {
+  const { idreserva } = req.params;
+
+  if (!idreserva || isNaN(Number(idreserva))) {
+    return res.status(400).json({ error: 'ID de reserva inválido' });
+  }
+
+  try {
+    const existePago = await verificarPagoRentaService(Number(idreserva));
+    return res.json({ estado: existePago });
+  } catch (error) {
+    console.error('Error al verificar pago de renta:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
   }
 };

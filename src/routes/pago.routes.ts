@@ -10,4 +10,5 @@ router.post('/pagarConTarjeta/:reserva_idreserva', (req, res, next) => {
 router.post('/pagarConQR/:reserva_idreserva', PagoController.realizarPagoQR);
 router.get('/', PagoController.obtenerPagos);
 router.get('/verificarPagoGarantia/:idReserva', PagoController.verificarPagoGarantiaController);
+router.get('/verificarPagoRenta/:idreserva', PagoController.verificarPagoRentaController);
 export default router;

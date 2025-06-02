@@ -60,3 +60,12 @@ export const verificarPagoGarantiaService = async (idReserva: number): Promise<b
 
   return garantia !== null;
 };
+export const verificarPagoRentaService = async (idreserva: number): Promise<boolean> => {
+  const pago = await prisma.pago.findFirst({
+    where: {
+      reserva_idreserva: idreserva,
+    },
+  });
+
+  return pago !== null;
+};
