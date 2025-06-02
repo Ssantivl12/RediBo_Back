@@ -6,7 +6,7 @@ import { generarImagenPago } from '../utils/generarImagen';
 import { MetodoPago } from '@prisma/client';
 import { validarTarjeta } from '../middlewares/validarTarjeta'
 import { validarQR } from '../middlewares/validarQR'
-
+import { verificarPagoGarantiaService } from '../services/pago.service';
 export const realizarPagoQR = async (req: Request, res: Response): Promise<any> => {
   try {
     const { reserva_idreserva } = req.params;
@@ -208,4 +208,16 @@ export const generarCodigoComprobante = (): string => {
     comprobante += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
   }
   return comprobante;
+};
+
+export const verificarPagoGarantiaController = async (req: Request, res: Response) : Promise<any> => {
+  const { idReserva } = req.params;
+
+  try {
+    const existeGarantia = await verificarPagoGarantiaService(Number(idReserva));
+    res.json({ estado: existeGarantia });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: 'Error al verificar la garantía' });
+  }
 };

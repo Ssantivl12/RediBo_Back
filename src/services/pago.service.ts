@@ -52,3 +52,11 @@ export const obtenerPagos = async () => {
     throw new Error('Error al obtener los pagos');
   }
 };
+
+export const verificarPagoGarantiaService = async (idReserva: number): Promise<boolean> => {
+  const garantia = await prisma.garantia.findFirst({
+    where: { reserva_idreserva: idReserva }
+  });
+
+  return garantia !== null;
+};
