@@ -19,8 +19,7 @@ export const obtenerComentariosPorAuto = async (req: Request, res: Response) => 
       select: {
         usuario: {
           select: {
-            nombre: true,
-            apellido: true,
+            nombreCompleto: true,
           },
         },
         contenido: true,
@@ -35,7 +34,7 @@ export const obtenerComentariosPorAuto = async (req: Request, res: Response) => 
       : 0;
 
     const comentariosFormateados = comentarios.map((c) => ({
-      autor: `${c.usuario.nombre} ${c.usuario.apellido}`,
+      autor: c.usuario.nombreCompleto,
       contenido: c.contenido,
       puntuacion: c.calificacion,
       fecha: c.fechaCreacion,
