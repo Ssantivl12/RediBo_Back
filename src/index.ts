@@ -11,6 +11,7 @@ import { createNotificacionRoutes } from './routes/notificacion.routes';
 import { ReservaService } from './services/reserva.service';
 import { ReservaController } from './controllers/reserva.controller';
 import { createReservaRoutes } from './routes/reserva.routes';
+import { createCalificacionRoutes } from './routes/calificacion.routes';
 import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config();
@@ -60,6 +61,7 @@ setInterval(() => {
 
 // Rutas
 app.use('/api/notificaciones', createNotificacionRoutes());
+app.use('/api/calificaciones', createCalificacionRoutes());
 app.use('/api/reservas', createReservaRoutes(reservaController, sseController));
 app.get('/api/notificaciones/sse/:usuarioId', (req, res) => {
   sseController.conectar(req, res);

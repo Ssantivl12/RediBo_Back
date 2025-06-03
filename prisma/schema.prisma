@@ -151,7 +151,7 @@ model Reserva {
 model Calificacion {
   id            String   @id @default(uuid())
   puntuacion    Int      @db.SmallInt
-  comentario    String?  @db.Text
+  texto         String?  @db.Text
   rentaId       String   @unique 
   fechaCreacion DateTime @default(now())
   
