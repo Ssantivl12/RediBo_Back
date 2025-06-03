@@ -32,7 +32,6 @@ export const registrarDriverCompleto = async (data: {
   throw new Error('Debes asignar al menos un renter válido al driver.');
 }
 
-
   const usuario = await prisma.usuario.findUnique({
     where: { idUsuario },
     select: { telefono: true }
@@ -82,8 +81,13 @@ export const registrarDriverCompleto = async (data: {
     }
 
     // 5. Registrar relaciones en UsuarioDriver
+    const uniqueRenters = [...new Set(rentersIds)];
+    if (uniqueRenters.length !== rentersIds.length) {
+      throw new Error("Hay renterIds duplicados en la lista.");
+    }
+
     await tx.usuarioDriver.createMany({
-      data: rentersIds.map(renterId => ({
+      data: uniqueRenters.map(renterId => ({
         idUsuario: renterId,
         idDriver: driver.idDriver,
         fechaAsignacion: new Date()
