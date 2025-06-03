@@ -1,6 +1,7 @@
-//src/services/auth/registroDriver.service.ts
 import { PrismaClient } from '@prisma/client';
+
 const prisma = new PrismaClient();
+
 
 export const registrarDriverCompleto = async (data: {
   idUsuario: number;
