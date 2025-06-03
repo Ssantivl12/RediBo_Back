@@ -123,6 +123,17 @@ export class NotificacionService {
                     imagenAuto = calif?.renta?.reserva?.auto?.imagenes ?? null;
                     break;
                   }
+                  case 'comentario': {
+                    // comentario -> auto -> imagenes
+                    const comentario = await prisma.comentario.findUnique({
+                        where: { idComentario: Number(idEnt) },
+                        include: {
+                        auto: { select: { imagenes: true } }
+                        }
+                    });
+                    imagenAuto = comentario?.auto?.imagenes ?? null;
+                    break;
+                  }
                   default:
                     imagenAuto = null;
                 }
@@ -413,6 +424,56 @@ export class NotificacionService {
             return false;
         }
     }
+
+    async notificarComentarioCalificacion(comentarioId: number): Promise<boolean> {
+        try {
+            const comentario = await prisma.comentario.findUnique({
+                where: { idComentario: comentarioId },
+                include: {
+                    auto: { include: { propietario: true } },
+                    usuario: true,
+                    calificacion: true,
+                    reserva: true
+                }
+            });
+
+            if (!comentario || !comentario.auto || !comentario.auto.propietario) {
+                console.error('Comentario, auto o propietario no encontrados');
+                return false;
+            }
+
+            // Verifica si ya existe una notificación para este comentario
+            const notificacionExistente = await prisma.notificacion.findFirst({
+                where: {
+                    usuarioId: comentario.auto.propietario.id,
+                    entidadId: comentario.idComentario.toString(),
+                    tipo: 'VEHICULO_CALIFICADO',
+                    haSidoBorrada: false
+                }
+            });
+
+            if (notificacionExistente) return false;
+
+            const mensaje = `La experiencia con el vehículo ${comentario.auto.marca}, ${comentario.auto.modelo} fue: ${
+                comentario.calificacion ? 'calificación de ' + comentario.calificacion.puntuacion + ' estrellas. ' : ''
+            }Comentario: ${comentario.contenido}\nAtte: REDIBO`;
+
+            await this.crearNotificacion({
+                usuarioId: comentario.auto.propietario.id,
+                titulo: 'Comentario Recibido',
+                mensaje,
+                tipo: 'VEHICULO_CALIFICADO',
+                prioridad: PrioridadNotificacion.MEDIA,
+                entidadId: comentario.idComentario.toString(),
+                tipoEntidad: 'Comentario'
+            });
+
+            return true;
+        } catch (error) {
+            console.error('Error al notificar comentario de calificación:', error);
+            return false;
+        }
+    }
 }
 
 export async function obtenerNoLeidas(userId: string) {
@@ -600,8 +661,8 @@ export async function notificarNuevaCalificacion(rentaId: string): Promise<boole
             `(${calificacion.renta.auto.marca}, placa ${calificacion.renta.auto.placa}) ha recibido ` +
             `una calificación de ${calificacion.puntuacion} estrellas`;
         
-        if (calificacion.comentario) {
-            mensaje += ` con el siguiente comentario: "${calificacion.comentario}"\n`;
+        if (calificacion.texto) {
+            mensaje += ` con el siguiente comentario: "${calificacion.texto}"\n`;
         } else {
             mensaje += ".\n";
         }
