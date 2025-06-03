@@ -28,9 +28,10 @@ export const registrarDriverCompleto = async (data: {
     rentersIds
   } = data;
 
-  if (!rentersIds || rentersIds.length === 0) {
-    throw new Error('Debes asignar al menos un renter al driver.');
-  }
+  if (!Array.isArray(rentersIds) || rentersIds.length === 0) {
+  throw new Error('Debes asignar al menos un renter válido al driver.');
+}
+
 
   const usuario = await prisma.usuario.findUnique({
     where: { idUsuario },
