@@ -90,6 +90,18 @@ if (!sexo || !licencia || !tipoLicencia || !fechaEmision || !fechaExpiracion) {
     if (renters.length !== rentersIds.length) {
       throw new Error("Uno o más renters no existen en la base de datos.");
     }
+    
+    const asignarRenters = async (tx: PrismaClient, driverId: number, rentersIds: number[]) => {
+  await tx.usuarioDriver.createMany({
+    data: rentersIds.map(idUsuario => ({
+      idUsuario,
+      idDriver: driverId,
+      fechaAsignacion: new Date()
+    })),
+    skipDuplicates: true,
+  });
+};
+
 
     // 5. Registrar relaciones en UsuarioDriver
     const uniqueRenters = [...new Set(rentersIds)];
