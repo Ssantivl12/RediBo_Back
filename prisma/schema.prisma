@@ -22,6 +22,7 @@ enum TipoDeNotificacion {
   DEPOSITO_CONFIRMADO
   DEPOSITO_RECIBIDO
   NUEVA_CALIFICACION
+  COMENTARIO_RECIBIDO
 }
 
 enum PrioridadNotificacion {

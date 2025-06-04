@@ -406,8 +406,8 @@ export class NotificacionService {
 
             if(notificacionExistente) return false;
 
-            const mensaje = `El usuario ${reserva.cliente.nombre} ${reserva.cliente.apellido} ha realizado el deposito para la reserva del vehiculo ${reserva.auto.modelo} ${reserva.auto.marca} con placa ${reserva.auto.placa}. \nAtte: REDIBO.`;
-            await this.crearNotificacion({
+            const mensaje = `Ha recibido un deposito correspondiente a la renta de su vehiculo ${reserva.auto.modelo} ${reserva.auto.marca} con placa ${reserva.auto.placa}. \nAtte: REDIBO.`;
+                await this.crearNotificacion({
                 usuarioId: reserva.auto.propietario.id,
                 titulo: 'Depósito Recibido',
                 mensaje,
@@ -462,7 +462,7 @@ export class NotificacionService {
                 usuarioId: comentario.auto.propietario.id,
                 titulo: 'Comentario Recibido',
                 mensaje,
-                tipo: 'VEHICULO_CALIFICADO',
+                tipo: 'COMENTARIO_RECIBIDO',
                 prioridad: PrioridadNotificacion.MEDIA,
                 entidadId: comentario.idComentario.toString(),
                 tipoEntidad: 'Comentario'
