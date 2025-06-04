@@ -2,9 +2,8 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-
-
-export const registrarDriverCompleto = async (data: {
+type RegistroDriverResultado = void;
+type DatosRegistro = {
   idUsuario: number;
   sexo: string;
   telefono: string;
@@ -15,7 +14,9 @@ export const registrarDriverCompleto = async (data: {
   anversoUrl: string;
   reversoUrl: string;
   rentersIds: number[];
-}) => {
+};
+export const registrarDriverCompleto = async (data: DatosRegistro): Promise<RegistroDriverResultado> => { 
+ {
   const {
     idUsuario,
     sexo,
@@ -90,7 +91,7 @@ if (!sexo || !licencia || !tipoLicencia || !fechaEmision || !fechaExpiracion) {
     if (renters.length !== rentersIds.length) {
       throw new Error("Uno o más renters no existen en la base de datos.");
     }
-    
+
     const asignarRenters = async (tx: PrismaClient, driverId: number, rentersIds: number[]) => {
   await tx.usuarioDriver.createMany({
     data: rentersIds.map(idUsuario => ({
@@ -118,4 +119,4 @@ if (!sexo || !licencia || !tipoLicencia || !fechaEmision || !fechaExpiracion) {
       skipDuplicates: true
     });
   });
-};
+};}
