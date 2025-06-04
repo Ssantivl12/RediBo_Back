@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 
+
 export const registrarDriverCompleto = async (data: {
   idUsuario: number;
   sexo: string;
@@ -58,6 +59,12 @@ if (!sexo || !licencia || !tipoLicencia || !fechaEmision || !fechaExpiracion) {
         reversoUrl
       }
     });
+
+    const existing = await prisma.driver.findUnique({ where: { idUsuario } });
+      if (existing) {
+        throw new Error('Este usuario ya está registrado como driver.');
+      }
+
 
     // 2. Actualizar teléfono si no tenía
     if (!usuario?.telefono) {
