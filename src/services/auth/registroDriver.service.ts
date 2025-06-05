@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 type RegistroDriverResultado = void;
-type DatosRegistro = {
+interface DatosRegistroDriver {
   idUsuario: number;
   sexo: string;
   telefono: string;
@@ -14,8 +14,9 @@ type DatosRegistro = {
   anversoUrl: string;
   reversoUrl: string;
   rentersIds: number[];
-};
-export const registrarDriverCompleto = async (data: DatosRegistro): Promise<RegistroDriverResultado> => { 
+}
+
+export const registrarDriverCompleto = async (data: DatosRegistroDriver): Promise<RegistroDriverResultado> => { 
  {
   const {
     idUsuario,
