@@ -61,6 +61,11 @@ if (!sexo || !licencia || !tipoLicencia || !fechaEmision || !fechaExpiracion) {
       }
     });
 
+    if (new Date(fechaExpiracion) <= new Date(fechaEmision)) {
+  throw new Error('La fecha de expiración debe ser posterior a la de emisión.');
+}
+
+
     const existing = await prisma.driver.findUnique({ where: { idUsuario } });
       if (existing) {
         throw new Error('Este usuario ya está registrado como driver.');
