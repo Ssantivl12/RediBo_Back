@@ -1,12 +1,14 @@
-//src/controllers/auth.controller.ts
 import { PrismaClient, Usuario } from "@prisma/client";
 import { Request, Response } from "express";
 import * as authService from "../../services/auth/auth.service";
 import { generateToken } from "../../utils/auth/generateToken";
 
+import { SSEInitializerService } from "../../services/notificaciones/sse-initializer.service";
+
 import { updateGoogleProfile as updateGoogleProfileService } from "../../services/auth/auth.service";
 
 const prisma = new PrismaClient();
+const sseInitializer = SSEInitializerService.getInstance();
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   const { nombreCompleto, email, contraseña, fechaNacimiento, telefono } =
@@ -69,7 +71,6 @@ export const updateGoogleProfile = async (
   }
 };
 
-// controllers/auth.controller.ts - Modificar la función login
 export const login = async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body;
 
@@ -110,12 +111,14 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Login normal sin 2FA
+    // Login normal sin 2FA - Generar token completo
     const token = generateToken({
       idUsuario: user.idUsuario,
       email: user.email,
       nombreCompleto: user.nombreCompleto,
     });
+
+    sseInitializer.inicializarSSEParaUsuario(user.idUsuario);
 
     res.json({
       message: "Login exitoso",
@@ -131,6 +134,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ message: "Error en el servidor" });
   }
 };
+
 
 export const me = async (req: Request, res: Response): Promise<void> => {
   const { idUsuario } = req.user as { idUsuario: number };

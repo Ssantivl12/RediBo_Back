@@ -1,4 +1,3 @@
-//src/services/notificaciones/notificacion.service.ts
 import prisma from '../../config/database';
 import { NotificacionDTO, NotificacionFiltro } from '../../types/notificaciones/notificacion.types';
 import { PrioridadNotificacion } from '@prisma/client';
@@ -235,7 +234,7 @@ export class NotificacionService {
         }, 0);
     }
 
-    // ========== MÉTODO NUEVO PARA USAR EL SISTEMA DE TEMPLATES ========== 
+    // ========== PARA USAR EL SISTEMA DE TEMPLATES ========== 
     async procesarEvento(evento: EventoNotificacion) {
         if (!this.adapter) {
             throw new Error('Adapter no inicializado. Usa crearNotificacion() directamente.');
@@ -251,7 +250,6 @@ export class NotificacionService {
         return this.adapter;
     }
 
-    // ========== TUS MÉTODOS ORIGINALES (sin cambios) ========== 
     async crearNotificacion(notificacionData: NotificacionDTO) {
         try {
             const data = {

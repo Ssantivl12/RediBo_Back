@@ -341,7 +341,7 @@ model CalificacionUsuario {
   @@map("calificaciones_usuarios")
 }
 
-/*model Renta {
+model Renta {
   idRenta            String      @id @default(uuid())
   fechaInicio        DateTime
   fechaFin           DateTime
@@ -362,7 +362,7 @@ model CalificacionUsuario {
 
   @@index([idRenta])
   @@index([idReserva])
-}*/
+}
 
 enum TipoCalificacionUsuario {
   ARRENDADOR    

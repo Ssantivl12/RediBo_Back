@@ -1,10 +1,9 @@
-//src/routes/notificaciones/notificacion.routes.ts
 import { Router } from 'express';
 import { NotificacionController } from '../../controllers/notificaciones/notificacion.controller';
 import { SSEController } from '../../controllers/notificaciones/sse.controller';
 import { SSEService } from '../../services/notificaciones/sse.service';
 import { NotificacionService } from '../../services/notificaciones/notificacion.service';
-import { requireAuth } from '../../middlewares/auth/authMiddleware';
+import { requireAuth, authMiddleware } from '../../middlewares/auth/authMiddleware';
 
 const sseService = SSEService.getInstance();
 const notificacionService = new NotificacionService();
@@ -14,12 +13,40 @@ const sseController = new SSEController(sseService);
 export const createNotificacionRoutes = () => {
   const router = Router();
 
-  // SSE conexion
+// ============================================================================
+// Conexión SSE 
+// ============================================================================
+
+  // SSE conexion 
   router.get(
     '/sse/connect',
+    requireAuth,
     (req, res) => sseController.conectar(req, res)
   );
 
+  // Auto conexion
+  router.get('/auto-connect',
+     requireAuth, 
+     sseController.conectarAutomatico);
+
+  // Obtener estadísticas
+  router.get('/stats', 
+    requireAuth, 
+    sseController.obtenerEstadisticas);
+
+  // Desconectar cliente
+  router.post('/disconnect',
+     requireAuth, 
+     sseController.desconectarCliente);
+
+  // Verificar estado de conexión
+  router.get('/status',
+     requireAuth, 
+     sseController.verificarConexion);
+
+// ============================================================================
+
+  // Home page
   router.get(
     '/', 
     (req, res) => { res.status(200).json({ message: 'Notification API is running' }); }
