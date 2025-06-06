@@ -357,7 +357,7 @@ export class NotificacionService {
 
             if (notificacionExistente) return false;
 
-            let mensaje = `El depósito al vehículo ${reserva.auto.modelo} ${reserva.auto.marca} se ha realizado con exito.\nAtte: REDIBO`;
+            let mensaje = `El depósito al vehículo ${reserva.auto.modelo} ${reserva.auto.marca} se ha realizado con exíto.\nAtte: REDIBO`;
 
             await this.crearNotificacion({
                 usuarioId: reserva.idCliente,
