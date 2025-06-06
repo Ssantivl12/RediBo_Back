@@ -149,28 +149,28 @@ model Auto {
   marca             String?
   modelo            String?
   descripcion       String?
-  precioRentaDiario Decimal            @db.Decimal(10, 2)
-  montoGarantia     Decimal            @db.Decimal(10, 2)
-  kilometraje       Int                @default(0)
+  precioRentaDiario Decimal?            @db.Decimal(10, 2)
+  montoGarantia     Decimal?            @db.Decimal(10, 2)
+  kilometraje       Int?                @default(0)
   comentarios       Comentario[]
   calificacionPromedio Float?
-  totalComentarios  Int                @default(0)
+  totalComentarios  Int?                @default(0)
   reservas          Reserva[]
   disponibilidad    Disponibilidad[]  
 
-  tipo              String             
-  año               Int
-  placa             String             @unique
-  soat              String
-  color             String
-  estado            EstadoAuto         @default(ACTIVO) 
-  fechaAdquisicion  DateTime           @default(now())
+  tipo              String?             
+  año               Int?
+  placa             String?             @unique
+  soat              String?
+  color             String?
+  estado            EstadoAuto?         @default(ACTIVO) 
+  fechaAdquisicion  DateTime?           @default(now())
   historialMantenimiento HistorialMantenimiento[]
   imagenes          Imagen[]           
-  asientos          Int                @default(5)
-  capacidadMaletero Int                
-  transmision       Transmision       
-  combustible       Combustible        
+  asientos          Int?                @default(5)
+  capacidadMaletero Int?                
+  transmision       Transmision?       
+  combustible       Combustible?        
   diasTotalRenta     Int?               
   vecesAlquilado     Int?               
   @@map("autos")
