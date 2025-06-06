@@ -357,7 +357,7 @@ export class NotificacionService {
 
             if (notificacionExistente) return false;
 
-            let mensaje = `El depósito al vehículo ${reserva.auto.modelo} ${reserva.auto.marca} con placa ${reserva.auto.placa} se ha realizado con exito.\nAtte: REDIBO`;
+            let mensaje = `El depósito al vehículo ${reserva.auto.modelo} ${reserva.auto.marca} se ha realizado con exito.\nAtte: REDIBO`;
 
             await this.crearNotificacion({
                 usuarioId: reserva.idCliente,
@@ -447,7 +447,7 @@ export class NotificacionService {
                 where: {
                     usuarioId: comentario.auto.propietario.id,
                     entidadId: comentario.idComentario.toString(),
-                    tipo: 'VEHICULO_CALIFICADO',
+                    tipo: 'COMENTARIO_RECIBIDO',
                     haSidoBorrada: false
                 }
             });
