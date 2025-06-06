@@ -29,9 +29,10 @@ export const obtenerComentariosPorAuto = async (req: Request, res: Response) => 
     });
 
     const totalComentarios = comentarios.length;
-    const promedioCalificacion = totalComentarios > 0 
-      ? comentarios.reduce((sum, c) => sum + c.calificacion, 0) / totalComentarios
-      : 0;
+    const promedioCalificacion =
+      totalComentarios > 0
+        ? comentarios.reduce((sum, c) => sum + c.calificacion, 0) / totalComentarios
+        : 0;
 
     const comentariosFormateados = comentarios.map((c) => ({
       autor: c.usuario.nombreCompleto,
@@ -43,8 +44,9 @@ export const obtenerComentariosPorAuto = async (req: Request, res: Response) => 
     res.json({
       comentarios: comentariosFormateados,
       promedioCalificacion: parseFloat(promedioCalificacion.toFixed(1)),
-      totalComentarios
+      totalComentarios,
     });
+
   } catch (error) {
     console.error("Error al obtener comentarios:", error);
     res.status(500).json({ error: "Error interno del servidor" });
