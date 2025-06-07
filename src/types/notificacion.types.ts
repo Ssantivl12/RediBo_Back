@@ -1,4 +1,4 @@
-import { TipoDeNotificacion, PrioridadNotificacion } from "@prisma/client";
+import { TipoDeNotificacion, PrioridadNotificacion, Calificacion, Comentario } from "@prisma/client";
 
 // Data Transfer Object, estructura exacta para crear una nueva notificacion en el sistema
 export interface NotificacionDTO {
@@ -22,4 +22,16 @@ export interface NotificacionFiltro {
     tipoEntidad?: string;
     limit?: number;
     offset?: number;
+}
+
+export interface NotificacionCalificacionComentario {
+    titulo: string;
+    mensaje: string;
+    tipo: TipoDeNotificacion;
+    prioridad?: PrioridadNotificacion;
+    entidadId?: string;
+    tipoEntidad?: string;
+    usuarioId: string;
+    calificacion: Calificacion;
+    comentario: Comentario;
 }

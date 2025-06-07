@@ -1,5 +1,5 @@
 import prisma from '../config/database';
-import { NotificacionDTO, NotificacionFiltro } from '../types/notificacion.types';
+import { NotificacionCalificacionComentario, NotificacionDTO, NotificacionFiltro } from '../types/notificacion.types';
 import { PrioridadNotificacion } from '@prisma/client';
 import { SSEService } from './sse.service';
 
@@ -36,6 +36,36 @@ export class NotificacionService {
             console.error('Error al crear notificación:', error);
             throw new Error('No se pudo crear la notificación');
         }
+    }
+    
+    async crearNotificacionCalificacionComentario(notificacionData: NotificacionCalificacionComentario) {
+        try {
+            const { calificacion, comentario, ...notificacionBase } = notificacionData;
+            
+            const data = {
+                ...notificacionBase,
+                prioridad: notificacionBase.prioridad || PrioridadNotificacion.MEDIA,
+            };
+
+            const nuevaNotificacion = await prisma.notificacion.create({
+                data
+            });
+
+            try {
+                await this.sseService.enviarNotificacion({
+                    evento: 'NUEVA_NOTIFICACION',
+                    data: nuevaNotificacion,
+                    usuarioId: notificacionBase.usuarioId
+                });
+            } catch (sseError) {
+                console.error('Error al enviar notificación via SSE:', sseError);
+            }
+
+            return nuevaNotificacion;
+        } catch (error) {
+            console.error('Error al crear notificación:', error);
+            throw new Error('No se pudo crear la notificación');
+        }
     }    
 
     async obtenerNotificaciones(filtros: NotificacionFiltro) {
@@ -59,7 +89,7 @@ export class NotificacionService {
           const take = filtros.limit  || 10;
           const skip = filtros.offset || 0;
       
-          // 1) Traemos las notificaciones “planas”
+          // 1) Traemos las notificaciones "planas"
           const [rawNotificaciones, total] = await Promise.all([
             prisma.notificacion.findMany({
               where,
@@ -442,6 +472,11 @@ export class NotificacionService {
                 return false;
             }
 
+            if (!comentario.calificacion) {
+                console.error('No se puede crear notificación sin calificación');
+                return false;
+            }
+
             // Verifica si ya existe una notificación para este comentario
             const notificacionExistente = await prisma.notificacion.findFirst({
                 where: {
@@ -454,18 +489,18 @@ export class NotificacionService {
 
             if (notificacionExistente) return false;
 
-            const mensaje = `La experiencia con el vehículo ${comentario.auto.marca}, ${comentario.auto.modelo} fue: ${
-                comentario.calificacion ? 'calificación de ' + comentario.calificacion.puntuacion + ' estrellas. ' : ''
-            }Comentario: ${comentario.contenido}\nAtte: REDIBO`;
+            const mensaje = `La experiencia con el vehículo ${comentario.auto.marca}, ${comentario.auto.modelo} fue: `;
 
-            await this.crearNotificacion({
+            await this.crearNotificacionCalificacionComentario({
                 usuarioId: comentario.auto.propietario.id,
                 titulo: 'Comentario Recibido',
                 mensaje,
                 tipo: 'COMENTARIO_RECIBIDO',
                 prioridad: PrioridadNotificacion.MEDIA,
                 entidadId: comentario.idComentario.toString(),
-                tipoEntidad: 'Comentario'
+                tipoEntidad: 'Comentario',
+                calificacion: comentario.calificacion,
+                comentario: comentario
             });
 
             return true;
