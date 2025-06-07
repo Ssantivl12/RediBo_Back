@@ -42,6 +42,50 @@ export const editarPerfilDriver = async (req: Request, res: Response): Promise<v
       fechaExpiracion,
     } = typedReq.body;
 
+    // --- ✅ VALIDACIONES --- //
+    const errores: string[] = [];
+
+    // Teléfono: solo números, 8 dígitos, inicia con 6 o 7
+    if (!/^[67]\d{7}$/.test(telefono)) {
+      errores.push("El teléfono debe tener 8 dígitos numéricos y comenzar con 6 o 7.");
+    }
+
+    // Licencia: solo números, entre 6 y 9 dígitos
+    if (!/^\d{6,9}$/.test(licencia)) {
+      errores.push("La licencia debe tener entre 6 y 9 dígitos numéricos.");
+    }
+
+    // Categoría: solo una opción válida
+    const categoriasValidas = ['M', 'P', 'T', 'A', 'B', 'C'];
+    if (!categoriasValidas.includes(tipoLicencia)) {
+      errores.push("La categoría debe ser una de las siguientes: M, P, T, A, B, C.");
+    }
+
+    // Fechas: formato válido y reglas cronológicas
+    const emision = new Date(fechaEmision);
+    const expiracion = new Date(fechaExpiracion);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0); // reset hora
+
+    if (isNaN(emision.getTime()) || isNaN(expiracion.getTime())) {
+      errores.push("Las fechas deben ser válidas.");
+    } else {
+      if (emision > hoy) {
+        errores.push("La fecha de emisión no puede ser mayor a la fecha actual.");
+      }
+      if (expiracion < hoy) {
+        errores.push("La fecha de vencimiento no puede ser menor a la fecha actual.");
+      }
+      if (emision >= expiracion) {
+        errores.push("La fecha de emisión debe ser menor a la fecha de vencimiento.");
+      }
+    }
+
+    if (errores.length > 0) {
+      res.status(400).json({ errores });
+      return;
+    }
+
     const files = typedReq.files as { [fieldname: string]: Express.Multer.File[] };
     const anversoFile = files?.["anverso"]?.[0];
     const reversoFile = files?.["reverso"]?.[0];
