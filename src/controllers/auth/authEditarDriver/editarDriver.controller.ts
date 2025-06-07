@@ -1,5 +1,4 @@
-// src/controllers/auth/authEditarDriver/editarDriver.controller.ts
-import { Response } from "express";
+import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { v2 as cloudinary } from "cloudinary";
 import streamifier from "streamifier";
@@ -7,7 +6,7 @@ import { AuthenticatedRequest } from "../../../middlewares/auth/authDriverMiddle
 
 const prisma = new PrismaClient();
 
-// Subir imagen a Cloudinary desde buffer
+// Función para subir imagen a Cloudinary desde un buffer
 const uploadToCloudinary = (fileBuffer: Buffer, folder: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
@@ -24,8 +23,10 @@ const uploadToCloudinary = (fileBuffer: Buffer, folder: string): Promise<string>
   });
 };
 
-export const editarPerfilDriver = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const idUsuario = req.user?.idUsuario;
+export const editarPerfilDriver = async (req: Request, res: Response): Promise<void> => {
+  const typedReq = req as AuthenticatedRequest;
+
+  const idUsuario = typedReq.user?.idUsuario;
 
   if (!idUsuario) {
     res.status(401).json({ message: "No autorizado: token inválido" });
@@ -39,9 +40,9 @@ export const editarPerfilDriver = async (req: AuthenticatedRequest, res: Respons
       tipoLicencia,
       fechaEmision,
       fechaExpiracion,
-    } = req.body;
+    } = typedReq.body;
 
-    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    const files = typedReq.files as { [fieldname: string]: Express.Multer.File[] };
     const anversoFile = files?.["anverso"]?.[0];
     const reversoFile = files?.["reverso"]?.[0];
 
