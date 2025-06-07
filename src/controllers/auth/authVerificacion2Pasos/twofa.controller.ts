@@ -45,7 +45,7 @@ export const verificarCodigo2FA = async (idUsuario: number, codigo: string) => {
   }
 
   if (user.codigo2FA !== codigo) {
-    throw new Error('El código ingresado es incorrecto. Intenta ');
+    throw new Error('El código ingresado es incorrecto. Intenta nuevamente.');
   }
 
   if (new Date() > user.codigo2FAExpira) {
