@@ -1,19 +1,30 @@
-import { Request, Response } from "express";
+// src/controllers/auth/authEditarDriver/editarDriver.controller.ts
+import { Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { v2 as cloudinary } from "cloudinary";
+import streamifier from "streamifier";
+import { AuthenticatedRequest } from "../../../middlewares/auth/authDriverMiddleware";
 
 const prisma = new PrismaClient();
 
-// Extendemos Request para incluir `user` y `files` con tipado más claro
-interface MulterRequest extends Request {
-  user?: {
-    idUsuario: number;
-  };
-  files?: {
-    [fieldname: string]: Express.Multer.File[];
-  };
-}
+// Subir imagen a Cloudinary desde buffer
+const uploadToCloudinary = (fileBuffer: Buffer, folder: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result?.secure_url || "");
+        }
+      }
+    );
+    streamifier.createReadStream(fileBuffer).pipe(stream);
+  });
+};
 
-export const editarPerfilDriver = async (req: MulterRequest, res: Response): Promise<void> => {
+export const editarPerfilDriver = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const idUsuario = req.user?.idUsuario;
 
   if (!idUsuario) {
@@ -22,43 +33,41 @@ export const editarPerfilDriver = async (req: MulterRequest, res: Response): Pro
   }
 
   try {
-    // Extraemos campos del body
     const {
       telefono,
       licencia,
       tipoLicencia,
       fechaEmision,
-      fechaExpiracion
+      fechaExpiracion,
     } = req.body;
 
-    // Extraemos archivos subidos (si existen)
-    const anversoFile = req.files?.["anverso"]?.[0];
-    const reversoFile = req.files?.["reverso"]?.[0];
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    const anversoFile = files?.["anverso"]?.[0];
+    const reversoFile = files?.["reverso"]?.[0];
 
-    // Construimos el objeto para actualizar
     const updateData: any = {
       telefono,
       licencia,
       tipoLicencia,
       fechaEmision: new Date(fechaEmision),
-      fechaExpiracion: new Date(fechaExpiracion)
+      fechaExpiracion: new Date(fechaExpiracion),
     };
 
+    // Subir imágenes a Cloudinary si existen
     if (anversoFile) {
-      updateData.anversoUrl = `/uploads/${anversoFile.filename}`;
+      const url = await uploadToCloudinary(anversoFile.buffer, "Redibo/licencias");
+      updateData.anversoUrl = url;
     }
 
     if (reversoFile) {
-      updateData.reversoUrl = `/uploads/${reversoFile.filename}`;
+      const url = await uploadToCloudinary(reversoFile.buffer, "Redibo/licencias");
+      updateData.reversoUrl = url;
     }
 
-    // Actualizamos el perfil
     const updatedDriver = await prisma.driver.update({
       where: { idUsuario },
       data: updateData,
-      include: {
-        usuario: true
-      }
+      include: { usuario: true }
     });
 
     res.status(200).json(updatedDriver);
