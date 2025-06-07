@@ -1,15 +1,13 @@
-/*import { Response, NextFunction } from "express";
+// src/controllers/auth/authVisualizarDriver/visualizarDriver.controller.ts
+import { RequestHandler } from "express";
 import { PrismaClient } from "@prisma/client";
-import { AuthenticatedRequest } from "../../../middlewares/auth/authDriverMiddleware"; // 👈 Asegúrate de usar la ruta correcta
+import { AuthenticatedRequest } from "../../../middlewares/auth/authDriverMiddleware";
 
 const prisma = new PrismaClient();
 
-export const getDriverProfile = async (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  const idUsuario = req.user?.idUsuario;
+export const getDriverProfile: RequestHandler = async (req, res, next) => {
+  const authReq = req as AuthenticatedRequest;
+  const idUsuario = authReq.user?.idUsuario;
 
   if (!idUsuario) {
     res.status(401).json({ message: "No autorizado: token inválido o ausente" });
@@ -32,4 +30,4 @@ export const getDriverProfile = async (
     console.error("Error al obtener perfil del driver:", error);
     res.status(500).json({ message: "Error del servidor" });
   }
-};*/
+};
