@@ -48,6 +48,12 @@ export const registrarDriverController = async (
       rentersIds,
     });
 
+    if (!sexo || !licencia || !tipoLicencia || !fechaEmision || !fechaExpiracion) {
+  res.status(400).json({ message: "Faltan campos requeridos" });
+  return;
+}
+
+
     res.status(201).json({ message: "Registro de driver exitoso" });
   } catch (error) {
     console.error("Error en registrarDriverController:", error);
