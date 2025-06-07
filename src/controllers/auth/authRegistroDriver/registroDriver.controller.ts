@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { registrarDriverCompleto } from "../../../services/auth/registroDriver.service";
+import { JwtPayload } from "jsonwebtoken";
 
 export const registrarDriverController = async (
   req: Request,
@@ -27,7 +28,7 @@ export const registrarDriverController = async (
       return;
     }
 
-    const usuario = req.user;
+    const usuario = req.user as JwtPayload;
     if (!usuario || typeof usuario !== "object" || !("idUsuario" in usuario)) {
       console.error("Usuario no autenticado o inválido:", usuario);
       console.log("🔴 Respuesta del backend:", res.status);
