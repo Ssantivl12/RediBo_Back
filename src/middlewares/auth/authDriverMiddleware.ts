@@ -1,6 +1,5 @@
-
-//src/middlewares/auth/authDriverMiddleware.ts
-/*import { Request, Response, NextFunction } from "express";
+// src/middlewares/auth/authDriverMiddleware.ts
+import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 export interface JwtPayload {
@@ -43,4 +42,4 @@ export const authDriverMiddleware = (
   } catch (error) {
     res.status(403).json({ message: "Token inválido" });
   }
-};*/
+};
