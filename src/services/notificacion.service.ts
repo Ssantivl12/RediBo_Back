@@ -436,7 +436,7 @@ export class NotificacionService {
 
             if(notificacionExistente) return false;
 
-            const mensaje = `El usuario ${reserva.cliente.nombre} ${reserva.cliente.apellido} ha realizado un deposito para la reserva del vehiculo ${reserva.auto.modelo} ${reserva.auto.marca} con placa ${reserva.auto.placa}. \nAtte: REDIBO.`;
+            const mensaje = `El usuario ${reserva.cliente.nombre} ${reserva.cliente.apellido} ha realizado el deposito de: ${reserva.montoPagado} Bs para la reserva del vehiculo ${reserva.auto.modelo} ${reserva.auto.marca} con placa ${reserva.auto.placa}. \nAtte: REDIBO.`;
                 await this.crearNotificacion({
                 usuarioId: reserva.auto.propietario.id,
                 titulo: 'Depósito Recibido',
