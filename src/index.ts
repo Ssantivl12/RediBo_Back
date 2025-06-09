@@ -8,6 +8,7 @@ import rentalsRoutes from "./routes/rentals";
 import inquilinoRoutes from "./routes/inquilinoRoutes"
 import validateWhatsappRouter from "./routes/validateWhatsapp"
 import ratingRoutes from './routes/ratingRoutes'
+import carControllerRoutes from "./routes/carControllerRoutes"
 
 const app = express();
 const PORT = 5000;
@@ -34,6 +35,7 @@ app.use("/api/cars", carRoutes);
 app.use("/api/inquilinos", inquilinoRoutes); 
 app.use('/api', validateWhatsappRouter);
 app.use('/api/ratings', ratingRoutes);
+app.use('/api/autos' , carControllerRoutes);
 
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en http://localhost:${PORT}`);
