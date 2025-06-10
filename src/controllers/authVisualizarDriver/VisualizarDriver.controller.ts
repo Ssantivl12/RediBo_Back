@@ -33,4 +33,3 @@ export const getDriverProfile = async (
     res.status(500).json({ message: "Error del servidor" });
   }
 };
-//
