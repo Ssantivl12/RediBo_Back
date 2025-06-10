@@ -69,8 +69,9 @@ async function ensureDefaultUbicacion() {
 app.use((req: Request, res: Response, next: NextFunction): void => {
   res.header("Access-Control-Allow-Origin", "http://localhost:3000");
   res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Last-Event-ID");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  res.header("Access-Control-Expose-Headers", "Content-Type, Authorization");
 
   if (req.method === "OPTIONS") {
     res.sendStatus(200);
@@ -155,6 +156,13 @@ app.use("/api/notificaciones", createNotificacionRoutes());
 
 // Endpoint SSE para notificaciones
 app.get("/api/notificaciones/sse/:usuarioId", (req, res) => {
+  // Configurar headers específicos para SSE
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
   sseController.conectar(req, res);
 });
 

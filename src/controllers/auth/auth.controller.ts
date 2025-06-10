@@ -3,10 +3,12 @@ import { PrismaClient, Usuario } from "@prisma/client";
 import { Request, Response } from "express";
 import * as authService from "../../services/auth/auth.service";
 import { generateToken } from "../../utils/auth/generateToken";
+import { SSEService } from "../../services/notificaciones/sse.service";
 
 import { updateGoogleProfile as updateGoogleProfileService } from "../../services/auth/auth.service";
 
 const prisma = new PrismaClient();
+const sseService = SSEService.getInstance();
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   const { nombreCompleto, email, contraseña, fechaNacimiento, telefono } =
@@ -116,6 +118,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       email: user.email,
       nombreCompleto: user.nombreCompleto,
     });
+
+    // Conectar el usuario al servicio SSE con su ID
+    sseService.conectarCliente(user.idUsuario, req, res);
 
     res.json({
       message: "Login exitoso",
