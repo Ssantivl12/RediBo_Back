@@ -33,7 +33,7 @@ export const registrarHostCompletoController = async (
       res.status(400).json({ message: "Faltan datos del vehículo" });
       return;
     }
-
+// Validar que el tipo de método de pago sea válido
     const tipoFinal =
       tipo === "card"
         ? "TARJETA_DEBITO"
