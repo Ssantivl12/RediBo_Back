@@ -4,7 +4,7 @@ import { uploadToCloudinary } from "../../services/upload.service";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
-
+/// Controlador para registrar un host completo
 export const registrarHostCompletoController = async (
   req: Request,
   res: Response
