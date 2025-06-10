@@ -25,7 +25,7 @@ export const registrarHostCompletoController = async (
       imagenes?: Express.Multer.File[];
       qrImage?: Express.Multer.File[];
     };
-
+// Validar que el usuario esté autenticado
     const imagenes = files?.imagenes || [];
     const qrFile = files?.qrImage?.[0];
 
