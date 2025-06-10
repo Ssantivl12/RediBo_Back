@@ -47,7 +47,6 @@ export const registrarHostCompletoController = async (
       res.status(400).json({ message: "Tipo de método de pago inválido" });
       return;
     }
-// Validar que se proporcione un número de tarjeta o QR si el tipo es TARJETA_DEBITO o QR
     // Validar que exista ubicación por defecto (idUbicacion = 1)
     const ubicacion = await prisma.ubicacion.findUnique({
       where: { idUbicacion: 1 },
