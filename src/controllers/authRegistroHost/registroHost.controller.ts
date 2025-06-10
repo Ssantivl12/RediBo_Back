@@ -61,6 +61,7 @@ export const registrarHostCompletoController = async (
       imagenes.map((file) => uploadToCloudinary(file))
     );
 
+    // Subir imagen QR si se proporciona
     let imagenQr: string | undefined = undefined;
     if (qrFile) {
       imagenQr = await uploadToCloudinary(qrFile);
