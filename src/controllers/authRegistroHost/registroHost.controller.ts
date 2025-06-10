@@ -87,4 +87,3 @@ export const registrarHostCompletoController = async (
   }
 };
 
-// Función para registrar un host completo
