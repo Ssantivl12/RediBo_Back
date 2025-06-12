@@ -60,5 +60,11 @@ export const createNotificacionRoutes = () => {
     (req, res) => notificacionController.obtenerConteoNoLeidas(req, res)
   );
 
+  // Obtener notificaciones para dropdown
+  router.get(
+    '/dropdown-notificaciones/:token',
+    (req, res) => notificacionController.obtenerNotificacionesDropdown(req, res)
+  );
+
   return router;
 };

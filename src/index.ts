@@ -71,20 +71,13 @@ async function ensureDefaultUbicacion() {
   }
 }
 
-// ✅ CORS robusto
-app.use((req: Request, res: Response, next: NextFunction): void => {
-  res.header("Access-Control-Allow-Origin", "http://localhost:3000");
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-
-  if (req.method === "OPTIONS") {
-    res.sendStatus(200);
-    return;
-  }
-
-  next();
-});
+// Configuración de CORS
+app.use(cors({
+  origin: 'http://localhost:3000', // Origen específico del frontend
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Middlewares básicos
 app.use(helmet({ crossOriginResourcePolicy: false }));
@@ -167,7 +160,7 @@ app.use('/api', autoRoutes);
 app.use("/api/notificaciones", createNotificacionRoutes());
 
 // Endpoint SSE para notificaciones
-app.get("/api/notificaciones/sse/:usuarioId", (req, res) => {
+app.get("/api/notificaciones/sse", (req, res) => {
   sseController.conectar(req, res);
 });
 

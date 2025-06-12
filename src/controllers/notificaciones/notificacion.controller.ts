@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { NotificacionService } from '../../services/notificaciones/notificacion.service';
 import { PrioridadNotificacion } from '@prisma/client';
 import { RequestUtils } from '../../utils/notificaciones/request.noti.utils';
+import { JWTUtils } from '../../utils/notificaciones/jwt.utils';
 
 export class NotificacionController {
   private notificacionService: NotificacionService;
@@ -132,21 +133,31 @@ export class NotificacionController {
 
   async obtenerNotificacionesDropdown(req: Request, res: Response): Promise<void> {
     try {
-      const { usuarioId, error } = RequestUtils.extractAndValidateUsuarioId(req, 'params');
+      const token = req.params.token;
       
-      if (error) {
-        res.status(400).json({ error });
+      if (!token) {
+        res.status(400).json({ error: 'Token requerido' });
         return;
       }
+
+      const { payload, error } = JWTUtils.verifyAndDecodeToken(token);
+      
+      if (error || !payload) {
+        res.status(401).json({ error: error || 'Token inválido' });
+        return;
+      }
+
+      const idUsuario = payload.idUsuario;
+      console.log('Token decodificado para usuario:', idUsuario);
       
       const filtros = {
-        idUsuario: usuarioId!, 
+        idUsuario,
         limit: 4,
         offset: 0
       };
 
       const notificaciones = await this.notificacionService.obtenerNotificaciones(filtros);
-      const totalNoLeidas = await this.notificacionService.obtenerConteoNoLeidas(usuarioId!);
+      const totalNoLeidas = await this.notificacionService.obtenerConteoNoLeidas(idUsuario);
       
       res.json({
         notificaciones: notificaciones.notificaciones,

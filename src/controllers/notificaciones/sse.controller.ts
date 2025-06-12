@@ -11,22 +11,23 @@ export class SSEController {
 
   conectar = (req: Request, res: Response): void => {
     try {
-      // CAMBIO PRINCIPAL: Extraer idUsuario del JWT
-      const { idUsuario, userInfo, error } = JWTUtils.extractAndValidateUser(req);
+      const token = req.query.token as string;
       
-      if (error) {
-        res.status(401).json({ error });
+      if (!token) {
+        res.status(401).json({ error: 'Token requerido' });
         return;
       }
 
-      if (!idUsuario || !userInfo) {
-        res.status(401).json({ error: 'Usuario no autenticado' });
+      const { payload, error } = JWTUtils.verifyAndDecodeToken(token);
+      
+      if (error || !payload) {
+        res.status(401).json({ error: error || 'Token inválido' });
         return;
       }
 
-      console.log(`Iniciando conexión SSE para usuario autenticado: ${userInfo.nombreCompleto} (ID: ${idUsuario})`);
+      const idUsuario = payload.idUsuario;
+      console.log(`Iniciando conexión SSE para usuario: ${payload.nombreCompleto} (ID: ${idUsuario})`);
       
-      // Usar idUsuario del JWT (garantizado como válido)
       this.sseService.conectarCliente(idUsuario, req, res);
       
     } catch (error) {
@@ -37,11 +38,17 @@ export class SSEController {
 
   obtenerEstadisticas = (req: Request, res: Response): void => {
     try {
-      // También proteger estadísticas con JWT
-      const { idUsuario, userInfo, error } = JWTUtils.extractAndValidateUser(req);
+      const token = req.query.token as string;
       
-      if (error) {
-        res.status(401).json({ error });
+      if (!token) {
+        res.status(401).json({ error: 'Token requerido' });
+        return;
+      }
+
+      const { payload, error } = JWTUtils.verifyAndDecodeToken(token);
+      
+      if (error || !payload) {
+        res.status(401).json({ error: error || 'Token inválido' });
         return;
       }
 
@@ -49,9 +56,9 @@ export class SSEController {
         clientesConectados: this.sseService.listarClientesConectados(),
         timestamp: new Date().toISOString(),
         usuarioActual: {
-          id: idUsuario,
-          nombre: userInfo?.nombreCompleto,
-          email: userInfo?.email
+          id: payload.idUsuario,
+          nombre: payload.nombreCompleto,
+          email: payload.email
         }
       };
       

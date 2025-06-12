@@ -20,16 +20,15 @@ class SSEService {
     }
   
     conectarCliente(idUsuario: number, req: Request, res: Response): void {
-        // Configurar encabezados para evitar problemas de conectividad
+        // Configurar encabezados para SSE y CORS
         res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache, no-transform');
+        res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
         res.setHeader('X-Accel-Buffering', 'no');
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
         
-        // Configurar tiempo de espera del socket a un valor alto
+        // Configurar tiempo de espera del socket
         req.socket.setTimeout(0);
         req.socket.setNoDelay(true);
         req.socket.setKeepAlive(true);
@@ -52,10 +51,21 @@ class SSEService {
             console.error(`Error en la conexión del usuario ${idUsuario}:`, error);
             this.desconectarCliente(idUsuario);
         });
+
+        // Enviar un ping inicial para mantener la conexión viva
+        res.write(':\n\n');
     }
   
     desconectarCliente(idUsuario: number): void {
         if (this.clients.has(idUsuario)) {
+            const res = this.clients.get(idUsuario);
+            if (res) {
+                try {
+                    res.end();
+                } catch (error) {
+                    console.error(`Error al cerrar conexión del usuario ${idUsuario}:`, error);
+                }
+            }
             this.clients.delete(idUsuario);
             console.log(`Usuario ${idUsuario} desconectado`);
             console.log('Usuarios conectados:', this.listarClientesConectados());
@@ -79,14 +89,7 @@ class SSEService {
             console.log(`Enviando notificación al usuario ${idUsuario}`);
             console.log('Mensaje SSE:', mensaje);
             
-            // Asegurarse de que los datos se envíen inmediatamente
             res.write(mensaje);
-            if (typeof (res as any).flush === 'function') {
-                (res as any).flush();
-            }
-            
-            // Forzar el envío de datos
-            res.socket?.write(mensaje);
             
             console.log(`Notificación enviada exitosamente al usuario ${idUsuario}`);
         } catch (error) {
@@ -95,7 +98,6 @@ class SSEService {
         }
     }
   
-    // Método para enviar un ping periódico para mantener la conexión viva
     enviarPing(): void {
         let totalUsuarios = 0;
         
@@ -113,12 +115,7 @@ class SSEService {
             console.log(`Ping enviado a ${totalUsuarios} conexiones activas`);
         }
     }
-      
-    cleanup(): void {
-        clearInterval(this.pingInterval);
-    }
 
-    // Método para listar todos los clientes conectados
     listarClientesConectados(): string {
         const usuarios = Array.from(this.clients.keys());
         return usuarios.length > 0 
