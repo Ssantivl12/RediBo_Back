@@ -14,9 +14,9 @@ Define las rutas (URL's) de la API
 import { Request, Response } from 'express';
 import { Router } from 'express';
 //imports locales
-import { marcarActivo, marcarInactivo, ponerEnMantenimiento, finalizarMantenimiento, obtenerAutosDelPropietario, liberarAuto } from '../controllers/autoController';
-import { obtenerDetallesReservaAuto, obtenerSolicitudesDeReserva, aceptarReserva, denegarReserva } from '../controllers/reservaController';
-import { obtenerComentariosPorAuto } from '../controllers/comentarioController';
+import { marcarActivo, marcarInactivo, ponerEnMantenimiento, finalizarMantenimiento, obtenerAutosDelPropietario, liberarAuto } from '../../controllers/autoController';
+import { obtenerDetallesReservaAuto, obtenerSolicitudesDeReserva, aceptarReserva, denegarReserva } from '../../controllers/reservaController';
+import { obtenerComentariosPorAuto } from '../../controllers/comentarioController';
 
 const router = Router();
 

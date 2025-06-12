@@ -21,7 +21,7 @@ import usuarioRoutes from "./routes/auth/usuario.routes";
 //import visualizarDriverRoutes from "./routes/auth/visualizarDriver.routes";
 import listaDriversRoutes from "./routes/auth/listaDrivers.routes";
 import visualizarRentersRoutes from "./routes/auth/visualizarRenters.routes";
-import routesCodeLovers from "./routes/routesCodelovers"
+import routesCodeLovers from "./routes/codelovers/routesCodelovers"
 // Verificación en 2 pasos
 import twofaRoutes from "./routes/auth/twofa.routes";
 
