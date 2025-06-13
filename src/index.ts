@@ -25,6 +25,10 @@ import editarDriverRoutes from "./routes/auth/editarDriver.routes";
 // Verificación en 2 pasos
 import twofaRoutes from "./routes/auth/twofa.routes";
 
+//seccion de comentarios grupoX host
+import carRoutes from "./routes/GrupoX/carRoutes";
+import carControllerRoutes from "./routes/GrupoX/carControllerRoutes"
+
 // Servicios y controladores de notificaciones
 import { SSEService } from "./services/notificaciones/sse.service";
 import { NotificacionService } from "./services/notificaciones/notificacion.service";
@@ -228,5 +232,9 @@ async function startServer() {
 if (require.main === module) {
   startServer();
 }
+
+//cometarios de autos grupoX
+app.use("/api/cars", carRoutes);
+app.use('/api/autos' , carControllerRoutes);
 
 export default app;
