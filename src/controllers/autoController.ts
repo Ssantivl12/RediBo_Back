@@ -230,67 +230,69 @@ export const getHost = async (req: Request, res: Response): Promise<void> => {
 };
 
 
-export const getAutosDisponiblesPorFecha = async (req: Request, res: Response): Promise<void> => {
-  const { inicio, fin } = req.params;
+  export const getAutosDisponiblesPorFecha = async (req: Request, res: Response): Promise<void> => {
+    const { inicio, fin } = req.params;
 
-  const fechaInicio = parseISO(inicio);
-  const fechaFin = parseISO(fin);
+    const fechaInicio = parseISO(inicio);
+    const fechaFin = parseISO(fin);
 
-  if (!isValid(fechaInicio) || !isValid(fechaFin) || fechaInicio > fechaFin) {
-    res.status(400).json({
-      success: false,
-      message: "Fechas inválidas o fuera de rango.",
-    });
-    return;
-  }
+    if (!isValid(fechaInicio) || !isValid(fechaFin) || fechaInicio > fechaFin) {
+      res.status(400).json({
+        success: false,
+        message: "Fechas inválidas o fuera de rango.",
+      });
+      return;
+    }
 
-  try {
-    const fechaInicio = parseISO(inicio).toISOString().split("T")[0];
-    const fechaFin = parseISO(fin).toISOString().split("T")[0];
-    const autosDisponibles = await prisma.auto.findMany({
-      where: {
-        disponibilidad: {
-          none: {
-            AND: [
-              {
-                fechaInicio: { lte: new Date(`${fechaFin}T23:59:59.999Z`) },
-              },
-              {
-                fechaFin: { gte: new Date(`${fechaInicio}T00:00:00.000Z`) },
-              },
-            ],
+    try {
+      const fechaInicio = parseISO(inicio).toISOString().split("T")[0];
+      const fechaFin = parseISO(fin).toISOString().split("T")[0];
+
+      const autosDisponibles = await prisma.auto.findMany({
+        where: {
+          disponibilidad: {
+            none: {
+              AND: [
+                { fechaInicio: { lte: new Date(`${fechaFin}T23:59:59.999Z`) } },
+                { fechaFin: { gte: new Date(`${fechaInicio}T00:00:00.000Z`) } },
+              ],
+            },
+          },
+          reservas: {
+            none: {
+              AND: [
+                { estado: "CONFIRMADA" },
+                { fechaInicio: { lte: new Date(`${fechaFin}T23:59:59.999Z`) } },
+                { fechaFin: { gte: new Date(`${fechaInicio}T00:00:00.000Z`) } },
+              ],
+            },
           },
         },
-        reservas: {
-          none: {
-            AND: [
-              { estado: "CONFIRMADA" },
-              { fechaInicio: { lte: new Date(`${fechaFin}T23:59:59.999Z`) } },
-              { fechaFin: { gte: new Date(`${fechaInicio}T00:00:00.000Z`) } },
-            ],
-          },
-        },
-      },
         select: {
           idAuto: true,
-          marca:true,
-          modelo:true,
-          capacidadMaletero:true,
-          asientos:true,
-          transmision:true,
-          combustible:true,
-          kilometraje:true,
-          precioRentaDiario:true,
-          calificacionPromedio:true,
-          imagenes:true,
+          marca: true,
+          modelo: true,
+          capacidadMaletero: true,
+          asientos: true,
+          transmision: true,
+          combustible: true,
+          kilometraje: true,
+          precioRentaDiario: true,
+          calificacionPromedio: true,
+          imagenes: true,
+          propietario: {
+            select: {
+              idUsuario: true,
+            },
+          },
         },
       });
-  
+
       res.status(200).json({
         success: true,
         data: autosDisponibles,
       });
-      
+
     } catch (error) {
       res.status(500).json({
         success: false,
@@ -299,6 +301,7 @@ export const getAutosDisponiblesPorFecha = async (req: Request, res: Response): 
       });
     }
   };
+
 
   export const getDrivers = async (req: Request, res: Response): Promise<void> => {
     try {
