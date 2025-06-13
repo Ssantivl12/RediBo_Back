@@ -33,7 +33,7 @@ router.get(
 router.get(
   "/auth/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "http://localhost:3000/home?error=google",
+    failureRedirect: `${process.env.APIFRONT}/home?error=google`,
     session: false,
   }),
   (req, res) => {
@@ -48,7 +48,7 @@ router.get(
     if (info?.message === "alreadyExists" || info?.message === "loginWithGoogle") {
       console.log("⚠️ Usuario ya registrado. Enviando login automático.");
       return res.redirect(
-        `http://localhost:3000/home?googleAutoLogin=true&token=${info.token}&email=${info.email}`
+        `${process.env.APIFRONT}/home?googleAutoLogin=true&token=${info.token}&email=${info.email}`
       );
     }
 
@@ -62,7 +62,7 @@ router.get(
     console.log("🧩 Usuario nuevo, redirigiendo a completar perfil");
 
     return res.redirect(
-      `http://localhost:3000/home?googleComplete=true&token=${token}&email=${user.email}`
+      `${process.env.APIFRONT}/home?googleComplete=true&token=${token}&email=${user.email}`
     );
   }
 );
