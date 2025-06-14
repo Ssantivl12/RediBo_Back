@@ -6,6 +6,9 @@ import { generateToken } from "../../utils/auth/generateToken";
 
 import { updateGoogleProfile as updateGoogleProfileService } from "../../services/auth/auth.service";
 
+import { NotificationManager } from "../../services/notificaciones/notificacion.service";
+
+
 const prisma = new PrismaClient();
 
 export const register = async (req: Request, res: Response): Promise<void> => {
@@ -27,6 +30,22 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       fechaNacimiento,
       telefono,
     });
+    
+    const existingNotification = await prisma.notificacion.findFirst({
+      where: {
+        idUsuario: newUser.idUsuario,
+        tipo: 'BIENVENIDA',
+      }
+    });
+
+    if (!existingNotification) {
+      await NotificationManager.getInstance().notificar({
+        type: 'BIENVENIDA',
+        idUsuario: newUser.idUsuario,
+        data: {
+        },
+      });
+    }
 
     res.status(201).json({
       message: "Usuario registrado exitosamente",

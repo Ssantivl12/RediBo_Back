@@ -129,7 +129,7 @@ app.use(passport.session());
 
 // Configuración de servicios y controladores para notificaciones
 const sseService = SSEService.getInstance();
-const notificacionService = new NotificacionService();
+const notificacionService = NotificacionService.getInstance();
 const notificacionController = new NotificacionController(notificacionService);
 const sseController = new SSEController(sseService);
 
@@ -182,23 +182,6 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     error: "Error interno del servidor",
     message: process.env.NODE_ENV === "development" ? err.message : "Algo salió mal"
   });
-});
-
-
-
-// Manejo de cierre del servidor
-process.on("SIGTERM", () => {
-  console.log("Cerrando servidor...");
-  sseService.cleanup();
-  prisma.$disconnect();
-  process.exit(0);
-});
-
-process.on("SIGINT", () => {
-  console.log("Cerrando servidor por SIGINT...");
-  sseService.cleanup();
-  prisma.$disconnect();
-  process.exit(0);
 });
 
 // Inicializar servidor

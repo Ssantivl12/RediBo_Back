@@ -1,4 +1,3 @@
-//src/services/notificaciones/notificacion.service.ts
 import prisma from '../../config/database';
 import { NotificacionDTO, NotificacionFiltro } from '../../types/notificaciones/notificacion.types';
 import { PrioridadNotificacion } from '@prisma/client';
@@ -99,6 +98,13 @@ export class NotificationTemplateRegistry {
       mensaje: data.mensaje || 'Tienes una nueva notificación',
       prioridad: data.prioridad || PrioridadNotificacion.MEDIA
     }));
+
+    this.templates.set('BIENVENIDA', (data) => ({
+    titulo: 'Bienvenido!',
+    mensaje: `¡Hola, ${data.nombreCompleto || 'Usuario'}! Gracias por registrarte en RediBo.`,
+    prioridad: PrioridadNotificacion.ALTA
+  }));
+
   }
 
   // Método para que otros servicios registren sus templates
@@ -228,11 +234,20 @@ export class NotificacionService {
     private sseService: SSEService;
     private adapter?: NotificationAdapter;
 
-    constructor() {
+    private static instance: NotificacionService;
+
+    private constructor() {
         this.sseService = SSEService.getInstance();
         setTimeout(() => {
             this.adapter = new NotificationAdapter(this);
         }, 0);
+    }
+
+    public static getInstance(): NotificacionService{
+      if (!NotificacionService.instance){
+        NotificacionService.instance = new NotificacionService();
+      }
+      return NotificacionService.instance;
     }
 
     // ========== MÉTODO NUEVO PARA USAR EL SISTEMA DE TEMPLATES ========== 
@@ -251,7 +266,6 @@ export class NotificacionService {
         return this.adapter;
     }
 
-    // ========== TUS MÉTODOS ORIGINALES (sin cambios) ========== 
     async crearNotificacion(notificacionData: NotificacionDTO) {
         try {
             const data = {
@@ -587,7 +601,7 @@ export class NotificationManager {
   private notificationService: NotificacionService;
 
   private constructor() {
-    this.notificationService = new NotificacionService();
+    this.notificationService = NotificacionService.getInstance();
   }
 
   static getInstance(): NotificationManager {

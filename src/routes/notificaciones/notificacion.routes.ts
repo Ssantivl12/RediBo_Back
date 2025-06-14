@@ -1,4 +1,3 @@
-//src/routes/notificaciones/notificacion.routes.ts
 import { Router } from 'express';
 import { NotificacionController } from '../../controllers/notificaciones/notificacion.controller';
 import { SSEController } from '../../controllers/notificaciones/sse.controller';
@@ -7,7 +6,7 @@ import { NotificacionService } from '../../services/notificaciones/notificacion.
 import { requireAuth } from '../../middlewares/auth/authMiddleware';
 
 const sseService = SSEService.getInstance();
-const notificacionService = new NotificacionService();
+const notificacionService = NotificacionService.getInstance();
 const notificacionController = new NotificacionController(notificacionService);
 const sseController = new SSEController(sseService);
 
