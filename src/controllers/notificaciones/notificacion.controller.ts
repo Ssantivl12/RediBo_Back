@@ -71,14 +71,14 @@ export class NotificacionController {
   async marcarComoLeida(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { usuarioId, error } = RequestUtils.extractAndValidateUsuarioId(req, 'params');
+      const { idUsuario, error } = JWTUtils.extractAndValidateUser(req);
       
       if (error) {
         res.status(400).json({ error });
         return;
       }
   
-      const notificacion = await this.notificacionService.marcarComoLeida(id, usuarioId!);
+      const notificacion = await this.notificacionService.marcarComoLeida(id, idUsuario!);
       res.json(notificacion);
     } catch (error: any) {
       console.error('Error al marcar notificación como leída:', error);
@@ -114,14 +114,14 @@ export class NotificacionController {
 
   async obtenerConteoNoLeidas(req: Request, res: Response): Promise<void> {
     try {
-      const { usuarioId, error } = RequestUtils.extractAndValidateUsuarioId(req, 'params');
+      const { idUsuario, error } = JWTUtils.extractAndValidateUser(req);
       
       if (error) {
         res.status(400).json({ error });
         return;
       }
 
-      const resultado = await this.notificacionService.obtenerConteoNoLeidas(usuarioId!);
+      const resultado = await this.notificacionService.obtenerConteoNoLeidas(idUsuario!);
       res.json(resultado);
     } catch (error: any) {
       console.error('Error al obtener conteo de notificaciones:', error);
