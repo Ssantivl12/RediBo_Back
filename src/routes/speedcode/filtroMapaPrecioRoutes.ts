@@ -30,15 +30,15 @@ router.post('/cancelar/:idreserva', cancelarReserva);
 
 router.post('/pagarConTarjeta/:reserva_idreserva', PagoController.realizarPagoTarjeta);
 router.post('/pagarConQR/:reserva_idreserva', PagoController.realizarPagoQR);
-router.get('/', PagoController.obtenerPagos);
+router.get('/obtenerPagos', PagoController.obtenerPagos);
 
 router.get("/ultimas", obtenerUltimasBusquedas);
 router.post("/registrar", registrarBusqueda);
 router.get("/autocompletar", autocompletarBusquedas);
 
-router.post('/asignar', asignarConductores);
-router.get('/:idReserva', obtenerConductores);
-router.delete('/:idReserva/:idUsuario', eliminarConductor);
+router.post('/conductores/asignar', asignarConductores);
+router.get('/conductores/:idReserva', obtenerConductores);
+router.delete('/conductores/:idReserva/:idUsuario', eliminarConductor);
 
 router.get('/generarQR/:tipo/:monto/:idReserva', asyncHandler(generarQR));
 
