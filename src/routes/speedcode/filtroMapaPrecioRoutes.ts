@@ -5,9 +5,42 @@ import {
 import { autocompletarAeropuerto } from '../../controllers/speedcode/filtroAeropuertoController';
 import { listarReservasAprobadas, getDetalleReserva } from "../../controllers/speedcode/reservasAprobadasController";
 import { getTopAutos } from '../../controllers/speedcode/topAutosController';
-
+import { generarQR } from '../../controllers/speedcode/generarQRController';
+import { asyncHandler } from '../../utils/asyncHandler';
+import {
+  asignarConductores,
+  obtenerConductores,
+  eliminarConductor,
+} from '../../controllers/speedcode/conductoresController';
+import {
+  obtenerUltimasBusquedas,
+  registrarBusqueda,
+  autocompletarBusquedas
+} from "../../controllers/speedcode/historialBusquedaController";
+import * as PagoController from '../../controllers/speedcode/pago.controller';
+import {
+  cancelarExpiradas,
+  cancelarReserva,
+} from '../../controllers/speedcode/reservas.controller';
 
 const router = Router();
+
+router.post('/cancelar-expiradas', cancelarExpiradas);
+router.post('/cancelar/:idreserva', cancelarReserva);
+
+router.post('/pagarConTarjeta/:reserva_idreserva', PagoController.realizarPagoTarjeta);
+router.post('/pagarConQR/:reserva_idreserva', PagoController.realizarPagoQR);
+router.get('/', PagoController.obtenerPagos);
+
+router.get("/ultimas", obtenerUltimasBusquedas);
+router.post("/registrar", registrarBusqueda);
+router.get("/autocompletar", autocompletarBusquedas);
+
+router.post('/asignar', asignarConductores);
+router.get('/:idReserva', obtenerConductores);
+router.delete('/:idReserva/:idUsuario', eliminarConductor);
+
+router.get('/generarQR/:tipo/:monto/:idReserva', asyncHandler(generarQR));
 
 router.get('/filtroMapaPrecio', filtrarVehiculos);
 router.get('/autocompletar/aeropuerto', autocompletarAeropuerto);
